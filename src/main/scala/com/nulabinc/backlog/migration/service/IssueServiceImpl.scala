@@ -180,9 +180,13 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
     //description
     (backlogIssue.optParentIssueId, optParentIssue) match {
       case (Some(_), Some(parentIssue)) if (parentIssue.optParentIssueId.nonEmpty) =>
-        params.description(
-          s"${backlogIssue.description}\n${Messages("common.parent_issue")}:${parentIssue.optIssueKey.getOrElse("")}"
-        )
+        val sb = new StringBuilder()
+        sb.append(backlogIssue.description).append("\n")
+        sb.append(Messages("common.parent_issue")).append(":").append(parentIssue.optIssueKey.getOrElse(""))
+        params.description(sb.toString())
+      case (Some(_), Some(parentIssue)) if (parentIssue.optParentIssueId.isEmpty) =>
+        params.parentIssueId(parentIssue.id) //parent id
+        params.description(backlogIssue.description)
       case _ =>
         params.description(backlogIssue.description)
     }
@@ -217,12 +221,6 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
 
     //actual hours
     for { actualHours <- backlogIssue.optActualHours } yield params.actualHours(actualHours)
-
-    //parent id
-    for {
-      parentIssueId <- backlogIssue.optParentIssueId
-      id            <- toRemoteIssueId(parentIssueId)
-    } yield params.parentIssueId(id)
 
     //created
     for { created <- backlogIssue.operation.optCreated } yield params.created(created)
