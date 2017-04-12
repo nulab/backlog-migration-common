@@ -31,13 +31,22 @@ object ConsoleOut extends Logging {
 
   def println(value: String, space: Int = 0, color: Ansi.Color = BLACK): PrintStream = {
     logger.info(value)
-    outStream.println((" " * space) + ansi().fg(color).a(value).reset().toString)
+    if (color == BLACK) {
+      outStream.println((" " * space) + ansi().a(value).reset().toString)
+    } else {
+      outStream.println((" " * space) + ansi().fg(color).a(value).reset().toString)
+    }
+
     outStream.flush()
     outStream
   }
 
   def bold(value: String, color: Ansi.Color = BLACK): String = {
-    ansi().fg(color).bold().a(value).reset().toString
+    if (color == BLACK) {
+      ansi().bold().a(value).reset().toString
+    } else {
+      ansi().fg(color).bold().a(value).reset().toString
+    }
   }
 
   def boldln(value: String, space: Int = 0, color: Ansi.Color = BLACK) = {
