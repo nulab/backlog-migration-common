@@ -20,7 +20,9 @@ import scalax.file.Path
 /**
   * @author uchida
   */
-class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: BacklogPaths) extends CommentService with Logging {
+class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: BacklogPaths, issueService: IssueService)
+    extends CommentService
+    with Logging {
 
   override def allCommentsOfIssue(issueId: Long): Seq[BacklogComment] = {
     val allCount = backlog.getIssueCommentCount(issueId)
@@ -44,11 +46,12 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
     loop(None, Seq.empty[IssueComment], 0).sortWith((c1, c2) => c1.getCreated.before(c2.getCreated)).map(Backlog4jConverters.Comment.apply)
   }
 
-  override def update(setUpdateParam: BacklogComment => ImportUpdateIssueParams)(backlogComment: BacklogComment): Either[Throwable, BacklogIssue] = {
+  override def update(setUpdateParam: BacklogComment => ImportUpdateIssueParams)(backlogComment: BacklogComment): Either[Throwable, BacklogComment] = {
     try {
-      val result = updateIssue(setUpdateParam(backlogComment))
-      logger.debug(s"    [Success Finish Create Comment]:${backlogComment.optIssueId}----------------------------")
-      result
+      val noUpdate = updateIssue(setUpdateParam(backlogComment))
+      if (noUpdate) logger.debug(s"    [Success Finish No Update Comment]:${backlogComment.optIssueId}----------------------------")
+      else logger.debug(s"    [Success Finish Create Comment]:${backlogComment.optIssueId}----------------------------")
+      Right(backlogComment)
     } catch {
       case e: Throwable =>
         logger.debug(s"    [Fail Finish Create Comment]:${backlogComment.optCreated.getOrElse("")}----------------------------")
@@ -59,7 +62,9 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
   override def setUpdateParam(issueId: Long, path: Path, propertyResolver: PropertyResolver, toRemoteIssueId: (Long) => Option[Long])(
       backlogComment: BacklogComment): ImportUpdateIssueParams = {
     logger.debug(s"    [Start Create Comment][Comment Date]:${backlogComment.optCreated.getOrElse("")}")
-    val params = new ImportUpdateIssueParams(issueId)
+
+    val optCurrentIssue: Option[Issue] = issueService.optIssueOfId(issueId)
+    val params                         = new ImportUpdateIssueParams(issueId)
 
     //comment
     if (backlogComment.optContent.nonEmpty) {
@@ -84,44 +89,52 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
     } yield params.updatedUserId(id)
 
     //changelog
-    backlogComment.changeLogs.map(setChangeLog) foreach (_(params, path, toRemoteIssueId, propertyResolver))
+    backlogComment.changeLogs.map(setChangeLog) foreach (_(params, path, toRemoteIssueId, propertyResolver, optCurrentIssue))
 
     params
   }
 
-  private[this] def updateIssue(params: ImportUpdateIssueParams): Either[Throwable, BacklogIssue] =
-    try {
-      params.getParamList.asScala.foreach(p => logger.debug(s"        [Comment Parameter]:${p.getName}:${p.getValue}"))
-      Right(Backlog4jConverters.Issue(backlog.importUpdateIssue(params)))
-    } catch {
-      case e: Throwable =>
-        Left(e)
+  private[this] def updateIssue(params: ImportUpdateIssueParams): Boolean = {
+    val paramList = params.getParamList.asScala
+    paramList.foreach(p => logger.debug(s"        [Comment Parameter]:${p.getName}:${p.getValue}"))
+    if (paramList.exists(p => p.getName == "created") &&
+        paramList.exists(p => p.getName == "updated") &&
+        paramList.exists(p => p.getName == "updatedUserId") &&
+        paramList.size == 3) {
+      logger.warn("No update item")
+      true
+    } else {
+      Backlog4jConverters.Issue(backlog.importUpdateIssue(params))
+      false
     }
+  }
 
   private[this] def setChangeLog(changeLog: BacklogChangeLog)(params: ImportUpdateIssueParams,
                                                               path: Path,
                                                               toRemoteIssueId: (Long) => Option[Long],
-                                                              propertyResolver: PropertyResolver) = {
+                                                              propertyResolver: PropertyResolver,
+                                                              optCurrentIssue: Option[Issue]) = {
     if (changeLog.optAttributeInfo.nonEmpty) {
       setCustomField(params, changeLog, propertyResolver)
     } else if (changeLog.optAttachmentInfo.nonEmpty) {
       setAttachment(params, path, changeLog)
-    } else setAttr(params, changeLog, toRemoteIssueId, propertyResolver)
+    } else setAttr(params, changeLog, toRemoteIssueId, propertyResolver, optCurrentIssue)
   }
 
   private[this] def setAttr(params: ImportUpdateIssueParams,
                             changeLog: BacklogChangeLog,
                             toRemoteIssueId: (Long) => Option[Long],
-                            propertyResolver: PropertyResolver) =
+                            propertyResolver: PropertyResolver,
+                            optCurrentIssue: Option[Issue]) =
     changeLog.field match {
       case BacklogConstantValue.ChangeLog.SUMMARY         => setSummary(params, changeLog)
       case BacklogConstantValue.ChangeLog.DESCRIPTION     => setDescription(params, changeLog)
       case BacklogConstantValue.ChangeLog.COMPONENT       => setCategory(params, changeLog, propertyResolver)
       case BacklogConstantValue.ChangeLog.VERSION         => setVersion(params, changeLog, propertyResolver)
       case BacklogConstantValue.ChangeLog.MILESTONE       => setMilestone(params, changeLog, propertyResolver)
-      case BacklogConstantValue.ChangeLog.STATUS          => setStatus(params, changeLog, propertyResolver)
+      case BacklogConstantValue.ChangeLog.STATUS          => setStatus(params, changeLog, propertyResolver, optCurrentIssue)
       case BacklogConstantValue.ChangeLog.ASSIGNER        => setAssignee(params, changeLog, propertyResolver)
-      case BacklogConstantValue.ChangeLog.ISSUE_TYPE      => setIssueType(params, changeLog, propertyResolver)
+      case BacklogConstantValue.ChangeLog.ISSUE_TYPE      => setIssueType(params, changeLog, propertyResolver, optCurrentIssue)
       case BacklogConstantValue.ChangeLog.START_DATE      => setStartDate(params, changeLog)
       case BacklogConstantValue.ChangeLog.LIMIT_DATE      => setDueDate(params, changeLog)
       case BacklogConstantValue.ChangeLog.PRIORITY        => setPriority(params, changeLog, propertyResolver)
@@ -175,19 +188,26 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
       case None => params.milestoneIds(null)
     }
 
-  private[this] def setStatus(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, propertyResolver: PropertyResolver) =
-    (changeLog.optOriginalValue, changeLog.optNewValue) match {
-      case (Some(originalValue), Some(newValue)) =>
-        if (originalValue != newValue) {
-          val originalStatusId = propertyResolver.tryResolvedStatusId(originalValue)
-          val newStatusId      = propertyResolver.tryResolvedStatusId(newValue)
-          if (!(originalStatusId == StatusType.Closed.getIntValue && newStatusId == StatusType.Open.getIntValue)) {
+  private[this] def setStatus(params: ImportUpdateIssueParams,
+                              changeLog: BacklogChangeLog,
+                              propertyResolver: PropertyResolver,
+                              optCurrentIssue: Option[Issue]) = {
+    (optCurrentIssue, changeLog.optNewValue) match {
+      case (Some(currentIssue), Some(newValue)) =>
+        val newStatusId = propertyResolver.tryResolvedStatusId(newValue)
+        if (currentIssue.getStatus.getId != newStatusId) {
+          if (currentIssue.getStatus.getId == StatusType.Closed.getIntValue) {
+            if (newStatusId == StatusType.InProgress.getIntValue) {
+              params.status(StatusType.valueOf(newStatusId))
+            }
+          } else {
             params.status(StatusType.valueOf(newStatusId))
           }
         }
       case _ =>
         for { value <- changeLog.optNewValue } yield params.status(StatusType.valueOf(propertyResolver.tryResolvedStatusId(value)))
     }
+  }
 
   private[this] def setAssignee(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, propertyResolver: PropertyResolver) =
     changeLog.optNewValue match {
@@ -199,9 +219,20 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
       case None => params.assigneeId(null)
     }
 
-  private[this] def setIssueType(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, propertyResolver: PropertyResolver) =
-    for { value <- changeLog.optNewValue } yield {
-      propertyResolver.optResolvedIssueTypeId(value).map(params.issueTypeId)
+  private[this] def setIssueType(params: ImportUpdateIssueParams,
+                                 changeLog: BacklogChangeLog,
+                                 propertyResolver: PropertyResolver,
+                                 optCurrentIssue: Option[Issue]) =
+    for {
+      value        <- changeLog.optNewValue
+      currentIssue <- optCurrentIssue
+    } yield {
+      for { id <- propertyResolver.optResolvedIssueTypeId(value) } yield {
+        println(s"issue type id : ${id}:${currentIssue.getIssueType.getId}")
+        if (id != currentIssue.getIssueType.getId) {
+          params.issueTypeId(id)
+        }
+      }
     }
 
   private[this] def setPriority(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, propertyResolver: PropertyResolver) =

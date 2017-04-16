@@ -13,6 +13,8 @@ trait IssueService {
 
   def issueOfId(id: Long): BacklogIssue
 
+  def optIssueOfId(id: Long): Option[Issue]
+
   def optIssueOfKey(key: String): Option[BacklogIssue]
 
   def issueOfKey(key: String): BacklogIssue

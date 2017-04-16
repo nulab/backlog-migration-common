@@ -22,6 +22,13 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
 
   override def issueOfId(id: Long): BacklogIssue = Backlog4jConverters.Issue(backlog.getIssue(id))
 
+  override def optIssueOfId(id: Long): Option[Issue] =
+    try {
+      Some(backlog.getIssue(id))
+    } catch {
+      case _: Throwable => None
+    }
+
   override def optIssueOfKey(key: String): Option[BacklogIssue] =
     try {
       Some(issueOfKey(key))
