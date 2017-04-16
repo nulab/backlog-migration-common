@@ -19,6 +19,8 @@ trait BacklogConfiguration {
 
   val mixpanelProduct = internal.getString("application.mixpanel.product")
 
+  val language = internal.getString("application.language")
+
   val exportLimitAtOnce = {
     try {
       external.getInt("application.export-limit-at-once")
