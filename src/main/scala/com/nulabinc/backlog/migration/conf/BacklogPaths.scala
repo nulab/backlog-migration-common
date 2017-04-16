@@ -1,6 +1,8 @@
 package com.nulabinc.backlog.migration.conf
 
-import com.nulabinc.backlog.migration.utils.FileUtil
+import java.util.Date
+
+import com.nulabinc.backlog.migration.utils.{DateUtil, FileUtil}
 
 import scalax.file.Path
 
@@ -42,7 +44,8 @@ class BacklogPaths(projectKey: String) {
 
   def issueDirectoryPath: Path = outputPath / "project" / projectKey / "issues"
 
-  def issueDirectoryPath(date: String, label: String): Path = issueDirectoryPath / date / label
+  def issueDirectoryPath(eventType: String, issueId: Long, created: Date, index: Int): Path =
+    issueDirectoryPath / DateUtil.yyyymmddFormat(created) / s"${created.getTime}-${issueId}-${eventType}-${index}"
 
   def issueJson(path: Path): Path = path / "issue.json"
 
