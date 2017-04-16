@@ -6,7 +6,7 @@ import javax.inject.Inject
 import com.netaporter.uri.Uri
 import com.nulabinc.backlog.migration.converter.Backlog4jConverters
 import com.nulabinc.backlog.migration.domain._
-import com.nulabinc.backlog.migration.utils.{DateUtil, Logging}
+import com.nulabinc.backlog.migration.utils.{DateUtil, Logging, StringUtil}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.PriorityType
 import com.nulabinc.backlog4j._
@@ -286,10 +286,10 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
         params.milestoneIds(milestoneIds.asJava)
       }
       for { statusIds <- uri.query.paramMap.get("statusId[]") } yield {
-        params.statuses(statusIds.map(_.toInt).map(Issue.StatusType.valueOf).asJava)
+        params.statuses(statusIds.flatMap(StringUtil.safeStringToInt).map(Issue.StatusType.valueOf).asJava)
       }
       for { priorityIds <- uri.query.paramMap.get("priorityId[]") } yield {
-        params.priorities(priorityIds.map(_.toInt).map(Issue.PriorityType.valueOf).asJava)
+        params.priorities(priorityIds.flatMap(StringUtil.safeStringToInt).map(Issue.PriorityType.valueOf).asJava)
       }
       for { assigneeIds <- uri.query.paramMap.get("assigneeId[]") } yield {
         params.assigneeIds(assigneeIds.asJava)
@@ -299,7 +299,7 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
       }
       for { resolutionIds <- uri.query.paramMap.get("resolutionId[]") } yield {
         params.resolutions(
-          resolutionIds.map(_.toInt).map(Issue.ResolutionType.valueOf).asJava
+          resolutionIds.flatMap(StringUtil.safeStringToInt).map(Issue.ResolutionType.valueOf).asJava
         )
       }
       for {
@@ -377,10 +377,10 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
         params.milestoneIds(milestoneIds.asJava)
       }
       for { statusIds <- uri.query.paramMap.get("statusId[]") } yield {
-        params.statuses(statusIds.map(_.toInt).map(Issue.StatusType.valueOf).asJava)
+        params.statuses(statusIds.flatMap(StringUtil.safeStringToInt).map(Issue.StatusType.valueOf).asJava)
       }
       for { priorityIds <- uri.query.paramMap.get("priorityId[]") } yield {
-        params.priorities(priorityIds.map(_.toInt).map(Issue.PriorityType.valueOf).asJava)
+        params.priorities(priorityIds.flatMap(StringUtil.safeStringToInt).map(Issue.PriorityType.valueOf).asJava)
       }
       for { assigneeIds <- uri.query.paramMap.get("assigneeId[]") } yield {
         params.assignerIds(assigneeIds.asJava)
@@ -390,7 +390,7 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
       }
       for { resolutionIds <- uri.query.paramMap.get("resolutionId[]") } yield {
         params.resolutions(
-          resolutionIds.map(_.toInt).map(Issue.ResolutionType.valueOf).asJava
+          resolutionIds.flatMap(StringUtil.safeStringToInt).map(Issue.ResolutionType.valueOf).asJava
         )
       }
       for {
