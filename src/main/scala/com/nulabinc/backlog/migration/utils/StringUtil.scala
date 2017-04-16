@@ -21,4 +21,11 @@ object StringUtil {
       case _              => false
     }
 
+  def notEmpty(s: String): Option[String] = {
+    Option(s) match {
+      case Some(string) if (string.trim.nonEmpty) => Some(string)
+      case _                                      => None
+    }
+  }
+
 }
