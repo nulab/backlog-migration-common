@@ -148,17 +148,23 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
     changeLog.optNewValue.map(value => params.summary(value))
   }
 
-  private[this] def setDescription(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog) = {
-    changeLog.optNewValue.map(value => params.description(value))
-  }
+  private[this] def setDescription(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog) =
+    changeLog.optNewValue match {
+      case Some(value) => params.description(value)
+      case _           => params.description(null)
+    }
 
-  private[this] def setStartDate(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog) = {
-    changeLog.optNewValue.map(value => params.startDate(value))
-  }
+  private[this] def setStartDate(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog) =
+    changeLog.optNewValue match {
+      case Some(value) => params.startDate(value)
+      case _           => params.startDate(null)
+    }
 
-  private[this] def setDueDate(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog) = {
-    changeLog.optNewValue.map(value => params.dueDate(value))
-  }
+  private[this] def setDueDate(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog) =
+    changeLog.optNewValue match {
+      case Some(value) => params.dueDate(value)
+      case _           => params.dueDate(null)
+    }
 
   private[this] def setCategory(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, propertyResolver: PropertyResolver) =
     changeLog.optNewValue match {
@@ -249,14 +255,14 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
     changeLog.optNewValue match {
       case Some("")    => params.estimatedHours(null)
       case Some(value) => params.estimatedHours(value.toFloat)
-      case None        =>
+      case None        => params.estimatedHours(null)
     }
 
   private[this] def setActualHours(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog) =
     changeLog.optNewValue match {
       case Some("")    => params.actualHours(null)
       case Some(value) => params.actualHours(value.toFloat)
-      case None        =>
+      case None        => params.actualHours(null)
     }
 
   private[this] def setParentIssue(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, toRemoteIssueId: (Long) => Option[Long]) =
@@ -386,13 +392,15 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
   private[this] def setSingleListCustomField(params: ImportUpdateIssueParams,
                                              changeLog: BacklogChangeLog,
                                              customFieldSetting: BacklogCustomFieldSetting) =
-    (changeLog.optNewValue, customFieldSetting.property, customFieldSetting.optId) match {
-      case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id)) if (value.nonEmpty) =>
-        for {
-          item   <- property.items.find(_.name == value)
-          itemId <- item.optId
-        } yield params.singleListCustomField(id, itemId)
-      case _ =>
+    for { id <- customFieldSetting.optId } yield {
+      (changeLog.optNewValue, customFieldSetting.property) match {
+        case (Some(value), property: BacklogCustomFieldMultipleProperty) if (value.nonEmpty) =>
+          for {
+            item   <- property.items.find(_.name == value)
+            itemId <- item.optId
+          } yield params.singleListCustomField(id, itemId)
+        case _ => params.singleListCustomField(id, UpdateIssueParams.SINGLE_LIST_CUSTOM_FIELD_NOT_SET)
+      }
     }
 
   private[this] def setMultipleListCustomField(params: ImportUpdateIssueParams,
