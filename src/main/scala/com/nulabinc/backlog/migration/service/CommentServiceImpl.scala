@@ -228,7 +228,6 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
       currentIssue <- optCurrentIssue
     } yield {
       for { id <- propertyResolver.optResolvedIssueTypeId(value) } yield {
-        println(s"issue type id : ${id}:${currentIssue.getIssueType.getId}")
         if (id != currentIssue.getIssueType.getId) {
           params.issueTypeId(id)
         }
