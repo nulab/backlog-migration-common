@@ -35,8 +35,7 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
         }
         queryParams.count(100)
         queryParams.order(QueryParams.Order.Asc)
-        val commentsPart =
-          backlog.getIssueComments(issueId, queryParams).asScala
+        val commentsPart = backlog.getIssueComments(issueId, queryParams).asScala
         val optLastId = for { lastComment <- commentsPart.lastOption } yield {
           lastComment.getId
         }
