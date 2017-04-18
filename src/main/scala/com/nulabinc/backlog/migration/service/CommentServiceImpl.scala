@@ -299,7 +299,7 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
           if (e.getMessage.indexOf("The size of attached file is too large.") >= 0)
             ConsoleOut.println(Messages("import.error.attachment.too_large", path.name))
           else
-            ConsoleOut.println(Messages("import.error.issue.attachment", path.name))
+            ConsoleOut.println(Messages("import.error.issue.attachment", path.name, e.getMessage))
           None
       }
     optAttachment.map(_.getId)
