@@ -37,7 +37,7 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
     getValues(params, "milestoneId[]").map(_.toLong) should contain theSameElementsAs (Seq(versionId3, versionId4))
     getValue(params, "statusId").map(_.toInt) should be(Some(statusId1 - 1))
     getValue(params, "assigneeId").map(_.toInt) should be(Some(userId2))
-    getValue(params, "issueTypeId").map(_.toInt) should be(Some(issueTypeId))
+    //getValue(params, "issueTypeId").map(_.toInt) should be(Some(issueTypeId))
     getValue(params, "startDate") should be(Some(startDate))
     getValue(params, "dueDate") should be(Some(dueDate))
     getValue(params, "priorityId").map(_.toInt) should be(Some(priorityId))
