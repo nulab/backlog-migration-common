@@ -185,13 +185,13 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
     val optParentIssue: Option[BacklogIssue] = backlogIssue.optParentIssueId.flatMap(toRemoteIssueId(_).map(issueOfId))
 
     //description
-    (backlogIssue.optParentIssueId, optParentIssue) match {
-      case (Some(_), Some(parentIssue)) if (parentIssue.optParentIssueId.nonEmpty) =>
+    optParentIssue match {
+      case Some(parentIssue) if (parentIssue.optParentIssueId.nonEmpty) =>
         val sb = new StringBuilder()
         sb.append(backlogIssue.description).append("\n")
         sb.append(Messages("common.parent_issue")).append(":").append(parentIssue.optIssueKey.getOrElse(""))
         params.description(sb.toString())
-      case (Some(_), Some(parentIssue)) if (parentIssue.optParentIssueId.isEmpty) =>
+      case Some(parentIssue) if (parentIssue.optParentIssueId.isEmpty) =>
         params.parentIssueId(parentIssue.id) //parent id
         params.description(backlogIssue.description)
       case _ =>

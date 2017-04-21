@@ -268,7 +268,14 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
   private[this] def setParentIssue(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, toRemoteIssueId: (Long) => Option[Long]) =
     changeLog.optNewValue match {
       case Some(value) =>
-        for { id <- toRemoteIssueId(value.toLong) } yield params.parentIssueId(id)
+        for {
+          id <- toRemoteIssueId(value.toLong)
+        } yield {
+          val parentIssue = issueService.issueOfId(id)
+          if (parentIssue.optParentIssueId.isEmpty) {
+            params.parentIssueId(id)
+          }
+        }
       case None =>
         params.parentIssueId(UpdateIssueParams.PARENT_ISSUE_NOT_SET)
     }
