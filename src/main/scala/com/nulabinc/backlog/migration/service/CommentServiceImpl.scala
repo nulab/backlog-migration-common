@@ -62,12 +62,12 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
       backlogComment: BacklogComment): ImportUpdateIssueParams = {
     logger.debug(s"    [Start Create Comment][Comment Date]:${backlogComment.optCreated.getOrElse("")}")
 
-    val optCurrentIssue: Option[Issue] = issueService.optIssueOfId(issueId)
-    val params                         = new ImportUpdateIssueParams(issueId)
+    val optCurrentIssue = issueService.optIssueOfId(issueId)
+    val params          = new ImportUpdateIssueParams(issueId)
 
     //comment
-    if (backlogComment.optContent.nonEmpty) {
-      params.comment(backlogComment.optContent.getOrElse(""))
+    for { content <- backlogComment.optContent } yield {
+      params.comment(content)
     }
 
     //notificationUserIds
@@ -88,7 +88,9 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
     } yield params.updatedUserId(id)
 
     //changelog
-    backlogComment.changeLogs.map(setChangeLog) foreach (_(params, path, toRemoteIssueId, propertyResolver, optCurrentIssue))
+    backlogComment.changeLogs.foreach { changeLog =>
+      setChangeLog(changeLog, params, path, toRemoteIssueId, propertyResolver, optCurrentIssue)
+    }
 
     params
   }
@@ -108,11 +110,12 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
     }
   }
 
-  private[this] def setChangeLog(changeLog: BacklogChangeLog)(params: ImportUpdateIssueParams,
-                                                              path: Path,
-                                                              toRemoteIssueId: (Long) => Option[Long],
-                                                              propertyResolver: PropertyResolver,
-                                                              optCurrentIssue: Option[Issue]) = {
+  private[this] def setChangeLog(changeLog: BacklogChangeLog,
+                                 params: ImportUpdateIssueParams,
+                                 path: Path,
+                                 toRemoteIssueId: (Long) => Option[Long],
+                                 propertyResolver: PropertyResolver,
+                                 optCurrentIssue: Option[Issue]) = {
     if (changeLog.optAttributeInfo.nonEmpty) {
       setCustomField(params, changeLog, propertyResolver)
     } else if (changeLog.optAttachmentInfo.nonEmpty) {
