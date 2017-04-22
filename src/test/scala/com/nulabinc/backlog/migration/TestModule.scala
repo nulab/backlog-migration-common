@@ -1,17 +1,63 @@
 package com.nulabinc.backlog.migration
 
+import java.io.InputStream
+
 import com.google.inject.AbstractModule
-import com.nulabinc.backlog.migration.domain.BacklogCustomFieldSetting
-import com.nulabinc.backlog.migration.service.PropertyResolver
+import com.nulabinc.backlog.migration.domain.{BacklogCustomFieldSetting, BacklogIssue}
+import com.nulabinc.backlog.migration.service.{IssueService, PropertyResolver}
+import com.nulabinc.backlog4j.Issue
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
+import com.nulabinc.backlog4j.api.option.{GetIssuesCountParams, GetIssuesParams, ImportIssueParams}
 
 /**
   * @author uchida
   */
 class TestModule extends AbstractModule {
 
-  override def configure(): Unit = {}
+  override def configure(): Unit = {
+    bind(classOf[IssueService]).to(classOf[TestIssueServiceImpl])
+  }
 
+}
+
+class TestIssueServiceImpl extends IssueService with SimpleFixture {
+
+  override def issueOfId(id: Long): BacklogIssue = {
+    issue1.copy(optParentIssueId = None)
+  }
+
+  override def optIssueOfId(id: Long): Option[Issue] = {
+    None
+  }
+
+  override def optIssueOfKey(key: String): Option[BacklogIssue] = ???
+
+  override def issueOfKey(key: String): BacklogIssue = ???
+
+  override def optIssueOfParams(projectId: Long, backlogIssue: BacklogIssue): Option[BacklogIssue] = ???
+
+  override def allIssues(projectId: Long, offset: Int, count: Int, filter: Option[String]): Seq[Issue] = ???
+
+  override def countIssues(projectId: Long, filter: Option[String]): Int = ???
+
+  override def downloadIssueAttachment(issueId: Long, attachmentId: Long): Option[(String, InputStream)] = ???
+
+  override def exists(projectId: Long, backlogIssue: BacklogIssue): Boolean = ???
+
+  override def create(setCreateParam: (BacklogIssue) => ImportIssueParams)(backlogIssue: BacklogIssue): Either[Throwable, BacklogIssue] = ???
+
+  override def setCreateParam(projectId: Long,
+                              propertyResolver: PropertyResolver,
+                              toRemoteIssueId: (Long) => Option[Long],
+                              issueOfId: (Long) => BacklogIssue)(backlogIssue: BacklogIssue): ImportIssueParams = ???
+
+  override def createDummy(projectId: Long, propertyResolver: PropertyResolver): Issue = ???
+
+  override def delete(issueId: Long): Unit = ???
+
+  override def addIssuesParams(params: GetIssuesParams, filter: Option[String]): Unit = ???
+
+  override def addIssuesCountParams(params: GetIssuesCountParams, filter: Option[String]): Unit = ???
 }
 
 class TestPropertyResolver extends PropertyResolver with SimpleFixture {

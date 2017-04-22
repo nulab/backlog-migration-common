@@ -1,9 +1,10 @@
 package com.nulabinc.backlog.migration.service
 
 import com.google.inject.Guice
+import com.google.inject.util.Modules
 import com.nulabinc.backlog.migration.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.modules.DefaultModule
-import com.nulabinc.backlog.migration.{SimpleFixture, TestPropertyResolver}
+import com.nulabinc.backlog.migration.{SimpleFixture, TestModule, TestPropertyResolver}
 import com.nulabinc.backlog4j.api.option.ImportUpdateIssueParams
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -16,7 +17,9 @@ import scalax.file.Path
 class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
 
   def commentService() = {
-    Guice.createInjector(new DefaultModule(BacklogApiConfiguration("url", "key", "projectKey"))).getInstance(classOf[CommentServiceImpl])
+    Guice
+      .createInjector(Modules.`override`(new DefaultModule(BacklogApiConfiguration("url", "key", "projectKey"))).`with`(new TestModule()))
+      .getInstance(classOf[CommentServiceImpl])
   }
 
   "setUpdateParam" should "return the valid params" in {
