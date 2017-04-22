@@ -15,6 +15,8 @@ trait BacklogConfiguration {
 
   val applicationName = internal.getString("application.title")
 
+  val versionName = internal.getString("application.version")
+
   val mixpanelToken = internal.getString("application.mixpanel.token")
 
   val mixpanelProduct = internal.getString("application.mixpanel.product")
