@@ -34,16 +34,16 @@ trait BacklogConfiguration {
 
   val akkaMailBoxPool = {
     try {
-      external.getInt("backlog.migration.akka.mailbox-pool")
+      external.getInt("application.akka.mailbox-pool")
     } catch {
       case _: ConfigException =>
-        internal.getInt("backlog.migration.akka.mailbox-pool")
+        internal.getInt("application.akka.mailbox-pool")
     }
   }
 
   def getBacklogConfiguration() = {
     try {
-      external.getInt("backlog.migration.akka.mailbox-pool")
+      external.getInt("application.akka.mailbox-pool")
       external
     } catch {
       case _: ConfigException =>
