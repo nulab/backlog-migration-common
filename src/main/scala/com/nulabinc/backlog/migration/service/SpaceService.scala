@@ -9,6 +9,8 @@ trait SpaceService {
 
   def space(): BacklogSpace
 
+  def hasAdmin(): Boolean
+
   def environment(): BacklogEnvironment
 
 }

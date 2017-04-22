@@ -14,6 +14,14 @@ class SpaceServiceImpl @Inject()(backlog: BacklogClient) extends SpaceService {
   override def space(): BacklogSpace =
     Backlog4jConverters.Space(backlog.getSpace)
 
+  override def hasAdmin(): Boolean =
+    try {
+      backlog.getSpaceDiskUsage
+      true
+    } catch {
+      case _: Throwable => false
+    }
+
   override def environment(): BacklogEnvironment =
     Backlog4jConverters.Environment(backlog.getEnvironment)
 
