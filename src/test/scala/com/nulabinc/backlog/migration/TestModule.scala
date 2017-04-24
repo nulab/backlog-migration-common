@@ -46,11 +46,6 @@ class TestIssueServiceImpl extends IssueService with SimpleFixture {
 
   override def create(setCreateParam: (BacklogIssue) => ImportIssueParams)(backlogIssue: BacklogIssue): Either[Throwable, BacklogIssue] = ???
 
-  override def setCreateParam(projectId: Long,
-                              propertyResolver: PropertyResolver,
-                              toRemoteIssueId: (Long) => Option[Long],
-                              issueOfId: (Long) => BacklogIssue)(backlogIssue: BacklogIssue): ImportIssueParams = ???
-
   override def createDummy(projectId: Long, propertyResolver: PropertyResolver): Issue = ???
 
   override def delete(issueId: Long): Unit = ???
@@ -58,6 +53,12 @@ class TestIssueServiceImpl extends IssueService with SimpleFixture {
   override def addIssuesParams(params: GetIssuesParams, filter: Option[String]): Unit = ???
 
   override def addIssuesCountParams(params: GetIssuesCountParams, filter: Option[String]): Unit = ???
+
+  override def setCreateParam(projectId: Long,
+                              propertyResolver: PropertyResolver,
+                              toRemoteIssueId: (Long) => Option[Long],
+                              postAttachment: (String) => Option[Long],
+                              issueOfId: (Long) => BacklogIssue)(backlogIssue: BacklogIssue): ImportIssueParams = ???
 }
 
 class TestPropertyResolver extends PropertyResolver with SimpleFixture {

@@ -34,6 +34,7 @@ trait IssueService {
   def setCreateParam(projectId: Long,
                      propertyResolver: PropertyResolver,
                      toRemoteIssueId: (Long) => Option[Long],
+                     postAttachment: (String) => Option[Long],
                      issueOfId: (Long) => BacklogIssue)(backlogIssue: BacklogIssue): ImportIssueParams
 
   def createDummy(projectId: Long, propertyResolver: PropertyResolver): Issue

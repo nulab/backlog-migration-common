@@ -164,6 +164,7 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
   override def setCreateParam(projectId: Long,
                               propertyResolver: PropertyResolver,
                               toRemoteIssueId: (Long) => Option[Long],
+                              postAttachment: (String) => Option[Long],
                               issueOfId: (Long) => BacklogIssue)(backlogIssue: BacklogIssue): ImportIssueParams = {
     //issue type
     val issueTypeId = backlogIssue.optIssueTypeName match {
@@ -251,6 +252,13 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
 
     //custom fields
     backlogIssue.customFields.map(setCustomFieldParams).foreach(_(params, propertyResolver))
+
+    //attachments
+    backlogIssue.attachments.foreach { attachment =>
+      for { id <- postAttachment(attachment.name) } yield {
+        params.attachmentIds(Seq(Long.box(id)).asJava)
+      }
+    }
 
     //notified user id
     val notifiedUserIds = backlogIssue.notifiedUsers.flatMap(_.optUserId).flatMap(propertyResolver.optResolvedUserId)

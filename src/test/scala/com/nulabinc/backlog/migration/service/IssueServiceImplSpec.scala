@@ -23,8 +23,9 @@ class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
     val propertyResolver = new TestPropertyResolver()
     val toRemoteIssueId  = (localIssueId: Long) => None: Option[Long]
     val issueOfId        = (id: Long) => issue2
+    val postAttachment   = (fileName: String) => None: Option[Long]
 
-    val params = issueService().setCreateParam(projectId, propertyResolver, toRemoteIssueId, issueOfId)(issue1)
+    val params = issueService().setCreateParam(projectId, propertyResolver, toRemoteIssueId, postAttachment, issueOfId)(issue1)
     getValue(params, "projectId").map(_.toInt) should be(Some(projectId))
     getValue(params, "summary") should be(Some(summary))
     getValue(params, "issueTypeId").map(_.toInt) should be(Some(issueTypeId))
