@@ -63,10 +63,9 @@ object Backlog4jConverters extends Logging {
     def apply(issue: Issue): BacklogIssue = {
       BacklogIssue(
         eventType = "issue",
-        originalSummary = issue.getSummary,
         id = issue.getId,
         optIssueKey = Some(issue.getIssueKey),
-        summary = issue.getSummary,
+        summary = BacklogIssueSummary(value = issue.getSummary, original = issue.getSummary),
         optParentIssueId = parentIssueId(issue),
         description = issue.getDescription,
         optStartDate = Option(issue.getStartDate).map(DateUtil.dateFormat),
@@ -80,6 +79,7 @@ object Backlog4jConverters extends Logging {
         milestoneNames = issue.getMilestone.asScala.map(_.getName),
         priorityName = Option(issue.getPriority).map(_.getName).getOrElse(""),
         optAssignee = Option(issue.getAssignee).map(User.apply),
+        attachments = Seq.empty[BacklogAttachment],
         sharedFiles = issue.getSharedFiles.asScala.map(toBacklogSharedFile),
         customFields = issue.getCustomFields.asScala.flatMap(toBacklogCustomField),
         notifiedUsers = Seq.empty[BacklogUser],

@@ -61,13 +61,14 @@ case class BacklogOperation(optCreatedUser: Option[BacklogUser],
 
 case class BacklogNotification(optUser: Option[BacklogUser], optSenderUser: Option[BacklogUser])
 
+case class BacklogIssueSummary(value: String, original: String)
+
 trait BacklogEvent
 
 case class BacklogIssue(eventType: String,
-                        originalSummary: String,
                         id: Long,
                         optIssueKey: Option[String],
-                        summary: String,
+                        summary: BacklogIssueSummary,
                         optParentIssueId: Option[Long],
                         description: String,
                         optStartDate: Option[String],
@@ -81,6 +82,7 @@ case class BacklogIssue(eventType: String,
                         milestoneNames: Seq[String],
                         priorityName: String,
                         optAssignee: Option[BacklogUser],
+                        attachments: Seq[BacklogAttachment],
                         sharedFiles: Seq[BacklogSharedFile],
                         customFields: Seq[BacklogCustomField],
                         notifiedUsers: Seq[BacklogUser],
@@ -242,6 +244,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogAttributeInfoFormat               = jsonFormat2(BacklogAttributeInfo)
   implicit val BacklogChangeLogFormat                   = jsonFormat6(BacklogChangeLog)
   implicit val BacklogCommentFormat                     = jsonFormat8(BacklogComment)
+  implicit val BacklogIssueSummaryFormat                = jsonFormat2(BacklogIssueSummary)
   implicit val BacklogIssueFormat                       = jsonFormat22(BacklogIssue)
   implicit val BacklogWikiFormat                        = jsonFormat9(BacklogWiki)
   implicit val BacklogCustomFieldInitialDateFormat      = jsonFormat3(BacklogCustomFieldInitialDate)

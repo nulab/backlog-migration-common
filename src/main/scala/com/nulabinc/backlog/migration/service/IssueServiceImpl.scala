@@ -45,8 +45,8 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
         params.createdSince(DateUtil.isoToDateFormat(created))
       }
     }
-    if (backlogIssue.originalSummary.nonEmpty) {
-      params.keyword(backlogIssue.originalSummary)
+    if (backlogIssue.summary.original.nonEmpty) {
+      params.keyword(backlogIssue.summary.original)
     }
     val issues = try {
       backlog.getIssues(params).asScala
@@ -61,7 +61,7 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
       createdSince <- backlogIssue.operation.optCreated
     } yield {
       val optFoundIssue = issues.find { issue =>
-        (backlogIssue.originalSummary == issue.getSummary) && (userId.trim == issue.getCreatedUser.getUserId.trim) &&
+        (backlogIssue.summary.original == issue.getSummary) && (userId.trim == issue.getCreatedUser.getUserId.trim) &&
         (createdSince == DateUtil.isoFormat(issue.getCreated))
       }
       optFoundIssue match {
@@ -117,8 +117,8 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
         params.createdSince(DateUtil.isoToDateFormat(created))
       }
     }
-    if (backlogIssue.originalSummary.nonEmpty) {
-      params.keyword(backlogIssue.originalSummary)
+    if (backlogIssue.summary.original.nonEmpty) {
+      params.keyword(backlogIssue.summary.original)
     }
     val issues = try {
       backlog.getIssues(params).asScala
@@ -133,7 +133,7 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
       createdSince <- backlogIssue.operation.optCreated
     } yield {
       issues.exists { issue =>
-        (backlogIssue.originalSummary == issue.getSummary) && (userId.trim == issue.getCreatedUser.getUserId.trim) &&
+        (backlogIssue.summary.original == issue.getSummary) && (userId.trim == issue.getCreatedUser.getUserId.trim) &&
         (createdSince == DateUtil.isoFormat(issue.getCreated))
       }
     }).getOrElse(false)
@@ -179,7 +179,7 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
       .getOrElse(PriorityType.Normal)
 
     //parameter
-    val params: ImportIssueParams = new ImportIssueParams(projectId, backlogIssue.summary, issueTypeId, priorityType)
+    val params: ImportIssueParams = new ImportIssueParams(projectId, backlogIssue.summary.value, issueTypeId, priorityType)
 
     //parent issue
     val optParentIssue: Option[BacklogIssue] = backlogIssue.optParentIssueId.flatMap(toRemoteIssueId(_).map(issueOfId))

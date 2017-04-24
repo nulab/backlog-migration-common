@@ -506,10 +506,9 @@ trait SimpleFixture {
 
   val issue1 = BacklogIssue(
     eventType = "issue",
-    originalSummary = summary,
     id = issueId1,
     optIssueKey = optIssueKey,
-    summary = summary,
+    summary = BacklogIssueSummary(value = summary, original = summary),
     optParentIssueId = optParentIssueId,
     description = description,
     optStartDate = Some(startDate),
@@ -523,6 +522,7 @@ trait SimpleFixture {
     milestoneNames = Seq(versionName3, versionName4),
     priorityName = priorityName,
     optAssignee = Some(user1),
+    attachments = Seq.empty[BacklogAttachment],
     sharedFiles = Seq.empty[BacklogSharedFile],
     customFields = Seq(
       textCustomField,
