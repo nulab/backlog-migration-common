@@ -12,7 +12,7 @@ object FileUtil {
   }
 
   def normalize(string: String): String = {
-    Normalizer.normalize(string, Normalizer.Form.NFC)
+    Normalizer.normalize(Option(string).getOrElse(""), Normalizer.Form.NFC)
   }
 
 }

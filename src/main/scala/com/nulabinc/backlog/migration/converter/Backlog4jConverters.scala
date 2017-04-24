@@ -3,7 +3,7 @@ package com.nulabinc.backlog.migration.converter
 import com.nulabinc.backlog.migration.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.domain.BacklogJsonProtocol._
 import com.nulabinc.backlog.migration.domain.{BacklogCustomFieldSetting, _}
-import com.nulabinc.backlog.migration.utils.{DateUtil, Logging}
+import com.nulabinc.backlog.migration.utils.{DateUtil, FileUtil, Logging}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.internal.json.customFields._
 import com.nulabinc.backlog4j.{Notification, _}
@@ -248,7 +248,7 @@ object Backlog4jConverters extends Logging {
       BacklogAttributeInfo(optId = Option(attributeInfo).map(_.getId), typeId = attributeInfo.getTypeId)
 
     private[this] def toBacklogAttachmentInfo(attachmentInfo: AttachmentInfo): BacklogAttachment =
-      BacklogAttachment(optId = Option(attachmentInfo).map(_.getId), name = attachmentInfo.getName)
+      BacklogAttachment(optId = Option(attachmentInfo).map(_.getId), name = FileUtil.normalize(attachmentInfo.getName))
   }
 
   object Project {
@@ -514,7 +514,7 @@ object Backlog4jConverters extends Logging {
     def apply(attachment: Attachment): BacklogAttachment =
       BacklogAttachment(
         optId = Some(attachment.getId),
-        name = attachment.getName
+        name = FileUtil.normalize(attachment.getName)
       )
   }
 
