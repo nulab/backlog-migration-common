@@ -3,26 +3,22 @@ package com.nulabinc.backlog.migration.service
 import java.io.{File, FileInputStream}
 import javax.inject.Inject
 
-import com.nulabinc.backlog.migration.conf.{BacklogConstantValue, BacklogPaths}
+import com.nulabinc.backlog.migration.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.converter.Backlog4jConverters
 import com.nulabinc.backlog.migration.domain._
-import com.nulabinc.backlog.migration.utils.{ConsoleOut, Logging}
+import com.nulabinc.backlog.migration.utils.Logging
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType, StatusType}
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option.{ImportUpdateIssueParams, QueryParams, UpdateIssueParams}
 import com.nulabinc.backlog4j.internal.file.AttachmentDataImpl
-import com.osinka.i18n.Messages
 
 import scala.collection.JavaConverters._
-import scalax.file.Path
 
 /**
   * @author uchida
   */
-class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: BacklogPaths, issueService: IssueService)
-    extends CommentService
-    with Logging {
+class CommentServiceImpl @Inject()(backlog: BacklogClient, issueService: IssueService) extends CommentService with Logging {
 
   override def allCommentsOfIssue(issueId: Long): Seq[BacklogComment] = {
     val allCount = backlog.getIssueCommentCount(issueId)
@@ -58,8 +54,10 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
     }
   }
 
-  override def setUpdateParam(issueId: Long, path: Path, propertyResolver: PropertyResolver, toRemoteIssueId: (Long) => Option[Long])(
-      backlogComment: BacklogComment): ImportUpdateIssueParams = {
+  override def setUpdateParam(issueId: Long,
+                              propertyResolver: PropertyResolver,
+                              toRemoteIssueId: (Long) => Option[Long],
+                              postAttachment: (String) => Option[Long])(backlogComment: BacklogComment): ImportUpdateIssueParams = {
     logger.debug(s"    [Start Create Comment][Comment Date]:${backlogComment.optCreated.getOrElse("")}")
 
     val optCurrentIssue = issueService.optIssueOfId(issueId)
@@ -89,7 +87,7 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
 
     //changelog
     backlogComment.changeLogs.foreach { changeLog =>
-      setChangeLog(changeLog, params, path, toRemoteIssueId, propertyResolver, optCurrentIssue)
+      setChangeLog(changeLog, params, toRemoteIssueId, propertyResolver, postAttachment, optCurrentIssue)
     }
 
     params
@@ -110,16 +108,28 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
     }
   }
 
+  override def postAttachment(path: String): Either[Throwable, BacklogAttachment] = {
+    try {
+      val file: File                     = new File(path)
+      val attachmentData: AttachmentData = new AttachmentDataImpl(file.getName, new FileInputStream(file))
+      Right(Backlog4jConverters.Attachment(backlog.postAttachment(attachmentData)))
+    } catch {
+      case e: Throwable =>
+        logger.error(e.getMessage, e)
+        Left(e)
+    }
+  }
+
   private[this] def setChangeLog(changeLog: BacklogChangeLog,
                                  params: ImportUpdateIssueParams,
-                                 path: Path,
                                  toRemoteIssueId: (Long) => Option[Long],
                                  propertyResolver: PropertyResolver,
+                                 postAttachment: (String) => Option[Long],
                                  optCurrentIssue: Option[Issue]) = {
     if (changeLog.optAttributeInfo.nonEmpty) {
       setCustomField(params, changeLog, propertyResolver)
     } else if (changeLog.optAttachmentInfo.nonEmpty) {
-      setAttachment(params, path, changeLog)
+      setAttachment(params, changeLog, postAttachment)
     } else setAttr(params, changeLog, toRemoteIssueId, propertyResolver, optCurrentIssue)
   }
 
@@ -283,37 +293,11 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
         params.parentIssueId(UpdateIssueParams.PARENT_ISSUE_NOT_SET)
     }
 
-  private[this] def setAttachment(params: ImportUpdateIssueParams, path: Path, changeLog: BacklogChangeLog) =
+  private[this] def setAttachment(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, postAttachment: (String) => Option[Long]) =
     for {
       fileName <- changeLog.optAttachmentInfo.map(_.name)
-      id       <- postAttachments(path, fileName)
+      id       <- postAttachment(fileName)
     } yield params.attachmentIds(Seq(Long.box(id)).asJava)
-
-  private[this] def postAttachments(path: Path, fileName: String): Option[Long] = {
-    val files = backlogPaths.issueAttachmentDirectoryPath(path).toAbsolute.children()
-    files.find(file => file.name == fileName) match {
-      case Some(file) => postAttachment(file)
-      case _          => None
-    }
-  }
-
-  private[this] def postAttachment(path: Path): Option[Long] = {
-    val optAttachment: Option[Attachment] =
-      try {
-        val file: File                     = new File(path.path)
-        val attachmentData: AttachmentData = new AttachmentDataImpl(file.getName, new FileInputStream(file))
-        Some(backlog.postAttachment(attachmentData))
-      } catch {
-        case e: Throwable =>
-          logger.error(e.getMessage, e)
-          if (e.getMessage.indexOf("The size of attached file is too large.") >= 0)
-            ConsoleOut.println(Messages("import.error.attachment.too_large", path.name))
-          else
-            ConsoleOut.println(Messages("import.error.issue.attachment", path.name, e.getMessage))
-          None
-      }
-    optAttachment.map(_.getId)
-  }
 
   private[this] def setCustomField(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, propertyResolver: PropertyResolver) =
     for { customFieldSetting <- propertyResolver.optResolvedCustomFieldSetting(changeLog.field) } yield {
@@ -435,4 +419,5 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, backlogPaths: Backlog
         params.customFieldOtherValue(id, stringItems.mkString(","))
       case _ =>
     }
+
 }

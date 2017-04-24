@@ -25,8 +25,9 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
   "setUpdateParam" should "return the valid params" in {
     val propertyResolver = new TestPropertyResolver()
     val toRemoteIssueId  = (localIssueId: Long) => Some(1): Option[Long]
+    val postAttachment   = (fileName: String) => None: Option[Long]
 
-    val params = commentService().setUpdateParam(issueId1, Path(""), propertyResolver, toRemoteIssueId)(comment1)
+    val params = commentService().setUpdateParam(issueId1, propertyResolver, toRemoteIssueId, postAttachment)(comment1)
     params.getParamList.asScala.foreach(p => println(s"${p.getName}:${p.getValue}"))
     getValue(params, "comment").map(_.trim) should be(Some(commentContent))
     getValues(params, "notifiedUserId[]").map(_.toLong) should be(Seq(userId3))
@@ -64,8 +65,9 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
   "setUpdateParam(Reset)" should "return the valid params" in {
     val propertyResolver = new TestPropertyResolver()
     val toRemoteIssueId  = (localIssueId: Long) => Some(1): Option[Long]
+    val postAttachment   = (fileName: String) => None: Option[Long]
 
-    val params = commentService().setUpdateParam(issueId1, Path(""), propertyResolver, toRemoteIssueId)(comment2)
+    val params = commentService().setUpdateParam(issueId1, propertyResolver, toRemoteIssueId, postAttachment)(comment2)
     getValues(params, "categoryId[]") should contain theSameElementsAs (Seq(""))
     getValues(params, "versionId[]") should contain theSameElementsAs (Seq(""))
     getValues(params, "milestoneId[]") should contain theSameElementsAs (Seq(""))
