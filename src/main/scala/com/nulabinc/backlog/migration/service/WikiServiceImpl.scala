@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration.service
 
-import java.io.{File, FileInputStream, InputStream}
+import java.io.InputStream
 import javax.inject.{Inject, Named}
 
 import com.nulabinc.backlog.migration.conf.BacklogConstantValue
@@ -9,7 +9,6 @@ import com.nulabinc.backlog.migration.domain.{BacklogAttachment, BacklogWiki}
 import com.nulabinc.backlog.migration.utils.Logging
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option.{AddWikiAttachmentParams, GetWikisParams, ImportWikiParams, UpdateWikiParams}
-import com.nulabinc.backlog4j.internal.file.AttachmentDataImpl
 
 import scala.collection.JavaConverters._
 
@@ -74,18 +73,6 @@ class WikiServiceImpl @Inject()(@Named("projectKey") projectKey: String, backlog
         backlog.addWikiAttachment(params).asScala
       }
       Right(attachments)
-    } catch {
-      case e: Throwable =>
-        logger.error(e.getMessage, e)
-        Left(e)
-    }
-  }
-
-  override def postAttachment(path: String): Either[Throwable, BacklogAttachment] = {
-    val file           = new File(path)
-    val attachmentData = new AttachmentDataImpl(file.getName, new FileInputStream(file))
-    try {
-      Right(Backlog4jConverters.Attachment(backlog.postAttachment(attachmentData)))
     } catch {
       case e: Throwable =>
         logger.error(e.getMessage, e)

@@ -36,6 +36,7 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
     bind(classOf[UserService]).to(classOf[UserServiceImpl])
     bind(classOf[PriorityService]).to(classOf[PriorityServiceImpl])
     bind(classOf[SpaceService]).to(classOf[SpaceServiceImpl])
+    bind(classOf[AttachmentService]).to(classOf[AttachmentServiceImpl])
   }
 
   private[this] def createBacklogClient(): BacklogClient = {

@@ -21,6 +21,4 @@ trait WikiService {
 
   def addAttachment(wikiId: Long, attachments: Seq[BacklogAttachment]): Either[Throwable, Seq[BacklogAttachment]]
 
-  def postAttachment(path: String): Either[Throwable, BacklogAttachment]
-
 }

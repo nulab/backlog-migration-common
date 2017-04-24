@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration.service
 
-import com.nulabinc.backlog.migration.domain.{BacklogAttachment, BacklogComment}
+import com.nulabinc.backlog.migration.domain.BacklogComment
 import com.nulabinc.backlog4j.api.option.ImportUpdateIssueParams
 
 /**
@@ -16,7 +16,5 @@ trait CommentService {
                      propertyResolver: PropertyResolver,
                      toRemoteIssueId: (Long) => Option[Long],
                      postAttachment: (String) => Option[Long])(backlogComment: BacklogComment): ImportUpdateIssueParams
-
-  def postAttachment(path: String): Either[Throwable, BacklogAttachment]
 
 }

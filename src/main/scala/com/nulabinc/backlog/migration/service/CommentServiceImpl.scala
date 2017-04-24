@@ -1,6 +1,5 @@
 package com.nulabinc.backlog.migration.service
 
-import java.io.{File, FileInputStream}
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.conf.BacklogConstantValue
@@ -11,7 +10,6 @@ import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType, StatusType}
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option.{ImportUpdateIssueParams, QueryParams, UpdateIssueParams}
-import com.nulabinc.backlog4j.internal.file.AttachmentDataImpl
 
 import scala.collection.JavaConverters._
 
@@ -105,18 +103,6 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, issueService: IssueSe
     } else {
       Backlog4jConverters.Issue(backlog.importUpdateIssue(params))
       false
-    }
-  }
-
-  override def postAttachment(path: String): Either[Throwable, BacklogAttachment] = {
-    try {
-      val file: File                     = new File(path)
-      val attachmentData: AttachmentData = new AttachmentDataImpl(file.getName, new FileInputStream(file))
-      Right(Backlog4jConverters.Attachment(backlog.postAttachment(attachmentData)))
-    } catch {
-      case e: Throwable =>
-        logger.error(e.getMessage, e)
-        Left(e)
     }
   }
 
