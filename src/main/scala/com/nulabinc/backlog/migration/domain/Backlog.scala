@@ -8,8 +8,6 @@ import scala.math.BigDecimal
 /**
   * @author uchida
   */
-case class BacklogAttachment(id: Int, fileName: String)
-
 case class BacklogProject(optId: Option[Long],
                           name: String,
                           key: String,
@@ -99,14 +97,14 @@ case class BacklogComment(eventType: String,
                           optCreated: Option[String])
     extends BacklogEvent
 
-case class BacklogAttachmentInfo(optId: Option[Long], name: String)
+case class BacklogAttachment(optId: Option[Long], name: String)
 
 case class BacklogAttributeInfo(optId: Option[Long], typeId: String)
 
 case class BacklogChangeLog(field: String,
                             optOriginalValue: Option[String],
                             optNewValue: Option[String],
-                            optAttachmentInfo: Option[BacklogAttachmentInfo],
+                            optAttachmentInfo: Option[BacklogAttachment],
                             optAttributeInfo: Option[BacklogAttributeInfo],
                             optNotificationInfo: Option[String])
 
@@ -242,7 +240,6 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogIssueCategoriesWrapperFormat      = jsonFormat1(BacklogIssueCategoriesWrapper)
   implicit val BacklogCustomFieldFormat                 = jsonFormat4(BacklogCustomField)
   implicit val BacklogAttributeInfoFormat               = jsonFormat2(BacklogAttributeInfo)
-  implicit val BacklogAttachmentInfoFormat              = jsonFormat2(BacklogAttachmentInfo)
   implicit val BacklogChangeLogFormat                   = jsonFormat6(BacklogChangeLog)
   implicit val BacklogCommentFormat                     = jsonFormat8(BacklogComment)
   implicit val BacklogIssueFormat                       = jsonFormat22(BacklogIssue)

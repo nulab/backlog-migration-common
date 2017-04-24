@@ -247,8 +247,8 @@ object Backlog4jConverters extends Logging {
     private[this] def toBacklogAttributeInfo(attributeInfo: AttributeInfo): BacklogAttributeInfo =
       BacklogAttributeInfo(optId = Option(attributeInfo).map(_.getId), typeId = attributeInfo.getTypeId)
 
-    private[this] def toBacklogAttachmentInfo(attachmentInfo: AttachmentInfo): BacklogAttachmentInfo =
-      BacklogAttachmentInfo(optId = Option(attachmentInfo).map(_.getId), name = attachmentInfo.getName)
+    private[this] def toBacklogAttachmentInfo(attachmentInfo: AttachmentInfo): BacklogAttachment =
+      BacklogAttachment(optId = Option(attachmentInfo).map(_.getId), name = attachmentInfo.getName)
   }
 
   object Project {
@@ -513,8 +513,8 @@ object Backlog4jConverters extends Logging {
   object Attachment {
     def apply(attachment: Attachment): BacklogAttachment =
       BacklogAttachment(
-        id = attachment.getId.toInt,
-        fileName = attachment.getName
+        optId = Some(attachment.getId),
+        name = attachment.getName
       )
   }
 

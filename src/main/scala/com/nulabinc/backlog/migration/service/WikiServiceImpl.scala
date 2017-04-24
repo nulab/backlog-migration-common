@@ -70,7 +70,7 @@ class WikiServiceImpl @Inject()(@Named("projectKey") projectKey: String, backlog
   override def addAttachment(wikiId: Long, attachments: Seq[BacklogAttachment]): Either[Throwable, Seq[BacklogAttachment]] = {
     try {
       if (attachments.nonEmpty) {
-        val params = new AddWikiAttachmentParams(wikiId, attachments.map(_.id).asJava)
+        val params = new AddWikiAttachmentParams(wikiId, attachments.flatMap(_.optId).asJava)
         backlog.addWikiAttachment(params).asScala
       }
       Right(attachments)
