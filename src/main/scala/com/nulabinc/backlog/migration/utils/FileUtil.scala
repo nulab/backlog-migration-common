@@ -1,12 +1,18 @@
 package com.nulabinc.backlog.migration.utils
 
+import java.text.Normalizer
+
 /**
   * @author uchida
   */
 object FileUtil {
 
   def clean(string: String): String = {
-    string.replaceAll("\\\\|/|\\||:|\\?|\\*|\"|<|>|\\p{Cntrl}", "_")
+    normalize(string).replaceAll("\\\\|/|\\||:|\\?|\\*|\"|<|>|\\p{Cntrl}", "_")
+  }
+
+  def normalize(string: String): String = {
+    Normalizer.normalize(string, Normalizer.Form.NFC)
   }
 
 }
