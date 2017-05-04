@@ -1,13 +1,11 @@
 package com.nulabinc.backlog.migration.convert
 
 import com.nulabinc.backlog.migration.conf.BacklogConstantValue
-import com.nulabinc.backlog.migration.domain.BacklogJsonProtocol._
 import com.nulabinc.backlog.migration.domain.{BacklogCustomFieldSetting, _}
 import com.nulabinc.backlog.migration.utils.{DateUtil, FileUtil, Logging}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.internal.json.customFields._
-import spray.json._
 
 import scala.collection.JavaConverters._
 
@@ -15,22 +13,6 @@ import scala.collection.JavaConverters._
   * @author uchida
   */
 object Backlog4jConverters extends Logging {
-
-  object Group {
-    def apply(group: Group): BacklogGroup = {
-      BacklogGroup(group.getName, group.getMembers.asScala.map(User.apply))
-    }
-  }
-
-  object Groups {
-    def apply(groups: Seq[Group]): String = {
-      val backlogGroups: Seq[BacklogGroup] = groups.map(apply)
-      BacklogGroupsWrapper(backlogGroups).toJson.prettyPrint
-    }
-
-    def apply(group: Group): BacklogGroup =
-      BacklogGroup(group.getName, group.getMembers.asScala.map(User.apply))
-  }
 
   object User {
     def apply(user: User): BacklogUser = {
