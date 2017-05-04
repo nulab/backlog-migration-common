@@ -14,14 +14,6 @@ import scala.collection.JavaConverters._
   */
 object Backlog4jConverters extends Logging {
 
-  object IssueType {
-    def apply(issueType: IssueType): BacklogIssueType =
-      BacklogIssueType(optId = Some(issueType.getId), name = issueType.getName, issueType.getColor.getStrValue, delete = false)
-
-    def apply(name: String) =
-      BacklogIssueType(optId = None, name, BacklogConstantValue.ISSUE_TYPE_COLOR.getStrValue, delete = true)
-  }
-
   object CustomFieldSetting {
 
     def apply(customFieldSetting: CustomFieldSetting)(issueTypes: Seq[BacklogIssueType]): BacklogCustomFieldSetting = {
