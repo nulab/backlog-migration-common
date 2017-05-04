@@ -14,31 +14,6 @@ import scala.collection.JavaConverters._
   */
 object Backlog4jConverters extends Logging {
 
-  object User {
-    def apply(user: User): BacklogUser = {
-      BacklogUser(
-        optId = Some(user.getId),
-        optUserId = Option(user.getUserId),
-        optPassword = None,
-        name = user.getName,
-        optMailAddress = Option(user.getMailAddress),
-        roleType = user.getRoleType.getIntValue
-      )
-    }
-
-    def apply(name: String): BacklogUser = {
-      BacklogUser(None, None, None, name, None, BacklogConstantValue.USER_ROLE)
-    }
-  }
-
-  object Category {
-    def apply(category: Category): BacklogIssueCategory =
-      BacklogIssueCategory(optId = Some(category.getId), name = category.getName, delete = false)
-
-    def apply(name: String): BacklogIssueCategory =
-      BacklogIssueCategory(optId = None, name = name, delete = true)
-  }
-
   object IssueType {
     def apply(issueType: IssueType): BacklogIssueType =
       BacklogIssueType(optId = Some(issueType.getId), name = issueType.getName, issueType.getColor.getStrValue, delete = false)
