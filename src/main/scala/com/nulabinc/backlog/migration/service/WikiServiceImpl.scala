@@ -4,7 +4,7 @@ import java.io.InputStream
 import javax.inject.{Inject, Named}
 
 import com.nulabinc.backlog.migration.conf.BacklogConstantValue
-import com.nulabinc.backlog.migration.converter.Backlog4jConverters
+import com.nulabinc.backlog.migration.convert.Backlog4jConverters
 import com.nulabinc.backlog.migration.domain.{BacklogAttachment, BacklogWiki}
 import com.nulabinc.backlog.migration.utils.Logging
 import com.nulabinc.backlog4j._

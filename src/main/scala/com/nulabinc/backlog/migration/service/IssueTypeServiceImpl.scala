@@ -2,7 +2,7 @@ package com.nulabinc.backlog.migration.service
 
 import javax.inject.{Inject, Named}
 
-import com.nulabinc.backlog.migration.converter.Backlog4jConverters
+import com.nulabinc.backlog.migration.convert.Backlog4jConverters
 import com.nulabinc.backlog.migration.domain.BacklogIssueType
 import com.nulabinc.backlog.migration.utils.Logging
 import com.nulabinc.backlog4j.api.option.AddIssueTypeParams

@@ -1,4 +1,4 @@
-package com.nulabinc.backlog.migration.converter
+package com.nulabinc.backlog.migration.convert
 
 import com.nulabinc.backlog.migration.conf.BacklogPaths
 import com.nulabinc.backlog.migration.domain._

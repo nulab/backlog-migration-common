@@ -4,7 +4,7 @@ import java.io.InputStream
 import javax.inject.Inject
 
 import com.netaporter.uri.Uri
-import com.nulabinc.backlog.migration.converter.Backlog4jConverters
+import com.nulabinc.backlog.migration.convert.Backlog4jConverters
 import com.nulabinc.backlog.migration.domain._
 import com.nulabinc.backlog.migration.utils.{DateUtil, Logging, StringUtil}
 import com.nulabinc.backlog4j.CustomField.FieldType

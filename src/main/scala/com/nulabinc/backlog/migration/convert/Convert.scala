@@ -1,4 +1,4 @@
-package com.nulabinc.backlog.migration.converter
+package com.nulabinc.backlog.migration.convert
 
 /**
   * @author uchida
