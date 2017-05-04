@@ -31,28 +31,6 @@ object Backlog4jConverters extends Logging {
     }
   }
 
-  object Version {
-    def apply(version: Version): BacklogVersion =
-      BacklogVersion(
-        optId = Some(version.getId),
-        name = version.getName,
-        description = Option(version.getDescription).getOrElse(""),
-        optStartDate = Option(version.getStartDate).map(DateUtil.dateFormat),
-        optReleaseDueDate = Option(version.getReleaseDueDate).map(DateUtil.dateFormat),
-        delete = false
-      )
-
-    def apply(name: String): BacklogVersion =
-      BacklogVersion(
-        optId = None,
-        name = name,
-        description = "",
-        optStartDate = None,
-        optReleaseDueDate = None,
-        delete = true
-      )
-  }
-
   object Category {
     def apply(category: Category): BacklogIssueCategory =
       BacklogIssueCategory(optId = Some(category.getId), name = category.getName, delete = false)

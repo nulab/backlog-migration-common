@@ -2,21 +2,24 @@ package com.nulabinc.backlog.migration.service
 
 import javax.inject.{Inject, Named}
 
-import com.nulabinc.backlog.migration.convert.Backlog4jConverters
+import com.nulabinc.backlog.migration.convert.Convert
+import com.nulabinc.backlog.migration.convert.writes.VersionWrites
 import com.nulabinc.backlog.migration.domain.BacklogVersion
 import com.nulabinc.backlog.migration.utils.Logging
+import com.nulabinc.backlog4j.BacklogClient
 import com.nulabinc.backlog4j.api.option.{AddVersionParams, UpdateVersionParams}
-import com.nulabinc.backlog4j.{BacklogClient, Version}
 
 import scala.collection.JavaConverters._
 
 /**
   * @author uchida
   */
-class VersionServiceImpl @Inject()(@Named("projectKey") projectKey: String, backlog: BacklogClient) extends VersionService with Logging {
+class VersionServiceImpl @Inject()(implicit val versionWrites: VersionWrites, @Named("projectKey") projectKey: String, backlog: BacklogClient)
+    extends VersionService
+    with Logging {
 
   override def allVersions(): Seq[BacklogVersion] =
-    backlog.getVersions(projectKey).asScala.map(Backlog4jConverters.Version.apply)
+    backlog.getVersions(projectKey).asScala.map(Convert.toBacklog(_))
 
   override def add(backlogVersion: BacklogVersion): Option[BacklogVersion] = {
     val params = new AddVersionParams(projectKey, backlogVersion.name)
@@ -28,7 +31,7 @@ class VersionServiceImpl @Inject()(@Named("projectKey") projectKey: String, back
       params.releaseDueDate(releaseDueDate)
     }
     try {
-      Some(Backlog4jConverters.Version(backlog.addVersion(params)))
+      Some(Convert.toBacklog(backlog.addVersion(params)))
     } catch {
       case e: Throwable =>
         logger.error(e.getMessage, e)
@@ -39,7 +42,7 @@ class VersionServiceImpl @Inject()(@Named("projectKey") projectKey: String, back
   override def update(versionId: Long, name: String): Option[BacklogVersion] = {
     val params = new UpdateVersionParams(projectKey, versionId, name)
     try {
-      Some(Backlog4jConverters.Version(backlog.updateVersion(params)))
+      Some(Convert.toBacklog(backlog.updateVersion(params)))
     } catch {
       case e: Throwable =>
         logger.error(e.getMessage, e)
