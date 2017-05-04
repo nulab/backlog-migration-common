@@ -16,48 +16,6 @@ import scala.collection.JavaConverters._
   */
 object Backlog4jConverters extends Logging {
 
-  object Wiki {
-
-    private[this] def getSharedFiles(wiki: Wiki): Seq[SharedFile] = {
-      try {
-        wiki.getSharedFiles.asScala
-      } catch {
-        case e: Throwable =>
-          logger.warn(e.getMessage, e)
-          Seq.empty[SharedFile]
-      }
-    }
-
-    private[this] def getAttachments(wiki: Wiki): Seq[Attachment] = {
-      try {
-        wiki.getAttachments.asScala
-      } catch {
-        case e: Throwable =>
-          logger.warn(e.getMessage, e)
-          Seq.empty[Attachment]
-      }
-    }
-
-    def apply(wiki: Wiki): BacklogWiki = {
-
-      if (getSharedFiles(wiki).nonEmpty)
-        logger.debug("[SharedFiles]issue shared files not empty.")
-
-      BacklogWiki(
-        optId = Some(wiki.getId),
-        name = wiki.getName,
-        optContent = Option(wiki.getContent),
-        attachments = getAttachments(wiki).map(Attachment.apply),
-        sharedFiles = getSharedFiles(wiki).map(toBacklogSharedFile),
-        optCreatedUser = Option(wiki.getCreatedUser).map(User.apply),
-        optCreated = Option(wiki.getCreated).map(DateUtil.isoFormat),
-        optUpdatedUser = Option(wiki.getUpdatedUser).map(User.apply),
-        optUpdated = Option(wiki.getUpdated).map(DateUtil.isoFormat)
-      )
-    }
-
-  }
-
   object Issue {
 
     def apply(issue: Issue): BacklogIssue = {
@@ -506,9 +464,6 @@ object Backlog4jConverters extends Logging {
     private[this] def toBacklogItem(listItemSetting: ListItemSetting): BacklogItem =
       BacklogItem(optId = Some(listItemSetting.getId), name = listItemSetting.getName)
   }
-
-  private[this] def toBacklogSharedFile(sharedFile: SharedFile): BacklogSharedFile =
-    BacklogSharedFile(dir = sharedFile.getDir, name = sharedFile.getName)
 
   object Attachment {
     def apply(attachment: Attachment): BacklogAttachment =

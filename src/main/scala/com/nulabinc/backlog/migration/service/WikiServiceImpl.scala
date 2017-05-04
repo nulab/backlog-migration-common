@@ -4,7 +4,8 @@ import java.io.InputStream
 import javax.inject.{Inject, Named}
 
 import com.nulabinc.backlog.migration.conf.BacklogConstantValue
-import com.nulabinc.backlog.migration.convert.Backlog4jConverters
+import com.nulabinc.backlog.migration.convert.Convert
+import com.nulabinc.backlog.migration.convert.writes.WikiWrites
 import com.nulabinc.backlog.migration.domain.{BacklogAttachment, BacklogWiki}
 import com.nulabinc.backlog.migration.utils.Logging
 import com.nulabinc.backlog4j._
@@ -15,13 +16,16 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class WikiServiceImpl @Inject()(@Named("projectKey") projectKey: String, backlog: BacklogClient) extends WikiService with Logging {
+class WikiServiceImpl @Inject()(implicit val wikiWrites: WikiWrites, @Named("projectKey") projectKey: String, backlog: BacklogClient)
+    extends WikiService
+    with Logging {
 
   override def allWikis(): Seq[BacklogWiki] =
-    backlog.getWikis(projectKey).asScala.map(Backlog4jConverters.Wiki.apply)
+    backlog.getWikis(projectKey).asScala.map(Convert.toBacklog(_))
 
-  override def wikiOfId(wikiId: Long): BacklogWiki =
-    Backlog4jConverters.Wiki(backlog.getWiki(wikiId))
+  override def wikiOfId(wikiId: Long): BacklogWiki = {
+    Convert.toBacklog(backlog.getWiki(wikiId))
+  }
 
   override def update(wiki: BacklogWiki): Option[BacklogWiki] =
     for {
@@ -32,7 +36,7 @@ class WikiServiceImpl @Inject()(@Named("projectKey") projectKey: String, backlog
       params.name(wiki.name)
       params.content(content)
       params.mailNotify(false)
-      Backlog4jConverters.Wiki(backlog.updateWiki(params))
+      Convert.toBacklog(backlog.updateWiki(params))
     }
 
   override def create(projectId: Long, wiki: BacklogWiki, propertyResolver: PropertyResolver): BacklogWiki = {
@@ -58,7 +62,7 @@ class WikiServiceImpl @Inject()(@Named("projectKey") projectKey: String, backlog
       id          <- propertyResolver.optResolvedUserId(userId)
     } yield params.updatedUserId(id)
 
-    Backlog4jConverters.Wiki(backlog.importWiki(params))
+    Convert.toBacklog(backlog.importWiki(params))
   }
 
   override def downloadWikiAttachment(wikiId: Long, attachmentId: Long): (String, InputStream) = {
