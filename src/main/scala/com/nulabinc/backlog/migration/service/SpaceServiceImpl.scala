@@ -2,17 +2,19 @@ package com.nulabinc.backlog.migration.service
 
 import javax.inject.Inject
 
-import com.nulabinc.backlog.migration.convert.Backlog4jConverters
+import com.nulabinc.backlog.migration.convert.Convert
+import com.nulabinc.backlog.migration.convert.writes.{EnvironmentWrites, SpaceWrites}
 import com.nulabinc.backlog.migration.domain.{BacklogEnvironment, BacklogSpace}
 import com.nulabinc.backlog4j.BacklogClient
 
 /**
   * @author uchida
   */
-class SpaceServiceImpl @Inject()(backlog: BacklogClient) extends SpaceService {
+class SpaceServiceImpl @Inject()(implicit val spaceWrites: SpaceWrites, implicit val environmentWrites: EnvironmentWrites, backlog: BacklogClient)
+    extends SpaceService {
 
   override def space(): BacklogSpace =
-    Backlog4jConverters.Space(backlog.getSpace)
+    Convert.toBacklog(backlog.getSpace)
 
   override def hasAdmin(): Boolean =
     try {
@@ -23,6 +25,6 @@ class SpaceServiceImpl @Inject()(backlog: BacklogClient) extends SpaceService {
     }
 
   override def environment(): BacklogEnvironment =
-    Backlog4jConverters.Environment(backlog.getEnvironment)
+    Convert.toBacklog(backlog.getEnvironment)
 
 }

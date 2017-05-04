@@ -3,7 +3,7 @@ package com.nulabinc.backlog.migration.service
 import java.io.{File, FileInputStream}
 import javax.inject.Inject
 
-import com.nulabinc.backlog.migration.convert.{Backlog4jConverters, Convert}
+import com.nulabinc.backlog.migration.convert.Convert
 import com.nulabinc.backlog.migration.convert.writes.AttachmentWrites
 import com.nulabinc.backlog.migration.domain.BacklogAttachment
 import com.nulabinc.backlog.migration.utils.Logging
