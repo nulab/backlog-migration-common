@@ -3,9 +3,12 @@ package com.nulabinc.backlog.migration.modules
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
 import com.nulabinc.backlog.migration.conf.{BacklogApiConfiguration, BacklogPaths}
+import com.nulabinc.backlog.migration.domain.PropertyValue
 import com.nulabinc.backlog.migration.service._
 import com.nulabinc.backlog4j.conf.BacklogPackageConfigure
-import com.nulabinc.backlog4j.{BacklogClient, BacklogClientFactory}
+import com.nulabinc.backlog4j.{BacklogClient, BacklogClientFactory, IssueType}
+
+import scala.collection.JavaConverters._
 
 /**
   * @author uchida
@@ -19,6 +22,7 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
     bind(classOf[BacklogClient]).toInstance(backlog)
     bind(classOf[String]).annotatedWith(Names.named("projectKey")).toInstance(apiConfig.projectKey)
     bind(classOf[BacklogPaths]).toInstance(new BacklogPaths(apiConfig.projectKey))
+    bind(classOf[PropertyValue]).toInstance(createPropertyValue())
 
     bind(classOf[CommentService]).to(classOf[CommentServiceImpl])
     bind(classOf[CustomFieldSettingService]).to(classOf[CustomFieldSettingServiceImpl])
@@ -43,6 +47,15 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
     val backlogPackageConfigure = new BacklogPackageConfigure(apiConfig.url)
     val configure               = backlogPackageConfigure.apiKey(apiConfig.key)
     new BacklogClientFactory(configure).newClient()
+  }
+
+  private[this] def createPropertyValue(): PropertyValue = {
+    val issueTypes = try {
+      backlog.getIssueTypes(apiConfig.projectKey).asScala
+    } catch {
+      case _: Throwable => Seq.empty[IssueType]
+    }
+    PropertyValue(issueTypes)
   }
 
 }

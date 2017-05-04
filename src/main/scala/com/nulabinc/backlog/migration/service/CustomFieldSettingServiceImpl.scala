@@ -3,7 +3,8 @@ package com.nulabinc.backlog.migration.service
 import javax.inject.{Inject, Named}
 
 import com.nulabinc.backlog.migration.conf.BacklogConstantValue
-import com.nulabinc.backlog.migration.convert.Backlog4jConverters
+import com.nulabinc.backlog.migration.convert.Convert
+import com.nulabinc.backlog.migration.convert.writes.CustomFieldSettingWrites
 import com.nulabinc.backlog.migration.domain._
 import com.nulabinc.backlog.migration.utils.Logging
 import com.nulabinc.backlog4j.api.option._
@@ -15,14 +16,16 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class CustomFieldSettingServiceImpl @Inject()(@Named("projectKey") projectKey: String, backlog: BacklogClient, issueTypeService: IssueTypeService)
+class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWrites: CustomFieldSettingWrites,
+                                              @Named("projectKey") projectKey: String,
+                                              backlog: BacklogClient,
+                                              issueTypeService: IssueTypeService)
     extends CustomFieldSettingService
     with Logging {
 
   override def allCustomFieldSettings(): Seq[BacklogCustomFieldSetting] =
     try {
-      val issueTypes = issueTypeService.allIssueTypes()
-      backlog.getCustomFields(projectKey).asScala.map(Backlog4jConverters.CustomFieldSetting.apply).map(_(issueTypes))
+      backlog.getCustomFields(projectKey).asScala.map(Convert.toBacklog(_))
     } catch {
       case api: BacklogAPIException if (api.getMessage.contains("current plan is not customField available.")) =>
         logger.warn(api.getMessage, api)
