@@ -4,7 +4,8 @@ import java.io.InputStream
 import javax.inject.Inject
 
 import com.netaporter.uri.Uri
-import com.nulabinc.backlog.migration.convert.Backlog4jConverters
+import com.nulabinc.backlog.migration.convert.Convert
+import com.nulabinc.backlog.migration.convert.writes.IssueWrites
 import com.nulabinc.backlog.migration.domain._
 import com.nulabinc.backlog.migration.utils.{DateUtil, Logging, StringUtil}
 import com.nulabinc.backlog4j.CustomField.FieldType
@@ -18,9 +19,9 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService with Logging {
+class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog: BacklogClient) extends IssueService with Logging {
 
-  override def issueOfId(id: Long): BacklogIssue = Backlog4jConverters.Issue(backlog.getIssue(id))
+  override def issueOfId(id: Long): BacklogIssue = Convert.toBacklog(backlog.getIssue(id))
 
   override def optIssueOfId(id: Long): Option[Issue] =
     try {
@@ -36,7 +37,7 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
       case _: Throwable => None
     }
 
-  override def issueOfKey(key: String): BacklogIssue = Backlog4jConverters.Issue(backlog.getIssue(key))
+  override def issueOfKey(key: String): BacklogIssue = Convert.toBacklog(backlog.getIssue(key))
 
   override def optIssueOfParams(projectId: Long, backlogIssue: BacklogIssue): Option[BacklogIssue] = {
     val params: GetIssuesParams = new GetIssuesParams(List(projectId).asJava)
@@ -65,10 +66,10 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
         (createdSince == DateUtil.isoFormat(issue.getCreated))
       }
       optFoundIssue match {
-        case Some(foundIssue) => Backlog4jConverters.Issue(foundIssue)
+        case Some(foundIssue) => Convert.toBacklog(foundIssue)
         case _                => None
       }
-      optFoundIssue.map(Backlog4jConverters.Issue.apply)
+      optFoundIssue.map(Convert.toBacklog(_))
     }).flatten
   }
 
@@ -154,7 +155,7 @@ class IssueServiceImpl @Inject()(backlog: BacklogClient) extends IssueService wi
   private[this] def createIssue(params: ImportIssueParams): Either[Throwable, BacklogIssue] =
     try {
       params.getParamList.asScala.foreach(p => logger.debug(s"        [Issue Parameter]:${p.getName}:${p.getValue}"))
-      Right(Backlog4jConverters.Issue(backlog.importIssue(params)))
+      Right(Convert.toBacklog(backlog.importIssue(params)))
     } catch {
       case e: Throwable =>
         logger.error(e.getMessage, e)

@@ -3,7 +3,8 @@ package com.nulabinc.backlog.migration.service
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.conf.BacklogConstantValue
-import com.nulabinc.backlog.migration.convert.Backlog4jConverters
+import com.nulabinc.backlog.migration.convert.writes.IssueWrites
+import com.nulabinc.backlog.migration.convert.{Backlog4jConverters, Convert}
 import com.nulabinc.backlog.migration.domain._
 import com.nulabinc.backlog.migration.utils.Logging
 import com.nulabinc.backlog4j.CustomField.FieldType
@@ -16,7 +17,9 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class CommentServiceImpl @Inject()(backlog: BacklogClient, issueService: IssueService) extends CommentService with Logging {
+class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog: BacklogClient, issueService: IssueService)
+    extends CommentService
+    with Logging {
 
   override def allCommentsOfIssue(issueId: Long): Seq[BacklogComment] = {
     val allCount = backlog.getIssueCommentCount(issueId)
@@ -101,7 +104,7 @@ class CommentServiceImpl @Inject()(backlog: BacklogClient, issueService: IssueSe
       logger.warn("No update item")
       true
     } else {
-      Backlog4jConverters.Issue(backlog.importUpdateIssue(params))
+      Convert.toBacklog(backlog.importUpdateIssue(params))
       false
     }
   }
