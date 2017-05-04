@@ -18,8 +18,7 @@ import scala.collection.JavaConverters._
   */
 class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWrites: CustomFieldSettingWrites,
                                               @Named("projectKey") projectKey: String,
-                                              backlog: BacklogClient,
-                                              issueTypeService: IssueTypeService)
+                                              backlog: BacklogClient)
     extends CustomFieldSettingService
     with Logging {
 
