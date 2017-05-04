@@ -3,8 +3,8 @@ package com.nulabinc.backlog.migration.service
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.conf.BacklogConstantValue
-import com.nulabinc.backlog.migration.convert.writes.IssueWrites
-import com.nulabinc.backlog.migration.convert.{Backlog4jConverters, Convert}
+import com.nulabinc.backlog.migration.convert.Convert
+import com.nulabinc.backlog.migration.convert.writes.{CommentWrites, IssueWrites}
 import com.nulabinc.backlog.migration.domain._
 import com.nulabinc.backlog.migration.utils.Logging
 import com.nulabinc.backlog4j.CustomField.FieldType
@@ -17,7 +17,10 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog: BacklogClient, issueService: IssueService)
+class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
+                                   implicit val commentWrites: CommentWrites,
+                                   backlog: BacklogClient,
+                                   issueService: IssueService)
     extends CommentService
     with Logging {
 
@@ -39,7 +42,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlo
         loop(optLastId, comments union commentsPart, offset + 100)
       } else comments
 
-    loop(None, Seq.empty[IssueComment], 0).sortWith((c1, c2) => c1.getCreated.before(c2.getCreated)).map(Backlog4jConverters.Comment.apply)
+    loop(None, Seq.empty[IssueComment], 0).sortWith((c1, c2) => c1.getCreated.before(c2.getCreated)).map(Convert.toBacklog(_))
   }
 
   override def update(setUpdateParam: BacklogComment => ImportUpdateIssueParams)(backlogComment: BacklogComment): Either[Throwable, BacklogComment] = {

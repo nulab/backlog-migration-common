@@ -5,8 +5,8 @@ import com.nulabinc.backlog.migration.domain.BacklogJsonProtocol._
 import com.nulabinc.backlog.migration.domain.{BacklogCustomFieldSetting, _}
 import com.nulabinc.backlog.migration.utils.{DateUtil, FileUtil, Logging}
 import com.nulabinc.backlog4j.CustomField.FieldType
+import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.internal.json.customFields._
-import com.nulabinc.backlog4j.{Notification, _}
 import spray.json._
 
 import scala.collection.JavaConverters._
@@ -15,41 +15,6 @@ import scala.collection.JavaConverters._
   * @author uchida
   */
 object Backlog4jConverters extends Logging {
-
-  object Comment {
-    def apply(comment: IssueComment): BacklogComment = {
-      BacklogComment(
-        eventType = "comment",
-        optIssueId = None,
-        optContent = Option(comment.getContent),
-        changeLogs = comment.getChangeLog.asScala.map(toBacklogChangeLog),
-        notifications = comment.getNotifications.asScala.map(toBacklogNotification),
-        isCreateIssue = false,
-        optCreatedUser = Option(comment.getCreatedUser).map(User.apply),
-        optCreated = Option(comment.getCreated).map(DateUtil.isoFormat)
-      )
-    }
-
-    private[this] def toBacklogNotification(notification: Notification): BacklogNotification = {
-      BacklogNotification(optUser = Option(notification.getUser).map(User.apply), optSenderUser = Option(notification.getSender).map(User.apply))
-    }
-
-    private[this] def toBacklogChangeLog(changeLog: ChangeLog): BacklogChangeLog =
-      BacklogChangeLog(
-        field = changeLog.getField,
-        optOriginalValue = Option(changeLog.getOriginalValue).map(DateUtil.formatIfNeeded),
-        optNewValue = Option(changeLog.getNewValue).map(DateUtil.formatIfNeeded),
-        optAttachmentInfo = Option(changeLog.getAttachmentInfo).map(toBacklogAttachmentInfo),
-        optAttributeInfo = Option(changeLog.getAttributeInfo).map(toBacklogAttributeInfo),
-        optNotificationInfo = Option(changeLog.getNotificationInfo).map(_.getType)
-      )
-
-    private[this] def toBacklogAttributeInfo(attributeInfo: AttributeInfo): BacklogAttributeInfo =
-      BacklogAttributeInfo(optId = Option(attributeInfo).map(_.getId), typeId = attributeInfo.getTypeId)
-
-    private[this] def toBacklogAttachmentInfo(attachmentInfo: AttachmentInfo): BacklogAttachment =
-      BacklogAttachment(optId = Option(attachmentInfo).map(_.getId), name = FileUtil.normalize(attachmentInfo.getName))
-  }
 
   object Project {
     def apply(project: Project): BacklogProject =
