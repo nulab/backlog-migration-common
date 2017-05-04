@@ -16,18 +16,6 @@ import scala.collection.JavaConverters._
   */
 object Backlog4jConverters extends Logging {
 
-  object Project {
-    def apply(project: Project): BacklogProject =
-      BacklogProject(
-        optId = Some(project.getId),
-        name = project.getName,
-        key = project.getProjectKey,
-        isChartEnabled = project.isChartEnabled,
-        isSubtaskingEnabled = project.isSubtaskingEnabled,
-        textFormattingRule = project.getTextFormattingRule.getStrValue
-      )
-  }
-
   object Group {
     def apply(group: Group): BacklogGroup = {
       BacklogGroup(group.getName, group.getMembers.asScala.map(User.apply))

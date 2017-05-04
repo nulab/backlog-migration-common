@@ -2,7 +2,8 @@ package com.nulabinc.backlog.migration.service
 
 import javax.inject.Inject
 
-import com.nulabinc.backlog.migration.convert.Backlog4jConverters
+import com.nulabinc.backlog.migration.convert.Convert
+import com.nulabinc.backlog.migration.convert.writes.ProjectWrites
 import com.nulabinc.backlog.migration.domain.BacklogProject
 import com.nulabinc.backlog.migration.utils.Logging
 import com.nulabinc.backlog4j.api.option.CreateProjectParams
@@ -11,7 +12,7 @@ import com.nulabinc.backlog4j.{BacklogAPIException, BacklogClient, Project}
 /**
   * @author uchida
   */
-class ProjectServiceImpl @Inject()(backlog: BacklogClient) extends ProjectService with Logging {
+class ProjectServiceImpl @Inject()(implicit val projectWrites: ProjectWrites, backlog: BacklogClient) extends ProjectService with Logging {
 
   override def create(project: BacklogProject): Either[Throwable, BacklogProject] =
     optProject(project.key) match {
@@ -21,7 +22,7 @@ class ProjectServiceImpl @Inject()(backlog: BacklogClient) extends ProjectServic
 
   override def optProject(projectKey: String): Option[BacklogProject] =
     try {
-      Some(Backlog4jConverters.Project(backlog.getProject(projectKey)))
+      Some(Convert.toBacklog(backlog.getProject(projectKey)))
     } catch {
       case e: BacklogAPIException =>
         if (!(e.getMessage.contains("No project") || e.getMessage.contains("No such project"))) {
@@ -39,7 +40,7 @@ class ProjectServiceImpl @Inject()(backlog: BacklogClient) extends ProjectServic
       Project.TextFormattingRule.enumValueOf(project.textFormattingRule)
     )
     try {
-      Right(Backlog4jConverters.Project(backlog.createProject(params)))
+      Right(Convert.toBacklog(backlog.createProject(params)))
     } catch {
       case e: Throwable =>
         Left(e)
@@ -47,6 +48,6 @@ class ProjectServiceImpl @Inject()(backlog: BacklogClient) extends ProjectServic
   }
 
   override def projectOfKey(projectKey: String): BacklogProject =
-    Backlog4jConverters.Project(backlog.getProject(projectKey))
+    Convert.toBacklog(backlog.getProject(projectKey))
 
 }
