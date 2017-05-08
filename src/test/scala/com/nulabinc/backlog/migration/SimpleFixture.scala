@@ -1,7 +1,8 @@
 package com.nulabinc.backlog.migration
 
-import com.nulabinc.backlog.migration.conf.BacklogConstantValue
-import com.nulabinc.backlog.migration.domain.{BacklogCustomFieldSetting, _}
+import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
+import com.nulabinc.backlog.migration.common.domain._
+import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, _}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}

@@ -1,8 +1,9 @@
 package com.nulabinc.backlog.migration.service
 
 import com.google.inject.Guice
-import com.nulabinc.backlog.migration.conf.BacklogApiConfiguration
-import com.nulabinc.backlog.migration.modules.DefaultModule
+import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
+import com.nulabinc.backlog.migration.common.modules.DefaultModule
+import com.nulabinc.backlog.migration.common.service.IssueServiceImpl
 import com.nulabinc.backlog.migration.{SimpleFixture, TestPropertyResolver}
 import com.nulabinc.backlog4j.Issue.PriorityType
 import com.nulabinc.backlog4j.api.option.{GetIssuesCountParams, GetIssuesParams, ImportIssueParams}
