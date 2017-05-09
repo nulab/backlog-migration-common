@@ -10,7 +10,7 @@ import com.nulabinc.backlog4j.Attachment
 /**
   * @author uchida
   */
-class AttachmentWrites @Inject()() extends Writes[Attachment, BacklogAttachment] with Logging {
+private[common] class AttachmentWrites @Inject()() extends Writes[Attachment, BacklogAttachment] with Logging {
 
   override def writes(attachment: Attachment): BacklogAttachment = {
     BacklogAttachment(

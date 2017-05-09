@@ -10,7 +10,7 @@ import com.nulabinc.backlog4j.AttachmentInfo
 /**
   * @author uchida
   */
-class AttachmentInfoWrites @Inject()() extends Writes[AttachmentInfo, BacklogAttachment] with Logging {
+private[common] class AttachmentInfoWrites @Inject()() extends Writes[AttachmentInfo, BacklogAttachment] with Logging {
 
   override def writes(attachmentInfo: AttachmentInfo): BacklogAttachment = {
     BacklogAttachment(optId = Option(attachmentInfo).map(_.getId), name = FileUtil.normalize(attachmentInfo.getName))

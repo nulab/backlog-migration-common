@@ -14,7 +14,7 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class CustomFieldWrites @Inject()() extends Writes[CustomField, Option[BacklogCustomField]] with Logging {
+private[common] class CustomFieldWrites @Inject()() extends Writes[CustomField, Option[BacklogCustomField]] with Logging {
 
   override def writes(customField: CustomField): Option[BacklogCustomField] = {
     customField match {

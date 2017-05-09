@@ -5,4 +5,4 @@ import com.nulabinc.backlog4j.IssueType
 /**
   * @author uchida
   */
-case class PropertyValue(issueTypes: Seq[IssueType])
+private[common] case class PropertyValue(issueTypes: Seq[IssueType])

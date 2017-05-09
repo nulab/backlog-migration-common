@@ -12,9 +12,9 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class WikiWrites @Inject()(implicit val userWrites: UserWrites,
-                           implicit val sharedFileWrites: SharedFileWrites,
-                           implicit val attachmentWrites: AttachmentWrites)
+private[common] class WikiWrites @Inject()(implicit val userWrites: UserWrites,
+                                           implicit val sharedFileWrites: SharedFileWrites,
+                                           implicit val attachmentWrites: AttachmentWrites)
     extends Writes[Wiki, BacklogWiki]
     with Logging {
 

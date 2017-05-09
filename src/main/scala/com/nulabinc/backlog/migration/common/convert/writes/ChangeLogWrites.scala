@@ -10,7 +10,8 @@ import com.nulabinc.backlog4j.ChangeLog
 /**
   * @author uchida
   */
-class ChangeLogWrites @Inject()(implicit val attachmentInfoWrites: AttachmentInfoWrites, implicit val attributeInfoWrites: AttributeInfoWrites)
+private[common] class ChangeLogWrites @Inject()(implicit val attachmentInfoWrites: AttachmentInfoWrites,
+                                                implicit val attributeInfoWrites: AttributeInfoWrites)
     extends Writes[ChangeLog, BacklogChangeLog]
     with Logging {
 

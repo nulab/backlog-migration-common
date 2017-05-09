@@ -12,9 +12,9 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class CommentWrites @Inject()(implicit val changeLogWrites: ChangeLogWrites,
-                              implicit val notificationWrites: NotificationWrites,
-                              implicit val userWrites: UserWrites)
+private[common] class CommentWrites @Inject()(implicit val changeLogWrites: ChangeLogWrites,
+                                              implicit val notificationWrites: NotificationWrites,
+                                              implicit val userWrites: UserWrites)
     extends Writes[IssueComment, BacklogComment]
     with Logging {
 

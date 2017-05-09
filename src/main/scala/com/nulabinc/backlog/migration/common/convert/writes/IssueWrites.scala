@@ -12,9 +12,9 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class IssueWrites @Inject()(implicit val userWrites: UserWrites,
-                            implicit val sharedFileWrites: SharedFileWrites,
-                            implicit val customFieldWrites: CustomFieldWrites)
+private[common] class IssueWrites @Inject()(implicit val userWrites: UserWrites,
+                                            implicit val sharedFileWrites: SharedFileWrites,
+                                            implicit val customFieldWrites: CustomFieldWrites)
     extends Writes[Issue, BacklogIssue]
     with Logging {
 

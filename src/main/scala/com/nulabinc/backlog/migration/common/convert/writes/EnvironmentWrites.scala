@@ -10,7 +10,7 @@ import com.nulabinc.backlog4j.Environment
 /**
   * @author uchida
   */
-class EnvironmentWrites @Inject()() extends Writes[Environment, BacklogEnvironment] with Logging {
+private[common] class EnvironmentWrites @Inject()() extends Writes[Environment, BacklogEnvironment] with Logging {
 
   override def writes(environment: Environment): BacklogEnvironment = {
     BacklogEnvironment(

@@ -10,7 +10,7 @@ import com.nulabinc.backlog4j.AttributeInfo
 /**
   * @author uchida
   */
-class AttributeInfoWrites @Inject()() extends Writes[AttributeInfo, BacklogAttributeInfo] with Logging {
+private[common] class AttributeInfoWrites @Inject()() extends Writes[AttributeInfo, BacklogAttributeInfo] with Logging {
 
   override def writes(attributeInfo: AttributeInfo): BacklogAttributeInfo = {
     BacklogAttributeInfo(optId = Option(attributeInfo).map(_.getId), typeId = attributeInfo.getTypeId)
