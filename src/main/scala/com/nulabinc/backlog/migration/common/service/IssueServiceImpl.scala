@@ -557,7 +557,9 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
 
         val itemIds = listItems.flatMap(findItem).flatMap(_.optId)
         params.multipleListCustomField(id, itemIds.map(Long.box).asJava)
-        params.customFieldOtherValue(id, stringItems.mkString(","))
+        if (property.allowInput) {
+          params.customFieldOtherValue(id, stringItems.mkString(","))
+        }
       case _ =>
     }
   }
@@ -578,7 +580,9 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
 
         val itemIds = listItems.flatMap(findItem).flatMap(_.optId)
         params.checkBoxCustomField(id, itemIds.map(Long.box).asJava)
-        params.customFieldOtherValue(id, stringItems.mkString(","))
+        if (property.allowInput) {
+          params.customFieldOtherValue(id, stringItems.mkString(","))
+        }
       case _ =>
     }
   }
