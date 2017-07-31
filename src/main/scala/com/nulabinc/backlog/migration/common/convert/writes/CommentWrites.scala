@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.convert.{Convert, Writes}
 import com.nulabinc.backlog.migration.common.domain.BacklogComment
-import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging}
+import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUtil}
 import com.nulabinc.backlog4j.IssueComment
 
 import scala.collection.JavaConverters._
@@ -22,7 +22,7 @@ private[common] class CommentWrites @Inject()(implicit val changeLogWrites: Chan
     BacklogComment(
       eventType = "comment",
       optIssueId = None,
-      optContent = Option(comment.getContent),
+      optContent = Option(comment.getContent).map(StringUtil.toSafeString),
       changeLogs = comment.getChangeLog.asScala.map(Convert.toBacklog(_)),
       notifications = comment.getNotifications.asScala.map(Convert.toBacklog(_)),
       isCreateIssue = false,

@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.convert.{Convert, Writes}
 import com.nulabinc.backlog.migration.common.domain.BacklogWiki
-import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging}
+import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUtil}
 import com.nulabinc.backlog4j.{Attachment, SharedFile, Wiki}
 
 import scala.collection.JavaConverters._
@@ -25,8 +25,8 @@ private[common] class WikiWrites @Inject()(implicit val userWrites: UserWrites,
 
     BacklogWiki(
       optId = Some(wiki.getId),
-      name = wiki.getName,
-      optContent = Option(wiki.getContent),
+      name = StringUtil.toSafeString(wiki.getName),
+      optContent = Option(wiki.getContent).map(StringUtil.toSafeString),
       attachments = getAttachments(wiki).map(Convert.toBacklog(_)),
       sharedFiles = getSharedFiles(wiki).map(Convert.toBacklog(_)),
       optCreatedUser = Option(wiki.getCreatedUser).map(Convert.toBacklog(_)),

@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.convert.{Convert, Writes}
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging}
+import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUtil}
 import com.nulabinc.backlog4j.Issue
 
 import scala.collection.JavaConverters._
@@ -23,9 +23,9 @@ private[common] class IssueWrites @Inject()(implicit val userWrites: UserWrites,
       eventType = "issue",
       id = issue.getId,
       optIssueKey = Some(issue.getIssueKey),
-      summary = BacklogIssueSummary(value = issue.getSummary, original = issue.getSummary),
+      summary = BacklogIssueSummary(value = StringUtil.toSafeString(issue.getSummary), original = StringUtil.toSafeString(issue.getSummary)),
       optParentIssueId = parentIssueId(issue),
-      description = issue.getDescription,
+      description = StringUtil.toSafeString(issue.getDescription),
       optStartDate = Option(issue.getStartDate).map(DateUtil.dateFormat),
       optDueDate = Option(issue.getDueDate).map(DateUtil.dateFormat),
       optEstimatedHours = Option(issue.getEstimatedHours).map(_.floatValue()),

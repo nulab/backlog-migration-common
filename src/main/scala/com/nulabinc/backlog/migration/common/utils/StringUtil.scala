@@ -5,6 +5,10 @@ package com.nulabinc.backlog.migration.common.utils
   */
 object StringUtil {
 
+  private[this] val EOI = '\uFFFF'
+
+  private[this] val Emoji: String = "[^\u0000-\uFFFF]"
+
   def safeStringToInt(str: String): Option[Int] = {
     import scala.util.control.Exception._
     catching(classOf[NumberFormatException]) opt str.toInt
@@ -26,6 +30,11 @@ object StringUtil {
       case Some(string) if (string.trim.nonEmpty) => Some(string)
       case _                                      => None
     }
+  }
+
+  def toSafeString(str: String): String = {
+    val newString = str.filter((c: Char) => c != EOI)
+    newString.replaceAll(Emoji, "")
   }
 
 }
