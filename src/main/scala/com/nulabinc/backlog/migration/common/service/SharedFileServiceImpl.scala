@@ -14,29 +14,29 @@ import scala.collection.JavaConverters._
 class SharedFileServiceImpl @Inject()(@Named("projectKey") projectKey: String, backlog: BacklogClient) extends SharedFileService with Logging {
 
   override def linkIssueSharedFile(issueId: Long, backlogIssue: BacklogIssue) = {
-//    val fileIds: Seq[Long] = backlogIssue.sharedFiles.flatMap(getFileId)
-//    if (fileIds.nonEmpty) {
-//      val links = backlog.getIssueSharedFiles(issueId).asScala
-//      val selectedLinks = fileIds.filter(fileId => {
-//        !links.exists(sharedFile => fileId == sharedFile.getId)
-//      })
-//      if (selectedLinks.nonEmpty) {
-//        backlog.linkIssueSharedFile(issueId, selectedLinks.asJava)
-//      }
-//    }
+    val fileIds: Seq[Long] = backlogIssue.sharedFiles.flatMap(getFileId)
+    if (fileIds.nonEmpty) {
+      val links = backlog.getIssueSharedFiles(issueId).asScala
+      val selectedLinks = fileIds.filter(fileId => {
+        !links.exists(sharedFile => fileId == sharedFile.getId)
+      })
+      if (selectedLinks.nonEmpty) {
+        backlog.linkIssueSharedFile(issueId, selectedLinks.asJava)
+      }
+    }
   }
 
   override def linkWikiSharedFile(wikiId: Long, backlogWiki: BacklogWiki) = {
-//    val fileIds: Seq[Long] = backlogWiki.sharedFiles.flatMap(getFileId)
-//    if (fileIds.nonEmpty) {
-//      val links = backlog.getWikiSharedFiles(wikiId).asScala
-//      val selectedLinks = fileIds.filter(fileId => {
-//        !links.exists(sharedFile => fileId == sharedFile.getId)
-//      })
-//      if (selectedLinks.nonEmpty) {
-//        backlog.linkWikiSharedFile(wikiId, fileIds.asJava)
-//      }
-//    }
+    val fileIds: Seq[Long] = backlogWiki.sharedFiles.flatMap(getFileId)
+    if (fileIds.nonEmpty) {
+      val links = backlog.getWikiSharedFiles(wikiId).asScala
+      val selectedLinks = fileIds.filter(fileId => {
+        !links.exists(sharedFile => fileId == sharedFile.getId)
+      })
+      if (selectedLinks.nonEmpty) {
+        backlog.linkWikiSharedFile(wikiId, fileIds.asJava)
+      }
+    }
   }
 
   private[this] def getFileId(
