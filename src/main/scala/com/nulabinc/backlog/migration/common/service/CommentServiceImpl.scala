@@ -6,7 +6,7 @@ import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.{CommentWrites, IssueWrites}
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.utils.Logging
+import com.nulabinc.backlog.migration.common.utils.{Logging, StringUtil}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType, StatusType}
 import com.nulabinc.backlog4j._
@@ -335,7 +335,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
                                           customFieldSetting: BacklogCustomFieldSetting) =
     (changeLog.optNewValue, customFieldSetting.optId) match {
       case (Some(""), Some(id))    => params.numericCustomField(id, null)
-      case (Some(value), Some(id)) => params.numericCustomField(id, value.toFloat)
+      case (Some(value), Some(id)) => params.numericCustomField(id, StringUtil.safeUnitStringToFloat(value))
       case (None, Some(id))        => params.numericCustomField(id, null)
       case _                       => throw new RuntimeException
     }
@@ -363,9 +363,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
       case _ =>
     }
 
-  private[this] def setRadioCustomField(params: ImportUpdateIssueParams,
-                                        changeLog: BacklogChangeLog,
-                                        customFieldSetting: BacklogCustomFieldSetting) =
+  private[this] def setRadioCustomField(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, customFieldSetting: BacklogCustomFieldSetting) =
     (changeLog.optNewValue, customFieldSetting.property, customFieldSetting.optId) match {
       case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id)) if (value.nonEmpty) =>
         for {

@@ -175,10 +175,8 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     }
 
     //priority
-    val priorityType = propertyResolver
-      .optResolvedPriorityId(backlogIssue.priorityName)
-      .map(value => PriorityType.valueOf(value.toInt))
-      .getOrElse(PriorityType.Normal)
+    val priorityType =
+      propertyResolver.optResolvedPriorityId(backlogIssue.priorityName).map(value => PriorityType.valueOf(value.toInt)).getOrElse(PriorityType.Normal)
 
     //parameter
     val params: ImportIssueParams = new ImportIssueParams(projectId, backlogIssue.summary.value, issueTypeId, priorityType)
@@ -508,13 +506,11 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     } yield params.dateCustomField(id, value)
   }
 
-  private[this] def setNumericCustomField(customField: BacklogCustomField,
-                                          params: CreateIssueParams,
-                                          customFieldSetting: BacklogCustomFieldSetting) = {
+  private[this] def setNumericCustomField(customField: BacklogCustomField, params: CreateIssueParams, customFieldSetting: BacklogCustomFieldSetting) = {
     for {
       value <- customField.optValue
       id    <- customFieldSetting.optId
-    } yield if (value.nonEmpty) params.numericCustomField(id, value.toFloat)
+    } yield if (value.nonEmpty) params.numericCustomField(id, StringUtil.safeUnitStringToFloat(value))
   }
 
   private[this] def setRadioCustomField(customField: BacklogCustomField, params: CreateIssueParams, customFieldSetting: BacklogCustomFieldSetting) = {

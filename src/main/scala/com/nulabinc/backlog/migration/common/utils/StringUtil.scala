@@ -1,5 +1,7 @@
 package com.nulabinc.backlog.migration.common.utils
 
+import scala.util.matching.Regex
+
 /**
   * @author uchida
   */
@@ -17,6 +19,17 @@ object StringUtil {
   def safeStringToLong(str: String): Option[Long] = {
     import scala.util.control.Exception._
     catching(classOf[NumberFormatException]) opt str.toLong
+  }
+
+  def safeUnitStringToFloat(str: String): Float = {
+    import scala.util.control.Exception._
+    catching(classOf[NumberFormatException]) opt str.toFloat match {
+      case Some(float) => float
+      case _ =>
+        val pattern: Regex = """^(\d+).*$""".r
+        val pattern(float) = str
+        float.toFloat
+    }
   }
 
   def safeEquals(value: Int, string: String): Boolean =
