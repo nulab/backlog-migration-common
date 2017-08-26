@@ -141,13 +141,13 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
   }
 
   def create(setCreateParam: BacklogIssue => ImportIssueParams)(backlogIssue: BacklogIssue): Either[Throwable, BacklogIssue] = {
-    logger.debug(s"[Start Create Issue]:${backlogIssue.id}${backlogIssue.optIssueKey}----------------------------")
+    logger.debug(s"[Start Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.optIssueKey}]----------------------------")
     val result = createIssue(setCreateParam(backlogIssue))
     result match {
       case Right(_) =>
-        logger.debug(s"[Success Finish Create Issue]:${backlogIssue.id}${backlogIssue.optIssueKey}----------------------------")
+        logger.debug(s"[Success Finish Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.optIssueKey}]----------------------------")
       case Left(_) =>
-        logger.debug(s"[Fail Finish Create Issue]:${backlogIssue.id}${backlogIssue.optIssueKey}----------------------------")
+        logger.debug(s"[Fail Finish Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.optIssueKey}]----------------------------")
     }
     result
   }
@@ -506,7 +506,9 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     } yield params.dateCustomField(id, value)
   }
 
-  private[this] def setNumericCustomField(customField: BacklogCustomField, params: CreateIssueParams, customFieldSetting: BacklogCustomFieldSetting) = {
+  private[this] def setNumericCustomField(customField: BacklogCustomField,
+                                          params: CreateIssueParams,
+                                          customFieldSetting: BacklogCustomFieldSetting) = {
     for {
       value <- customField.optValue
       id    <- customFieldSetting.optId

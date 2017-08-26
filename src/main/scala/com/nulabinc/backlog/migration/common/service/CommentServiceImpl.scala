@@ -45,15 +45,21 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
     loop(None, Seq.empty[IssueComment], 0).sortWith((c1, c2) => c1.getCreated.before(c2.getCreated)).map(Convert.toBacklog(_))
   }
 
-  override def update(setUpdateParam: BacklogComment => ImportUpdateIssueParams)(backlogComment: BacklogComment): Either[Throwable, BacklogComment] = {
+  override def update(setUpdateParam: BacklogComment => ImportUpdateIssueParams)(
+      backlogComment: BacklogComment): Either[Throwable, BacklogComment] = {
     try {
       val noUpdate = updateIssue(setUpdateParam(backlogComment))
-      if (noUpdate) logger.debug(s"    [Success Finish No Update Comment]:${backlogComment.optIssueId}----------------------------")
-      else logger.debug(s"    [Success Finish Create Comment]:${backlogComment.optIssueId}----------------------------")
+      if (noUpdate)
+        logger.debug(
+          s"    [Success Finish No Update Comment]:issueId[${backlogComment.optIssueId.getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------")
+      else
+        logger.debug(
+          s"    [Success Finish Create Comment]:issueId[${backlogComment.optIssueId.getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------")
       Right(backlogComment)
     } catch {
       case e: Throwable =>
-        logger.debug(s"    [Fail Finish Create Comment]:${backlogComment.optCreated.getOrElse("")}----------------------------")
+        logger.debug(
+          s"    [Fail Finish Create Comment]:issueId[${backlogComment.optIssueId.getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------")
         Left(e)
     }
   }
@@ -62,7 +68,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
                               propertyResolver: PropertyResolver,
                               toRemoteIssueId: (Long) => Option[Long],
                               postAttachment: (String) => Option[Long])(backlogComment: BacklogComment): ImportUpdateIssueParams = {
-    logger.debug(s"    [Start Create Comment][Comment Date]:${backlogComment.optCreated.getOrElse("")}")
+    logger.debug(s"    [Start Create Comment][Comment Date]:issueId[${issueId}] created[${backlogComment.optCreated.getOrElse("")}]")
 
     val optCurrentIssue = issueService.optIssueOfId(issueId)
     val params          = new ImportUpdateIssueParams(issueId)
@@ -306,7 +312,9 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
       }
     }
 
-  private[this] def setTextCustomField(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, customFieldSetting: BacklogCustomFieldSetting) = {
+  private[this] def setTextCustomField(params: ImportUpdateIssueParams,
+                                       changeLog: BacklogChangeLog,
+                                       customFieldSetting: BacklogCustomFieldSetting) = {
     for {
       value <- changeLog.optNewValue
       id    <- customFieldSetting.optId
