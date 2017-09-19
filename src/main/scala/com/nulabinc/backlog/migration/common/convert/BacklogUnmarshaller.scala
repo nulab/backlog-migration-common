@@ -37,7 +37,7 @@ object BacklogUnmarshaller {
       })
       .getOrElse(Seq.empty[BacklogUser])
 
-  def project(backlogPaths: BacklogPaths): Option[BacklogProject] =
+  def project(backlogPaths: BacklogPaths): BacklogProject =
     IOUtil
       .input(backlogPaths.projectJson)
       .map(json => {
@@ -45,6 +45,7 @@ object BacklogUnmarshaller {
           JsonParser(json).convertTo[BacklogProjectWrapper]
         backlogProjectsWrapper.project
       })
+      .getOrElse(throw new NoSuchElementException(s"No such project file. (${backlogPaths.projectJson})"))
 
   def issue(path: Path): Option[BacklogEvent] = {
     IOUtil.input(path).map(JsonParser(_).convertTo[BacklogEvent])
