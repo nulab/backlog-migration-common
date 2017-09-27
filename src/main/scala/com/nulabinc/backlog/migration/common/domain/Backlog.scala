@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.domain
 
+import com.nulabinc.backlog.migration.common.domain.support.{Identifier, Undefined}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import spray.json.{DefaultJsonProtocol, JsNumber, JsValue, RootJsonFormat, _}
 
@@ -8,6 +9,17 @@ import scala.math.BigDecimal
 /**
   * @author uchida
   */
+class BacklogProjectKey(projectKey: String) extends Identifier[String] {
+
+  def value = projectKey
+
+}
+object BacklogProjectKey {
+  val undefined = new BacklogProjectKey("") with Undefined
+
+  def apply(value: String): BacklogProjectKey = new BacklogProjectKey(value)
+}
+
 case class BacklogProject(optId: Option[Long],
                           name: String,
                           key: String,

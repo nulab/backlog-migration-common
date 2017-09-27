@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
-import javax.inject.{Inject, Named}
+import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
@@ -9,10 +9,10 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogCustomFieldDateProperty,
   BacklogCustomFieldMultipleProperty,
   BacklogCustomFieldNumericProperty,
-  BacklogCustomFieldSetting
+  BacklogCustomFieldSetting,
+  _
 }
 import com.nulabinc.backlog.migration.common.utils.Logging
-import com.nulabinc.backlog.migration.common.domain._
 import com.nulabinc.backlog4j.api.option._
 import com.nulabinc.backlog4j.internal.json.customFields._
 import com.nulabinc.backlog4j.{BacklogAPIException, BacklogClient}
@@ -23,14 +23,14 @@ import scala.collection.JavaConverters._
   * @author uchida
   */
 class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWrites: CustomFieldSettingWrites,
-                                              @Named("projectKey") projectKey: String,
+                                              projectKey: BacklogProjectKey,
                                               backlog: BacklogClient)
     extends CustomFieldSettingService
     with Logging {
 
   override def allCustomFieldSettings(): Seq[BacklogCustomFieldSetting] =
     try {
-      backlog.getCustomFields(projectKey).asScala.map(Convert.toBacklog(_))
+      backlog.getCustomFields(projectKey.value).asScala.map(Convert.toBacklog(_))
     } catch {
       case api: BacklogAPIException if (api.getMessage.contains("current plan is not customField available.")) =>
         logger.warn(api.getMessage, api)
@@ -41,7 +41,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
     }
 
   override def remove(customFieldSettingId: Long) = {
-    backlog.removeCustomField(projectKey, customFieldSettingId)
+    backlog.removeCustomField(projectKey.value, customFieldSettingId)
   }
 
   override def add(setAddParams: BacklogCustomFieldSetting => AddCustomFieldParams)(backlogCustomFieldSetting: BacklogCustomFieldSetting) = {
@@ -83,25 +83,25 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
   }
 
   private[this] def addTextCustomField(backlogCustomFieldSetting: BacklogCustomFieldSetting): AddTextCustomFieldParams = {
-    val params = new AddTextCustomFieldParams(projectKey, backlogCustomFieldSetting.name)
+    val params = new AddTextCustomFieldParams(projectKey.value, backlogCustomFieldSetting.name)
     params.description(backlogCustomFieldSetting.description)
     params
   }
 
   private[this] def addTextAreaCustomField(backlogCustomFieldSetting: BacklogCustomFieldSetting): AddTextAreaCustomFieldParams = {
-    val params = new AddTextAreaCustomFieldParams(projectKey, backlogCustomFieldSetting.name)
+    val params = new AddTextAreaCustomFieldParams(projectKey.value, backlogCustomFieldSetting.name)
     params.description(backlogCustomFieldSetting.description)
     params
   }
 
   private[this] def addNumericCustomField(backlogCustomFieldSetting: BacklogCustomFieldSetting): AddNumericCustomFieldParams = {
-    val params = new AddNumericCustomFieldParams(projectKey, backlogCustomFieldSetting.name)
+    val params = new AddNumericCustomFieldParams(projectKey.value, backlogCustomFieldSetting.name)
     params.description(backlogCustomFieldSetting.description)
     params
   }
 
   private[this] def addDateCustomField(backlogCustomFieldSetting: BacklogCustomFieldSetting): AddDateCustomFieldParams = {
-    val params = new AddDateCustomFieldParams(projectKey, backlogCustomFieldSetting.name)
+    val params = new AddDateCustomFieldParams(projectKey.value, backlogCustomFieldSetting.name)
     params.description(backlogCustomFieldSetting.description)
     params
   }
@@ -110,7 +110,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
     backlogCustomFieldSetting.property match {
       case property: BacklogCustomFieldMultipleProperty =>
         val params = new AddSingleListCustomFieldParams(
-          projectKey,
+          projectKey.value,
           backlogCustomFieldSetting.name
         )
         params.description(backlogCustomFieldSetting.description)
@@ -123,7 +123,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
     backlogCustomFieldSetting.property match {
       case property: BacklogCustomFieldMultipleProperty =>
         val params = new AddMultipleListCustomFieldParams(
-          projectKey,
+          projectKey.value,
           backlogCustomFieldSetting.name
         )
         params.description(backlogCustomFieldSetting.description)
@@ -136,7 +136,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
     backlogCustomFieldSetting.property match {
       case property: BacklogCustomFieldMultipleProperty =>
         val params: AddRadioCustomFieldParams =
-          new AddRadioCustomFieldParams(projectKey, backlogCustomFieldSetting.name)
+          new AddRadioCustomFieldParams(projectKey.value, backlogCustomFieldSetting.name)
         params.description(backlogCustomFieldSetting.description)
         params.items(property.items.map(_.name).asJava)
         params
@@ -147,7 +147,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
     backlogCustomFieldSetting.property match {
       case property: BacklogCustomFieldMultipleProperty =>
         val params = new AddCheckBoxCustomFieldParams(
-          projectKey,
+          projectKey.value,
           backlogCustomFieldSetting.name
         )
         params.description(backlogCustomFieldSetting.description)
@@ -211,7 +211,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
   private[this] def updateTextCustomField(customFiledId: Long,
                                           backlogCustomFieldSetting: BacklogCustomFieldSetting,
                                           propertyResolver: PropertyResolver): UpdateTextCustomFieldParams = {
-    val params = new UpdateTextCustomFieldParams(projectKey, customFiledId)
+    val params = new UpdateTextCustomFieldParams(projectKey.value, customFiledId)
     setUpdateCustomFieldParams(params, backlogCustomFieldSetting, propertyResolver)
     params
   }
@@ -219,7 +219,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
   private[this] def updateTextAreaCustomField(customFiledId: Long,
                                               backlogCustomFieldSetting: BacklogCustomFieldSetting,
                                               propertyResolver: PropertyResolver): UpdateTextAreaCustomFieldParams = {
-    val params = new UpdateTextAreaCustomFieldParams(projectKey, customFiledId)
+    val params = new UpdateTextAreaCustomFieldParams(projectKey.value, customFiledId)
     setUpdateCustomFieldParams(params, backlogCustomFieldSetting, propertyResolver)
     params
   }
@@ -229,7 +229,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
                                              propertyResolver: PropertyResolver): UpdateNumericCustomFieldParams =
     backlogCustomFieldSetting.property match {
       case property: BacklogCustomFieldNumericProperty =>
-        val params = new UpdateNumericCustomFieldParams(projectKey, customFiledId)
+        val params = new UpdateNumericCustomFieldParams(projectKey.value, customFiledId)
         setUpdateCustomFieldParams(params, backlogCustomFieldSetting, propertyResolver)
         for { min <- property.optMin } yield {
           params.min(min)
@@ -252,7 +252,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
                                           propertyResolver: PropertyResolver): UpdateDateCustomFieldParams =
     backlogCustomFieldSetting.property match {
       case property: BacklogCustomFieldDateProperty =>
-        val params = new UpdateDateCustomFieldParams(projectKey, customFiledId)
+        val params = new UpdateDateCustomFieldParams(projectKey.value, customFiledId)
         setUpdateCustomFieldParams(params, backlogCustomFieldSetting, propertyResolver)
         params.initialValueType(DateCustomFieldSetting.InitialValueType.Today)
         for { min <- property.optMin } yield {
@@ -297,7 +297,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
                                                 propertyResolver: PropertyResolver): UpdateSingleListCustomFieldParams =
     backlogCustomFieldSetting.property match {
       case property: BacklogCustomFieldMultipleProperty =>
-        val params = new UpdateSingleListCustomFieldParams(projectKey, customFiledId)
+        val params = new UpdateSingleListCustomFieldParams(projectKey.value, customFiledId)
         setUpdateCustomFieldParams(params, backlogCustomFieldSetting, propertyResolver)
         params.allowAddItem(property.allowAddItem)
         params.allowInput(property.allowInput)
@@ -310,7 +310,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
                                                   propertyResolver: PropertyResolver): UpdateMultipleListCustomFieldParams =
     backlogCustomFieldSetting.property match {
       case property: BacklogCustomFieldMultipleProperty =>
-        val params = new UpdateMultipleListCustomFieldParams(projectKey, customFiledId)
+        val params = new UpdateMultipleListCustomFieldParams(projectKey.value, customFiledId)
         setUpdateCustomFieldParams(params, backlogCustomFieldSetting, propertyResolver)
         params.allowAddItem(property.allowAddItem)
         params.allowInput(property.allowInput)
@@ -323,7 +323,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
                                               propertyResolver: PropertyResolver): UpdateCheckBoxCustomFieldParams =
     backlogCustomFieldSetting.property match {
       case property: BacklogCustomFieldMultipleProperty =>
-        val params = new UpdateCheckBoxCustomFieldParams(projectKey, customFiledId)
+        val params = new UpdateCheckBoxCustomFieldParams(projectKey.value, customFiledId)
         setUpdateCustomFieldParams(params, backlogCustomFieldSetting, propertyResolver)
         params.allowAddItem(property.allowAddItem)
         params.allowInput(property.allowInput)
@@ -336,7 +336,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
                                            propertyResolver: PropertyResolver): UpdateRadioCustomFieldParams =
     backlogCustomFieldSetting.property match {
       case property: BacklogCustomFieldMultipleProperty =>
-        val params = new UpdateRadioCustomFieldParams(projectKey, customFiledId)
+        val params = new UpdateRadioCustomFieldParams(projectKey.value, customFiledId)
         setUpdateCustomFieldParams(params, backlogCustomFieldSetting, propertyResolver)
         params.allowAddItem(property.allowAddItem)
         params.allowInput(property.allowInput)

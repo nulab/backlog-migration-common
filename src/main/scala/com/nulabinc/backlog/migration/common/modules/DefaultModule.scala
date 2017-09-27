@@ -3,7 +3,7 @@ package com.nulabinc.backlog.migration.common.modules
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
 import com.nulabinc.backlog.migration.common.conf.{BacklogApiConfiguration, BacklogPaths}
-import com.nulabinc.backlog.migration.common.domain.PropertyValue
+import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, PropertyValue}
 import com.nulabinc.backlog.migration.common.service._
 import com.nulabinc.backlog4j.conf.BacklogPackageConfigure
 import com.nulabinc.backlog4j.{BacklogClient, BacklogClientFactory, IssueType}
@@ -20,7 +20,7 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
   override def configure() = {
     //base
     bind(classOf[BacklogClient]).toInstance(backlog)
-    bind(classOf[String]).annotatedWith(Names.named("projectKey")).toInstance(apiConfig.projectKey)
+    bind(classOf[BacklogProjectKey]).toInstance(BacklogProjectKey(apiConfig.projectKey))
     bind(classOf[BacklogPaths]).toInstance(new BacklogPaths(apiConfig.projectKey))
     bind(classOf[PropertyValue]).toInstance(createPropertyValue())
 

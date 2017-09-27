@@ -1,10 +1,10 @@
 package com.nulabinc.backlog.migration.common.service
 
-import javax.inject.{Inject, Named}
+import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.CategoryWrites
-import com.nulabinc.backlog.migration.common.domain.BacklogIssueCategory
+import com.nulabinc.backlog.migration.common.domain.{BacklogIssueCategory, BacklogProjectKey}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.BacklogClient
 import com.nulabinc.backlog4j.api.option.AddCategoryParams
@@ -14,22 +14,20 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class IssueCategoryServiceImpl @Inject()(implicit val categoryWrites: CategoryWrites,
-                                         @Named("projectKey") projectKey: String,
-                                         backlog: BacklogClient)
+class IssueCategoryServiceImpl @Inject()(implicit val categoryWrites: CategoryWrites, projectKey: BacklogProjectKey, backlog: BacklogClient)
     extends IssueCategoryService
     with Logging {
 
   override def allIssueCategories(): Seq[BacklogIssueCategory] =
-    backlog.getCategories(projectKey).asScala.map(Convert.toBacklog(_))
+    backlog.getCategories(projectKey.value).asScala.map(Convert.toBacklog(_))
 
   override def add(backlogIssueCategory: BacklogIssueCategory): BacklogIssueCategory = {
-    val params = new AddCategoryParams(projectKey, backlogIssueCategory.name)
+    val params = new AddCategoryParams(projectKey.value, backlogIssueCategory.name)
     Convert.toBacklog(backlog.addCategory(params))
   }
 
   override def remove(issueCategoryId: Long) = {
-    backlog.removeCategory(projectKey, issueCategoryId)
+    backlog.removeCategory(projectKey.value, issueCategoryId)
   }
 
 }
