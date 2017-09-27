@@ -9,6 +9,8 @@ import com.typesafe.config.{ConfigException, ConfigFactory}
   */
 trait BacklogConfiguration {
 
+  val NaiSpaceDomain = "backlog.com"
+
   val internal = ConfigFactory.load()
 
   val external = ConfigFactory.parseFile(new File("./application.conf"))
