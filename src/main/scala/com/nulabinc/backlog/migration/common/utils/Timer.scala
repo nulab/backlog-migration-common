@@ -6,7 +6,7 @@ package com.nulabinc.backlog.migration.common.utils
 object Timer {
   var s: Long = 0L
   def time(label: String) = {
-    ConsoleOut.info(label + ":" + (System.currentTimeMillis - s))
+    ConsoleOut.println(label + ":" + (System.currentTimeMillis - s))
     s = System.currentTimeMillis
   }
 }
