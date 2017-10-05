@@ -20,6 +20,17 @@ object BacklogProjectKey {
   def apply(value: String): BacklogProjectKey = new BacklogProjectKey(value)
 }
 
+class BacklogProjectId(projectId: Long) extends Identifier[Long] {
+
+  def value = projectId
+
+}
+object BacklogProjectId {
+  val undefined = new BacklogProjectId(0) with Undefined
+
+  def apply(value: Long): BacklogProjectId = new BacklogProjectId(value)
+}
+
 case class BacklogProject(optId: Option[Long],
                           name: String,
                           key: String,
