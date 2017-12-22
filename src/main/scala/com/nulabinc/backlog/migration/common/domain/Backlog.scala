@@ -117,7 +117,6 @@ case class BacklogComment(eventType: String,
                           optContent: Option[String],
                           changeLogs: Seq[BacklogChangeLog],
                           notifications: Seq[BacklogNotification],
-                          isCreateIssue: Boolean,
                           optCreatedUser: Option[BacklogUser],
                           optCreated: Option[String])
     extends BacklogEvent
@@ -266,7 +265,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogCustomFieldFormat                 = jsonFormat4(BacklogCustomField)
   implicit val BacklogAttributeInfoFormat               = jsonFormat2(BacklogAttributeInfo)
   implicit val BacklogChangeLogFormat                   = jsonFormat6(BacklogChangeLog)
-  implicit val BacklogCommentFormat                     = jsonFormat8(BacklogComment)
+  implicit val BacklogCommentFormat                     = jsonFormat7(BacklogComment)
   implicit val BacklogIssueSummaryFormat                = jsonFormat2(BacklogIssueSummary)
   implicit val BacklogIssueFormat                       = jsonFormat22(BacklogIssue)
   implicit val BacklogWikiFormat                        = jsonFormat9(BacklogWiki)

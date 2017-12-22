@@ -479,7 +479,6 @@ trait SimpleFixture {
       radioCustomFieldChangeLog1
     ),
     notifications = Seq(BacklogNotification(optUser = Some(user3), optSenderUser = Some(user1))),
-    isCreateIssue = false,
     optCreatedUser = Some(user1),
     optCreated = Some(commentCreated)
   )
@@ -500,7 +499,6 @@ trait SimpleFixture {
       parentIssueChangeLog2
     ),
     notifications = Seq(BacklogNotification(optUser = Some(user3), optSenderUser = Some(user1))),
-    isCreateIssue = false,
     optCreatedUser = Some(user1),
     optCreated = Some(commentCreated)
   )
