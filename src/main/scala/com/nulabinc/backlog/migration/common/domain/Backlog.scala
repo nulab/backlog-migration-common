@@ -130,7 +130,8 @@ case class BacklogChangeLog(field: String,
                             optNewValue: Option[String],
                             optAttachmentInfo: Option[BacklogAttachment],
                             optAttributeInfo: Option[BacklogAttributeInfo],
-                            optNotificationInfo: Option[String])
+                            optNotificationInfo: Option[String],
+                            mustDeleteAttachment: Boolean = false)
 
 case class BacklogVersion(optId: Option[Long],
                           name: String,
@@ -264,7 +265,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogIssueCategoriesWrapperFormat      = jsonFormat1(BacklogIssueCategoriesWrapper)
   implicit val BacklogCustomFieldFormat                 = jsonFormat4(BacklogCustomField)
   implicit val BacklogAttributeInfoFormat               = jsonFormat2(BacklogAttributeInfo)
-  implicit val BacklogChangeLogFormat                   = jsonFormat6(BacklogChangeLog)
+  implicit val BacklogChangeLogFormat                   = jsonFormat7(BacklogChangeLog)
   implicit val BacklogCommentFormat                     = jsonFormat7(BacklogComment)
   implicit val BacklogIssueSummaryFormat                = jsonFormat2(BacklogIssueSummary)
   implicit val BacklogIssueFormat                       = jsonFormat22(BacklogIssue)
