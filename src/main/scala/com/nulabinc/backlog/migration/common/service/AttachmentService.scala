@@ -9,4 +9,5 @@ trait AttachmentService {
 
   def postAttachment(path: String): Either[Throwable, BacklogAttachment]
 
+  def allAttachmentsOfIssue(issueId: Long): Either[Throwable, Seq[BacklogAttachment]]
 }
