@@ -153,6 +153,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
       case BacklogConstantValue.ChangeLog.ACTUAL_HOURS    => setActualHours(params, changeLog)
       case BacklogConstantValue.ChangeLog.PARENT_ISSUE    => setParentIssue(params, changeLog, toRemoteIssueId)
       case BacklogConstantValue.ChangeLog.NOTIFICATION    =>
+      case BacklogConstantValue.ChangeLog.ATTACHMENT      =>
     }
 
   private[this] def setSummary(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog) = {
