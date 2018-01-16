@@ -2,7 +2,7 @@ package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
 
-import com.nulabinc.backlog.migration.common.domain.{BacklogIssue, BacklogUser}
+import com.nulabinc.backlog.migration.common.domain.BacklogIssue
 import com.nulabinc.backlog4j.Issue
 import com.nulabinc.backlog4j.api.option.{GetIssuesCountParams, GetIssuesParams, ImportIssueParams}
 

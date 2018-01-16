@@ -3,8 +3,8 @@ package com.nulabinc.backlog.migration
 import java.io.InputStream
 
 import com.google.inject.AbstractModule
-import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogIssue, BacklogUser}
-import com.nulabinc.backlog.migration.common.service.{IssueService, PropertyResolver}
+import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogIssue}
+import com.nulabinc.backlog.migration.common.service.IssueService
 import com.nulabinc.backlog.migration.common.service.PropertyResolver
 import com.nulabinc.backlog4j.Issue
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
