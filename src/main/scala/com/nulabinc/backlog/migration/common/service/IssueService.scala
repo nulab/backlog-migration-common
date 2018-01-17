@@ -41,6 +41,8 @@ trait IssueService {
 
   def delete(issueId: Long)
 
+  def deleteAttachment(issueId: Long, attachmentId: Long, createdUserId: Long, created: String)
+
   def addIssuesParams(params: GetIssuesParams, filter: Option[String])
 
   def addIssuesCountParams(params: GetIssuesCountParams, filter: Option[String])

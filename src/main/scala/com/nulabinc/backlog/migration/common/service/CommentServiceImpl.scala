@@ -153,6 +153,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
       case BacklogConstantValue.ChangeLog.ACTUAL_HOURS    => setActualHours(params, changeLog)
       case BacklogConstantValue.ChangeLog.PARENT_ISSUE    => setParentIssue(params, changeLog, toRemoteIssueId)
       case BacklogConstantValue.ChangeLog.NOTIFICATION    =>
+      case BacklogConstantValue.ChangeLog.ATTACHMENT      =>
     }
 
   private[this] def setSummary(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog) = {
@@ -225,14 +226,14 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
     }
   }
 
-  private[this] def setAssignee(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, propertyResolver: PropertyResolver) =
+  private[this] def setAssignee(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, propertyResolver: PropertyResolver): Object =
     changeLog.optNewValue match {
-      case Some("") => params.assigneeId(null)
+      case Some("") => params.assigneeId(-1L)
       case Some(value) =>
         for {
           id <- propertyResolver.optResolvedUserId(value)
         } yield params.assigneeId(id)
-      case None => params.assigneeId(null)
+      case None => params.assigneeId(-1L)
     }
 
   private[this] def setIssueType(params: ImportUpdateIssueParams,

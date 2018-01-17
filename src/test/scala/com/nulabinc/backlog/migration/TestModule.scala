@@ -4,8 +4,7 @@ import java.io.InputStream
 
 import com.google.inject.AbstractModule
 import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogIssue}
-import com.nulabinc.backlog.migration.common.service.{IssueService, PropertyResolver}
-import com.nulabinc.backlog.migration.common.domain.BacklogCustomFieldSetting
+import com.nulabinc.backlog.migration.common.service.IssueService
 import com.nulabinc.backlog.migration.common.service.PropertyResolver
 import com.nulabinc.backlog4j.Issue
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
@@ -61,6 +60,8 @@ class TestIssueServiceImpl extends IssueService with SimpleFixture {
                               toRemoteIssueId: (Long) => Option[Long],
                               postAttachment: (String) => Option[Long],
                               issueOfId: (Long) => BacklogIssue)(backlogIssue: BacklogIssue): ImportIssueParams = ???
+
+  override def deleteAttachment(issueId: Long, attachmentId: Long, createdUserId: Long, created: String): Unit = ???
 }
 
 class TestPropertyResolver extends PropertyResolver with SimpleFixture {

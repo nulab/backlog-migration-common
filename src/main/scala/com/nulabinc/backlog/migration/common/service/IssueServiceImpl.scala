@@ -11,7 +11,7 @@ import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUti
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.PriorityType
 import com.nulabinc.backlog4j._
-import com.nulabinc.backlog4j.api.option.{CreateIssueParams, GetIssuesCountParams, GetIssuesParams, ImportIssueParams}
+import com.nulabinc.backlog4j.api.option._
 import com.osinka.i18n.Messages
 
 import scala.collection.JavaConverters._
@@ -460,6 +460,19 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
         head    <- keyword.headOption
       } yield params.keyword(head)
     }
+
+  override def deleteAttachment(issueId: Long, attachmentId: Long, createdUserId: Long, created: String): Unit = {
+    val params: ImportDeleteAttachmentParams = new ImportDeleteAttachmentParams()
+    params.createdUserId(createdUserId)
+    params.created(created)
+
+    try {
+      backlog.importDeleteAttachment(issueId, attachmentId, params)
+    } catch {
+      case e: BacklogAPIException =>
+        logger.error(e.getMessage, e)
+    }
+  }
 
   private[this] def setCustomFieldParams(customField: BacklogCustomField)(params: CreateIssueParams, propertyResolver: PropertyResolver): Unit =
     for {
