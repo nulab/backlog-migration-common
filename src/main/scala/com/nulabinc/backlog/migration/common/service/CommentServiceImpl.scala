@@ -228,12 +228,12 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
 
   private[this] def setAssignee(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, propertyResolver: PropertyResolver): Object =
     changeLog.optNewValue match {
-      case Some("") => params
+      case Some("") => params.assigneeId(-1L)
       case Some(value) =>
         for {
           id <- propertyResolver.optResolvedUserId(value)
         } yield params.assigneeId(id)
-      case None => params
+      case None => params.assigneeId(-1L)
     }
 
   private[this] def setIssueType(params: ImportUpdateIssueParams,
