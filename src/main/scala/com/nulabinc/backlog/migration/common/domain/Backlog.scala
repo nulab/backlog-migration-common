@@ -1,7 +1,10 @@
 package com.nulabinc.backlog.migration.common.domain
 
 import com.nulabinc.backlog.migration.common.domain.support.{Identifier, Undefined}
+import com.nulabinc.backlog.migration.common.utils.DateUtil
 import com.nulabinc.backlog4j.CustomField.FieldType
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import spray.json.{DefaultJsonProtocol, JsNumber, JsValue, RootJsonFormat, _}
 
 import scala.math.BigDecimal
@@ -110,7 +113,28 @@ case class BacklogIssue(eventType: String,
                         customFields: Seq[BacklogCustomField],
                         notifiedUsers: Seq[BacklogUser],
                         operation: BacklogOperation)
-    extends BacklogEvent
+    extends BacklogEvent {
+
+  def offsetDays(offset: Int): BacklogIssue = {
+
+    def parse(str: String, offset: Int): String = {
+      val format = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ")
+      val dateTime = DateTime.parse(str, format)
+      DateUtil.isoFormat(dateTime.plusDays(offset).toDate)
+    }
+
+    val optCreated = this.operation.optCreated.map(s => parse(s, offset))
+    val optUpdated = this.operation.optUpdated.map(s => parse(s, offset))
+
+    this.copy(
+      operation = this.operation.copy(
+        optCreated = optCreated,
+        optUpdated = optUpdated
+      )
+    )
+  }
+
+}
 
 case class BacklogComment(eventType: String,
                           optIssueId: Option[Long],
@@ -119,7 +143,21 @@ case class BacklogComment(eventType: String,
                           notifications: Seq[BacklogNotification],
                           optCreatedUser: Option[BacklogUser],
                           optCreated: Option[String])
-    extends BacklogEvent
+    extends BacklogEvent {
+
+  def offsetDays(offset: Int): BacklogComment = {
+
+    def parse(str: String, offset: Int): String = {
+      val format = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ")
+      val dateTime = DateTime.parse(str, format)
+      DateUtil.isoFormat(dateTime.plusDays(offset).toDate)
+    }
+
+    val optCreated = this.optCreated.map(s => parse(s, offset))
+
+    this.copy(optCreated = optCreated)
+  }
+}
 
 case class BacklogAttachment(optId: Option[Long], name: String)
 
