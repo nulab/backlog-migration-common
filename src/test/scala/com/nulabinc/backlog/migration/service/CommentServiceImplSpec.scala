@@ -10,7 +10,6 @@ import com.nulabinc.backlog4j.api.option.ImportUpdateIssueParams
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.JavaConverters._
-import scalax.file.Path
 
 /**
   * @author uchida

@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration.common.utils
 
-import scalax.file.Path
+import better.files.{File => Path}
 
 /**
   * @author uchida
@@ -12,27 +12,27 @@ object IOUtil {
   }
 
   def input(path: Path): Option[String] = {
-    if (path.isFile) Some(path.lines().mkString)
+    if (!path.isDirectory) Some(path.lines().mkString)
     else None
   }
 
   def output(path: Path, content: String) = {
-    if (!path.isFile) path.createFile()
+    if (path.isDirectory) path.createFile()
     path.write(content)
   }
 
   def directoryPaths(path: Path): Seq[Path] = {
     if (path.isDirectory)
-      path.toAbsolute.children().filter(_.isDirectory).toSeq
+      path.listRecursively().filter(_.isDirectory).toSeq
     else Seq.empty[Path]
   }
 
   def isDirectory(path: String): Boolean = {
-    val filePath: Path = Path.fromString(path).toAbsolute
+    val filePath: Path = Path(path).path.toAbsolutePath
     filePath.isDirectory
   }
 
   def rename(from: Path, to: Path) =
-    from.toAbsolute.moveTo(to.toAbsolute)
+    from.renameTo(to.name)
 
 }

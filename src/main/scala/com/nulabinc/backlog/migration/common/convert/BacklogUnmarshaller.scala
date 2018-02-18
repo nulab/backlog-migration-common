@@ -1,11 +1,10 @@
 package com.nulabinc.backlog.migration.common.convert
 
+import better.files.{File => Path}
 import com.nulabinc.backlog.migration.common.domain._
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.utils.IOUtil
 import spray.json.JsonParser
-
-import scalax.file.Path
 
 /**
   * @author uchida
