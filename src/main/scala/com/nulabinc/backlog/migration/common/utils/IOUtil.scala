@@ -7,12 +7,11 @@ import better.files.{File => Path}
   */
 object IOUtil {
 
-  def createDirectory(path: Path): Unit = {
-    if (!path.isDirectory) path.createDirectory()
-  }
+  def createDirectory(path: Path): Unit =
+    path.createDirectories()
 
   def input(path: Path): Option[String] = {
-    if (!path.isDirectory) Some(path.lines().mkString)
+    if (!path.isDirectory && path.exists) Some(path.lines.mkString)
     else None
   }
 
@@ -25,7 +24,7 @@ object IOUtil {
 
   def directoryPaths(path: Path): Seq[Path] = {
     if (path.isDirectory)
-      path.listRecursively().filter(_.isDirectory).toSeq
+      path.list.filter(_.isDirectory).toSeq
     else Seq.empty[Path]
   }
 
