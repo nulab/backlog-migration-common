@@ -17,7 +17,9 @@ object IOUtil {
   }
 
   def output(path: Path, content: String) = {
-    if (path.isDirectory) path.createFile()
+    if (!path.exists) {
+      path.parent.toJava.mkdirs()
+    }
     path.write(content)
   }
 
