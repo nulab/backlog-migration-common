@@ -1,5 +1,7 @@
 package com.nulabinc.backlog.migration.common.utils
 
+import java.nio.charset.Charset
+
 import better.files.{File => Path}
 
 /**
@@ -11,7 +13,7 @@ object IOUtil {
     path.createDirectories()
 
   def input(path: Path): Option[String] = {
-    if (!path.isDirectory && path.exists) Some(path.lines.mkString)
+    if (!path.isDirectory && path.exists) Some(path.lines(charset = Charset.defaultCharset()).mkString)
     else None
   }
 
