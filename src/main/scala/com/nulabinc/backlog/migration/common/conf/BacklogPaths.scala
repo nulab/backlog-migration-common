@@ -2,9 +2,9 @@ package com.nulabinc.backlog.migration.common.conf
 
 import java.util.Date
 
+import better.files.{File => Path}
 import com.nulabinc.backlog.migration.common.utils.{DateUtil, FileUtil}
 
-import scalax.file.Path
 
 /**
   * @author uchida
