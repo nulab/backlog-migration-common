@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.domain
 
+import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.domain.support.{Identifier, Undefined}
 import com.nulabinc.backlog.migration.common.utils.DateUtil
 import com.nulabinc.backlog4j.CustomField.FieldType
@@ -118,18 +119,22 @@ case class BacklogIssue(eventType: String,
   def offsetDays(offset: Int): BacklogIssue = {
 
     def parse(str: String, offset: Int): String = {
+      val dateTime = DateTime.parse(str)
+      DateUtil.dateFormat(dateTime.plusDays(offset).toDate)
+    }
+
+    def parseDateTime(str: String, offset: Int): String = {
       val format = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ")
       val dateTime = DateTime.parse(str, format)
       DateUtil.isoFormat(dateTime.plusDays(offset).toDate)
     }
 
-    val optCreated = this.operation.optCreated.map(s => parse(s, offset))
-    val optUpdated = this.operation.optUpdated.map(s => parse(s, offset))
-
     this.copy(
+      optStartDate = this.optStartDate.map(s => parse(s, offset)),
+      optDueDate = this.optDueDate.map(s => parse(s, offset)),
       operation = this.operation.copy(
-        optCreated = optCreated,
-        optUpdated = optUpdated
+        optCreated = this.operation.optCreated.map(s => parseDateTime(s, offset)),
+        optUpdated = this.operation.optUpdated.map(s => parseDateTime(s, offset))
       )
     )
   }
@@ -153,9 +158,10 @@ case class BacklogComment(eventType: String,
       DateUtil.isoFormat(dateTime.plusDays(offset).toDate)
     }
 
-    val optCreated = this.optCreated.map(s => parse(s, offset))
-
-    this.copy(optCreated = optCreated)
+    this.copy(
+      changeLogs = this.changeLogs.map(c => c.offsetDays(offset)),
+      optCreated = this.optCreated.map(s => parse(s, offset))
+    )
   }
 }
 
@@ -169,7 +175,24 @@ case class BacklogChangeLog(field: String,
                             optAttachmentInfo: Option[BacklogAttachment],
                             optAttributeInfo: Option[BacklogAttributeInfo],
                             optNotificationInfo: Option[String],
-                            mustDeleteAttachment: Boolean = false)
+                            mustDeleteAttachment: Boolean = false) {
+
+  def offsetDays(offset: Int): BacklogChangeLog = {
+
+    def parse(str: String, offset: Int): String = {
+      val dateTime = DateTime.parse(str)
+      DateUtil.dateFormat(dateTime.plusDays(offset).toDate)
+    }
+    this.field match {
+      case BacklogConstantValue.ChangeLog.START_DATE | BacklogConstantValue.ChangeLog.LIMIT_DATE =>
+        this.copy(
+          optOriginalValue = this.optOriginalValue.map(s => parse(s, offset)),
+          optNewValue = this.optNewValue.map(s => parse(s, offset))
+        )
+      case _ => this
+    }
+  }
+}
 
 case class BacklogVersion(optId: Option[Long],
                           name: String,
