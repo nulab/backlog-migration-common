@@ -21,7 +21,7 @@ object IOUtil {
     if (!path.exists) {
       path.parent.toJava.mkdirs()
     }
-    path.write(content)
+    path.write(content)(charset = Charset.defaultCharset())
   }
 
   def directoryPaths(path: Path): Seq[Path] = {
