@@ -13,7 +13,7 @@ object IOUtil {
     path.createDirectories()
 
   def input(path: Path): Option[String] = {
-    if (!path.isDirectory && path.exists) Some(path.lines(charset = Charset.defaultCharset()).mkString)
+    if (!path.isDirectory && path.exists) Some(path.lines(charset = Charset.forName("UTF-8")).mkString)
     else None
   }
 
@@ -21,7 +21,7 @@ object IOUtil {
     if (!path.exists) {
       path.parent.toJava.mkdirs()
     }
-    path.write(content)(charset = Charset.defaultCharset())
+    path.write(content)(charset = Charset.forName("UTF-8"))
   }
 
   def directoryPaths(path: Path): Seq[Path] = {
