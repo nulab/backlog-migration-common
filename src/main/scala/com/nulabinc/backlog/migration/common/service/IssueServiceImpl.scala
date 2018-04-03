@@ -104,7 +104,11 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
   override def downloadIssueAttachment(issueId: Long, attachmentId: Long): Option[(String, InputStream)] =
     try {
       val attachmentData = backlog.downloadIssueAttachment(issueId, attachmentId)
-      Some((attachmentData.getFilename, attachmentData.getContent))
+      if (attachmentData.getFilename.isEmpty) {
+        None
+      } else {
+        Some((attachmentData.getFilename, attachmentData.getContent))
+      }
     } catch {
       case e: Throwable =>
         logger.warn(e.getMessage, e)
