@@ -21,7 +21,7 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
     //base
     bind(classOf[BacklogClient]).toInstance(backlog)
     bind(classOf[BacklogProjectKey]).toInstance(BacklogProjectKey(apiConfig.projectKey))
-    bind(classOf[BacklogPaths]).toInstance(new BacklogPaths(apiConfig.projectKey))
+    bind(classOf[BacklogPaths]).toInstance(new BacklogPaths(apiConfig.projectKey, apiConfig.backlogOutputPath))
     bind(classOf[PropertyValue]).toInstance(createPropertyValue())
 
     bind(classOf[CommentService]).to(classOf[CommentServiceImpl])
