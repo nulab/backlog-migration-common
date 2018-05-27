@@ -1,7 +1,6 @@
 package com.nulabinc.backlog.migration.common.modules
 
 import com.google.inject.AbstractModule
-import com.google.inject.name.Names
 import com.nulabinc.backlog.migration.common.conf.{BacklogApiConfiguration, BacklogPaths}
 import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, PropertyValue}
 import com.nulabinc.backlog.migration.common.service._
