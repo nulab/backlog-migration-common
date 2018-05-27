@@ -3,8 +3,6 @@ package com.nulabinc.backlog.migration.common.utils
 import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone}
 
-import scala.util.matching.Regex
-
 /**
   * @author uchida
   */
