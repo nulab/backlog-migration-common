@@ -2,9 +2,10 @@ package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
 
+import com.nulabinc.backlog.migration.common.client.params.ImportIssueParams
 import com.nulabinc.backlog.migration.common.domain.BacklogIssue
 import com.nulabinc.backlog4j.Issue
-import com.nulabinc.backlog4j.api.option.{GetIssuesCountParams, GetIssuesParams, ImportIssueParams}
+import com.nulabinc.backlog4j.api.option.{GetIssuesCountParams, GetIssuesParams}
 
 /**
   * @author uchida
@@ -33,9 +34,9 @@ trait IssueService {
 
   def setCreateParam(projectId: Long,
                      propertyResolver: PropertyResolver,
-                     toRemoteIssueId: (Long) => Option[Long],
-                     postAttachment: (String) => Option[Long],
-                     issueOfId: (Long) => BacklogIssue)(backlogIssue: BacklogIssue): ImportIssueParams
+                     toRemoteIssueId: Long => Option[Long],
+                     postAttachment: String => Option[Long],
+                     issueOfId: Long => BacklogIssue)(backlogIssue: BacklogIssue): ImportIssueParams
 
   def createDummy(projectId: Long, propertyResolver: PropertyResolver): Issue
 

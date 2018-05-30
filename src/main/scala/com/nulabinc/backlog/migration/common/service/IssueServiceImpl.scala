@@ -5,6 +5,7 @@ import java.io.InputStream
 import javax.inject.Inject
 import com.netaporter.uri.Uri
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+import com.nulabinc.backlog.migration.common.client.params.{ImportDeleteAttachmentParams, ImportIssueParams}
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.IssueWrites
 import com.nulabinc.backlog.migration.common.domain._

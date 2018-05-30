@@ -3,6 +3,7 @@ package com.nulabinc.backlog.migration.common.service
 import java.io.InputStream
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+import com.nulabinc.backlog.migration.common.client.params.ImportWikiParams
 import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
@@ -10,7 +11,7 @@ import com.nulabinc.backlog.migration.common.convert.writes.WikiWrites
 import com.nulabinc.backlog.migration.common.domain.{BacklogAttachment, BacklogProjectKey, BacklogWiki}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j._
-import com.nulabinc.backlog4j.api.option.{AddWikiAttachmentParams, GetWikisParams, ImportWikiParams, UpdateWikiParams}
+import com.nulabinc.backlog4j.api.option.{AddWikiAttachmentParams, GetWikisParams, UpdateWikiParams}
 
 import scala.collection.JavaConverters._
 

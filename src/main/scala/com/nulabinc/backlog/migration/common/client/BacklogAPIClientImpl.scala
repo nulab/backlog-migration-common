@@ -1,7 +1,7 @@
 package com.nulabinc.backlog.migration.common.client
 
+import com.nulabinc.backlog.migration.common.client.params._
 import com.nulabinc.backlog4j._
-import com.nulabinc.backlog4j.api.option._
 import com.nulabinc.backlog4j.conf.BacklogConfigure
 
 class BacklogAPIClientImpl(configure: BacklogConfigure) extends BacklogClientImpl(configure) with BacklogAPIClient {

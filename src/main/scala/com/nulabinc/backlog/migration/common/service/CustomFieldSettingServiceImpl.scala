@@ -1,21 +1,15 @@
 package com.nulabinc.backlog.migration.common.service
 
+import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.CustomFieldSettingWrites
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogCustomFieldDateProperty,
-  BacklogCustomFieldMultipleProperty,
-  BacklogCustomFieldNumericProperty,
-  BacklogCustomFieldSetting,
-  _
-}
+import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldDateProperty, BacklogCustomFieldMultipleProperty, BacklogCustomFieldNumericProperty, BacklogCustomFieldSetting, _}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option._
 import com.nulabinc.backlog4j.internal.json.customFields._
-import com.nulabinc.backlog4j.{BacklogAPIException, BacklogClient}
+import com.nulabinc.backlog4j.BacklogAPIException
 
 import scala.collection.JavaConverters._
 
@@ -24,7 +18,7 @@ import scala.collection.JavaConverters._
   */
 class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWrites: CustomFieldSettingWrites,
                                               projectKey: BacklogProjectKey,
-                                              backlog: BacklogClient)
+                                              backlog: BacklogAPIClient)
     extends CustomFieldSettingService
     with Logging {
 
@@ -32,7 +26,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
     try {
       backlog.getCustomFields(projectKey.value).asScala.map(Convert.toBacklog(_))
     } catch {
-      case api: BacklogAPIException if (api.getMessage.contains("current plan is not customField available.")) =>
+      case api: BacklogAPIException if api.getMessage.contains("current plan is not customField available.") =>
         logger.warn(api.getMessage, api)
         Seq.empty[BacklogCustomFieldSetting]
       case e: Throwable =>

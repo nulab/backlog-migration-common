@@ -3,12 +3,13 @@ package com.nulabinc.backlog.migration
 import java.io.InputStream
 
 import com.google.inject.AbstractModule
+import com.nulabinc.backlog.migration.common.client.params.ImportIssueParams
 import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogIssue}
 import com.nulabinc.backlog.migration.common.service.IssueService
 import com.nulabinc.backlog.migration.common.service.PropertyResolver
 import com.nulabinc.backlog4j.Issue
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
-import com.nulabinc.backlog4j.api.option.{GetIssuesCountParams, GetIssuesParams, ImportIssueParams}
+import com.nulabinc.backlog4j.api.option.{GetIssuesCountParams, GetIssuesParams}
 
 /**
   * @author uchida

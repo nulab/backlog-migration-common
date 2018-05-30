@@ -1,19 +1,19 @@
 package com.nulabinc.backlog.migration.common.service
 
+import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.UserWrites
 import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, BacklogUser}
 import com.nulabinc.backlog.migration.common.utils.Logging
-import com.nulabinc.backlog4j.{BacklogAPIException, BacklogClient}
+import com.nulabinc.backlog4j.BacklogAPIException
 
 import scala.collection.JavaConverters._
 
 /**
   * @author uchida
   */
-class ProjectUserServiceImpl @Inject()(implicit val userWrites: UserWrites, projectKey: BacklogProjectKey, backlog: BacklogClient)
+class ProjectUserServiceImpl @Inject()(implicit val userWrites: UserWrites, projectKey: BacklogProjectKey, backlog: BacklogAPIClient)
     extends ProjectUserService
     with Logging {
 

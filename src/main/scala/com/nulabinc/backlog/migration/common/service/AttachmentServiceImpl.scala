@@ -1,13 +1,13 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.{File, FileInputStream}
-import javax.inject.Inject
 
+import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.AttachmentWrites
 import com.nulabinc.backlog.migration.common.domain.BacklogAttachment
 import com.nulabinc.backlog.migration.common.utils.Logging
-import com.nulabinc.backlog4j.BacklogClient
 import com.nulabinc.backlog4j.internal.file.AttachmentDataImpl
 
 import scala.collection.JavaConverters._
@@ -15,7 +15,7 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class AttachmentServiceImpl @Inject()(implicit val attachmentWrites: AttachmentWrites, backlog: BacklogClient)
+class AttachmentServiceImpl @Inject()(implicit val attachmentWrites: AttachmentWrites, backlog: BacklogAPIClient)
     extends AttachmentService
     with Logging {
 

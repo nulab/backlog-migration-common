@@ -2,11 +2,11 @@ package com.nulabinc.backlog.migration.service
 
 import com.google.inject.Guice
 import com.google.inject.util.Modules
+import com.nulabinc.backlog.migration.common.client.params.ImportUpdateIssueParams
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.modules.DefaultModule
 import com.nulabinc.backlog.migration.common.service.CommentServiceImpl
 import com.nulabinc.backlog.migration.{SimpleFixture, TestModule, TestPropertyResolver}
-import com.nulabinc.backlog4j.api.option.ImportUpdateIssueParams
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.JavaConverters._

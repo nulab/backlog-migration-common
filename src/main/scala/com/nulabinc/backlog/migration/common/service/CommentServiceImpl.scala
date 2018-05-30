@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+import com.nulabinc.backlog.migration.common.client.params._
 import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
@@ -10,7 +11,7 @@ import com.nulabinc.backlog.migration.common.utils.{Logging, StringUtil}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType, StatusType}
 import com.nulabinc.backlog4j._
-import com.nulabinc.backlog4j.api.option.{ImportUpdateIssueParams, QueryParams, UpdateIssueParams}
+import com.nulabinc.backlog4j.api.option.{QueryParams, UpdateIssueParams}
 
 import scala.collection.JavaConverters._
 

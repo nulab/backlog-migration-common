@@ -1,20 +1,20 @@
 package com.nulabinc.backlog.migration.common.service
 
+import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.IssueTypeWrites
 import com.nulabinc.backlog.migration.common.domain.{BacklogIssueType, BacklogProjectKey}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option.AddIssueTypeParams
-import com.nulabinc.backlog4j.{BacklogClient, Project}
+import com.nulabinc.backlog4j.Project
 
 import scala.collection.JavaConverters._
 
 /**
   * @author uchida
   */
-class IssueTypeServiceImpl @Inject()(implicit val issueTypeWrites: IssueTypeWrites, projectKey: BacklogProjectKey, backlog: BacklogClient)
+class IssueTypeServiceImpl @Inject()(implicit val issueTypeWrites: IssueTypeWrites, projectKey: BacklogProjectKey, backlog: BacklogAPIClient)
     extends IssueTypeService
     with Logging {
 
