@@ -1,11 +1,12 @@
 package com.nulabinc.backlog.migration.common.modules
 
 import com.google.inject.AbstractModule
+import com.nulabinc.backlog.migration.common.client.{BacklogAPIClient, BacklogAPIClientImpl}
 import com.nulabinc.backlog.migration.common.conf.{BacklogApiConfiguration, BacklogPaths}
 import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, PropertyValue}
 import com.nulabinc.backlog.migration.common.service._
 import com.nulabinc.backlog4j.conf.BacklogPackageConfigure
-import com.nulabinc.backlog4j.{BacklogClient, BacklogClientFactory, IssueType}
+import com.nulabinc.backlog4j.IssueType
 
 import scala.collection.JavaConverters._
 
@@ -14,11 +15,11 @@ import scala.collection.JavaConverters._
   */
 class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
 
-  val backlog = createBacklogClient()
+  protected val backlog: BacklogAPIClient = createBacklogAPIClient()
 
-  override def configure() = {
+  override def configure(): Unit = {
     //base
-    bind(classOf[BacklogClient]).toInstance(backlog)
+    bind(classOf[BacklogAPIClient]).toInstance(backlog)
     bind(classOf[BacklogProjectKey]).toInstance(BacklogProjectKey(apiConfig.projectKey))
     bind(classOf[BacklogPaths]).toInstance(new BacklogPaths(apiConfig.projectKey, apiConfig.backlogOutputPath))
     bind(classOf[PropertyValue]).toInstance(createPropertyValue())
@@ -42,10 +43,11 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
     bind(classOf[AttachmentService]).to(classOf[AttachmentServiceImpl])
   }
 
-  private[this] def createBacklogClient(): BacklogClient = {
+  private[this] def createBacklogAPIClient(): BacklogAPIClient = {
     val backlogPackageConfigure = new BacklogPackageConfigure(apiConfig.url)
-    val configure               = backlogPackageConfigure.apiKey(apiConfig.key)
-    new BacklogClientFactory(configure).newClient()
+    val configure = backlogPackageConfigure.apiKey(apiConfig.key)
+
+    new BacklogAPIClientImpl(configure)
   }
 
   private[this] def createPropertyValue(): PropertyValue = {
@@ -56,5 +58,4 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
     }
     PropertyValue(issueTypes)
   }
-
 }

@@ -1,8 +1,9 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
-import javax.inject.Inject
 
+import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.WikiWrites
@@ -16,7 +17,7 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class WikiServiceImpl @Inject()(implicit val wikiWrites: WikiWrites, projectKey: BacklogProjectKey, backlog: BacklogClient)
+class WikiServiceImpl @Inject()(implicit val wikiWrites: WikiWrites, projectKey: BacklogProjectKey, backlog: BacklogAPIClient)
     extends WikiService
     with Logging {
 

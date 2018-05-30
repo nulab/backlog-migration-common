@@ -1,7 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
+import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.{CommentWrites, IssueWrites}
@@ -19,7 +19,7 @@ import scala.collection.JavaConverters._
   */
 class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
                                    implicit val commentWrites: CommentWrites,
-                                   backlog: BacklogClient,
+                                   backlog: BacklogAPIClient,
                                    issueService: IssueService)
     extends CommentService
     with Logging {

@@ -1,9 +1,10 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
-import javax.inject.Inject
 
+import javax.inject.Inject
 import com.netaporter.uri.Uri
+import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.IssueWrites
 import com.nulabinc.backlog.migration.common.domain._
@@ -19,7 +20,7 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog: BacklogClient) extends IssueService with Logging {
+class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog: BacklogAPIClient) extends IssueService with Logging {
 
   override def issueOfId(id: Long): BacklogIssue = Convert.toBacklog(backlog.getIssue(id))
 
