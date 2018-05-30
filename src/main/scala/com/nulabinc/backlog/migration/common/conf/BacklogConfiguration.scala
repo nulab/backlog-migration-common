@@ -21,6 +21,10 @@ trait BacklogConfiguration {
 
   val language = internal.getString("application.language")
 
+  val productName = internal.getString("application.product")
+
+  val productVersion = internal.getString("application.version")
+
   val exportLimitAtOnce = {
     try {
       external.getInt("application.export-limit-at-once")

@@ -1,12 +1,19 @@
 package com.nulabinc.backlog.migration.common.client
 
 import com.nulabinc.backlog.migration.common.client.params._
+import com.nulabinc.backlog.migration.common.conf.BacklogConfiguration
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.conf.BacklogConfigure
 
-class BacklogAPIClientImpl(configure: BacklogConfigure) extends BacklogClientImpl(configure) with BacklogAPIClient {
+class BacklogAPIClientImpl(configure: BacklogConfigure)
+  extends BacklogClientImpl(configure)
+    with BacklogAPIClient
+    with BacklogConfiguration {
 
   private val client = new BacklogClientImpl(configure) {
+
+    httpClient.setUserAgent(httpClient.getUserAgent + s"-$productName/$productVersion")
+
     def importIssue(params: ImportIssueParams): Issue =
       factory.importIssue(post(buildEndpoint("issues/import"), params))
     def importUpdateIssue(params: ImportUpdateIssueParams): Issue =
