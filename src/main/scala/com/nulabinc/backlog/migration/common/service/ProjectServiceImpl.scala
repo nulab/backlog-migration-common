@@ -1,18 +1,18 @@
 package com.nulabinc.backlog.migration.common.service
 
+import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.ProjectWrites
 import com.nulabinc.backlog.migration.common.domain.BacklogProject
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option.CreateProjectParams
-import com.nulabinc.backlog4j.{BacklogAPIException, BacklogClient, Project}
+import com.nulabinc.backlog4j.{BacklogAPIException, Project}
 
 /**
   * @author uchida
   */
-class ProjectServiceImpl @Inject()(implicit val projectWrites: ProjectWrites, backlog: BacklogClient) extends ProjectService with Logging {
+class ProjectServiceImpl @Inject()(implicit val projectWrites: ProjectWrites, backlog: BacklogAPIClient) extends ProjectService with Logging {
 
   override def create(project: BacklogProject): Either[Throwable, BacklogProject] =
     optProject(project.key) match {

@@ -19,13 +19,11 @@ trait BacklogConfiguration {
 
   val versionName = internal.getString("application.version")
 
-  val mixpanelToken = internal.getString("application.mixpanel.token")
-
-  val mixpanelBacklogtoolToken = internal.getString("application.mixpanel.backlogtool.token")
-
-  val mixpanelProduct = internal.getString("application.mixpanel.product")
-
   val language = internal.getString("application.language")
+
+  val productName = internal.getString("application.product")
+
+  val productVersion = internal.getString("application.version")
 
   val exportLimitAtOnce = {
     try {

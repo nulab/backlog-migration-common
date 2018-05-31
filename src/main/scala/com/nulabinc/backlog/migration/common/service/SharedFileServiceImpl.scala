@@ -1,17 +1,16 @@
 package com.nulabinc.backlog.migration.common.service
 
+import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.domain.{BacklogIssue, BacklogProjectKey, BacklogSharedFile, BacklogWiki}
 import com.nulabinc.backlog.migration.common.utils.Logging
-import com.nulabinc.backlog4j.BacklogClient
 
 import scala.collection.JavaConverters._
 
 /**
   * @author uchida
   */
-class SharedFileServiceImpl @Inject()(projectKey: BacklogProjectKey, backlog: BacklogClient) extends SharedFileService with Logging {
+class SharedFileServiceImpl @Inject()(projectKey: BacklogProjectKey, backlog: BacklogAPIClient) extends SharedFileService with Logging {
 
   override def linkIssueSharedFile(issueId: Long, backlogIssue: BacklogIssue) = {
     val fileIds: Seq[Long] = backlogIssue.sharedFiles.flatMap(getFileId)

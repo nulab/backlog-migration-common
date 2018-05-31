@@ -1,7 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
+import com.nulabinc.backlog.migration.common.client.params.ImportUpdateIssueParams
 import com.nulabinc.backlog.migration.common.domain.BacklogComment
-import com.nulabinc.backlog4j.api.option.ImportUpdateIssueParams
 
 /**
   * @author uchida

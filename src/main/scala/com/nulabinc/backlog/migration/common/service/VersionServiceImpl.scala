@@ -1,12 +1,11 @@
 package com.nulabinc.backlog.migration.common.service
 
+import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.VersionWrites
 import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, BacklogVersion}
 import com.nulabinc.backlog.migration.common.utils.Logging
-import com.nulabinc.backlog4j.BacklogClient
 import com.nulabinc.backlog4j.api.option.{AddVersionParams, UpdateVersionParams}
 
 import scala.collection.JavaConverters._
@@ -14,7 +13,7 @@ import scala.collection.JavaConverters._
 /**
   * @author uchida
   */
-class VersionServiceImpl @Inject()(implicit val versionWrites: VersionWrites, projectKey: BacklogProjectKey, backlog: BacklogClient)
+class VersionServiceImpl @Inject()(implicit val versionWrites: VersionWrites, projectKey: BacklogProjectKey, backlog: BacklogAPIClient)
     extends VersionService
     with Logging {
 

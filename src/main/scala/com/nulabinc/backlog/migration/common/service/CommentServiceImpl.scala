@@ -1,7 +1,8 @@
 package com.nulabinc.backlog.migration.common.service
 
+import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+import com.nulabinc.backlog.migration.common.client.params._
 import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.{CommentWrites, IssueWrites}
@@ -10,7 +11,7 @@ import com.nulabinc.backlog.migration.common.utils.{Logging, StringUtil}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType, StatusType}
 import com.nulabinc.backlog4j._
-import com.nulabinc.backlog4j.api.option.{ImportUpdateIssueParams, QueryParams, UpdateIssueParams}
+import com.nulabinc.backlog4j.api.option.{QueryParams, UpdateIssueParams}
 
 import scala.collection.JavaConverters._
 
@@ -19,10 +20,12 @@ import scala.collection.JavaConverters._
   */
 class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
                                    implicit val commentWrites: CommentWrites,
-                                   backlog: BacklogClient,
+                                   backlog: BacklogAPIClient,
                                    issueService: IssueService)
     extends CommentService
     with Logging {
+
+  private val SINGLE_LIST_CUSTOM_FIELD_NOT_SET = -1
 
   override def allCommentsOfIssue(issueId: Long): Seq[BacklogComment] = {
     val allCount = backlog.getIssueCommentCount(issueId)
@@ -392,7 +395,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
             item   <- property.items.find(_.name == value)
             itemId <- item.optId
           } yield params.singleListCustomField(id, itemId)
-        case _ => params.singleListCustomField(id, UpdateIssueParams.SINGLE_LIST_CUSTOM_FIELD_NOT_SET)
+        case _ => params.singleListCustomField(id, SINGLE_LIST_CUSTOM_FIELD_NOT_SET)
       }
     }
 
