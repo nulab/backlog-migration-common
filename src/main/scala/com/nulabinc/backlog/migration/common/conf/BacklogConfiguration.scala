@@ -25,6 +25,8 @@ trait BacklogConfiguration {
 
   val productVersion = internal.getString("application.version")
 
+  val backlog4jVersion = internal.getString("application.backlog4jVersion")
+
   val exportLimitAtOnce = {
     try {
       external.getInt("application.export-limit-at-once")
