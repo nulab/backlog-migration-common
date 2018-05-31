@@ -1,10 +1,8 @@
 
 name := "backlog-migration-common"
 
-resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
-
 libraryDependencies ++= Seq(
-  "com.nulab-inc"         %  "backlog4j"        % "2.3.0-SNAPSHOT",
+  "com.nulab-inc"         %  "backlog4j"        % "2.3.0",
   "org.fusesource.jansi"  %  "jansi"            % "1.17",
   "com.osinka.i18n"       %% "scala-i18n"       % "1.0.2",
   "ch.qos.logback"        %  "logback-classic"  % "1.2.3",
