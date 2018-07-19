@@ -136,7 +136,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
 
   private[this] def setAttr(params: ImportUpdateIssueParams,
                             changeLog: BacklogChangeLog,
-                            toRemoteIssueId: (Long) => Option[Long],
+                            toRemoteIssueId: Long => Option[Long],
                             propertyResolver: PropertyResolver,
                             optCurrentIssue: Option[Issue]) =
     changeLog.field match {
@@ -157,6 +157,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
       case BacklogConstantValue.ChangeLog.PARENT_ISSUE    => setParentIssue(params, changeLog, toRemoteIssueId)
       case BacklogConstantValue.ChangeLog.NOTIFICATION    =>
       case BacklogConstantValue.ChangeLog.ATTACHMENT      =>
+      case _                                              => logger.warn(s"Unknown change log field type: ${changeLog.field}")
     }
 
   private[this] def setSummary(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog) = {
