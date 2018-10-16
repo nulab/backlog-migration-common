@@ -20,6 +20,17 @@ object BacklogProjectKey {
   def apply(value: String): BacklogProjectKey = new BacklogProjectKey(value)
 }
 
+class BacklogTextFormattingRule(textFormattingRule: String) extends Identifier[String] {
+
+  def value = textFormattingRule
+
+}
+object BacklogTextFormattingRule {
+  val undefined = new BacklogTextFormattingRule("") with Undefined
+
+  def apply(value: String): BacklogTextFormattingRule = new BacklogTextFormattingRule(value)
+}
+
 class BacklogProjectId(projectId: Long) extends Identifier[Long] {
 
   def value = projectId
