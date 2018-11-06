@@ -192,12 +192,12 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
 
     //description
     optParentIssue match {
-      case Some(parentIssue) if (parentIssue.optParentIssueId.nonEmpty) =>
+      case Some(parentIssue) if parentIssue.optParentIssueId.nonEmpty =>
         val sb = new StringBuilder()
         sb.append(backlogIssue.description).append("\n")
         sb.append(Messages("common.parent_issue")).append(":").append(parentIssue.optIssueKey.getOrElse(""))
         params.description(sb.toString())
-      case Some(parentIssue) if (parentIssue.optParentIssueId.isEmpty) =>
+      case Some(parentIssue) if parentIssue.optParentIssueId.isEmpty =>
         params.parentIssueId(parentIssue.id) //parent id
         params.description(backlogIssue.description)
       case _ =>
