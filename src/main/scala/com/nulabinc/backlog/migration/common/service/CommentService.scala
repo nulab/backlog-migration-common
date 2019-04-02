@@ -14,7 +14,7 @@ trait CommentService {
 
   def setUpdateParam(issueId: Long,
                      propertyResolver: PropertyResolver,
-                     toRemoteIssueId: (Long) => Option[Long],
-                     postAttachment: (String) => Option[Long])(backlogComment: BacklogComment): ImportUpdateIssueParams
+                     toRemoteIssueId: Long => Option[Long],
+                     postAttachment: String => Option[Long])(backlogComment: BacklogComment): ImportUpdateIssueParams
 
 }
