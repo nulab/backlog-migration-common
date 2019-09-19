@@ -8,7 +8,7 @@ import com.nulabinc.backlog.migration.common.domain.BacklogGroup
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option.CreateGroupParams
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -17,7 +17,7 @@ class GroupServiceImpl @Inject()(implicit val groupWrites: GroupWrites, backlog:
 
   override def allGroups(): Seq[BacklogGroup] =
     try {
-      backlog.getGroups.asScala.map(Convert.toBacklog(_))
+      backlog.getGroups.asScala.toSeq.map(Convert.toBacklog(_))
     } catch {
       case e: Throwable =>
         logger.warn(e.getMessage, e)

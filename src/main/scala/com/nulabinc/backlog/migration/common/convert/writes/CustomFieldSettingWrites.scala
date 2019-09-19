@@ -9,7 +9,7 @@ import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.internal.json.customFields._
 import com.nulabinc.backlog4j.{CustomFieldSetting, IssueType}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -116,7 +116,7 @@ class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends W
         backlogCustomFieldSetting.copy(
           property = BacklogCustomFieldMultipleProperty(
             typeId = setting.getFieldTypeId,
-            items = setting.getItems.asScala.map(toBacklogItem),
+            items = setting.getItems.asScala.toSeq.map(toBacklogItem),
             allowAddItem = setting.isAllowAddItem,
             allowInput = false
           ))
@@ -130,7 +130,7 @@ class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends W
         backlogCustomFieldSetting.copy(
           property = BacklogCustomFieldMultipleProperty(
             typeId = setting.getFieldTypeId,
-            items = setting.getItems.asScala.map(toBacklogItem),
+            items = setting.getItems.asScala.toSeq.map(toBacklogItem),
             allowAddItem = setting.isAllowAddItem,
             allowInput = false
           ))
@@ -144,7 +144,7 @@ class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends W
         backlogCustomFieldSetting.copy(
           property = BacklogCustomFieldMultipleProperty(
             typeId = setting.getFieldTypeId,
-            items = setting.getItems.asScala.map(toBacklogItem),
+            items = setting.getItems.asScala.toSeq.map(toBacklogItem),
             allowAddItem = setting.isAllowAddItem,
             allowInput = setting.isAllowInput
           ))
@@ -158,7 +158,7 @@ class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends W
         backlogCustomFieldSetting.copy(
           property = BacklogCustomFieldMultipleProperty(
             typeId = setting.getFieldTypeId,
-            items = setting.getItems.asScala.map(toBacklogItem),
+            items = setting.getItems.asScala.toSeq.map(toBacklogItem),
             allowAddItem = setting.isAllowAddItem,
             allowInput = setting.isAllowInput
           ))

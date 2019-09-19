@@ -2,8 +2,6 @@ package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
 
-import javax.inject.Inject
-import com.netaporter.uri.Uri
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.client.params.{ImportDeleteAttachmentParams, ImportIssueParams}
 import com.nulabinc.backlog.migration.common.convert.Convert
@@ -15,8 +13,10 @@ import com.nulabinc.backlog4j.Issue.PriorityType
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option._
 import com.osinka.i18n.Messages
+import io.lemonlabs.uri._
+import javax.inject.Inject
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -83,7 +83,7 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     params.order(GetIssuesParams.Order.Asc)
     addIssuesParams(params, filter)
     try {
-      backlog.getIssues(params).asScala
+      backlog.getIssues(params).asScala.toSeq
     } catch {
       case e: Throwable =>
         logger.error(e.getMessage, e)
@@ -292,7 +292,7 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     for { queryString <- filter } yield {
       val newQueryString =
         if (queryString.startsWith("?")) queryString else s"?$queryString"
-      val uri = Uri.parse(newQueryString)
+      val uri = Url.parse(newQueryString)
       for { issueTypeIds <- uri.query.paramMap.get("issueTypeId[]") } yield {
         params.issueTypeIds(issueTypeIds.asJava)
       }
@@ -383,7 +383,7 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     for { queryString <- filter } yield {
       val newQueryString =
         if (queryString.startsWith("?")) queryString else s"?$queryString"
-      val uri = Uri.parse(newQueryString)
+      val uri = Url.parse(newQueryString)
       for { issueTypeIds <- uri.query.paramMap.get("issueTypeId[]") } yield {
         params.issueTypeIds(issueTypeIds.asJava)
       }

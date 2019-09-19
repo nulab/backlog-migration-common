@@ -9,7 +9,7 @@ import com.nulabinc.backlog.migration.common.utils.DateUtil
 import com.nulabinc.backlog4j.CustomField
 import com.nulabinc.backlog4j.internal.json.customFields._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -97,7 +97,7 @@ private[common] class CustomFieldWrites @Inject()() extends Writes[CustomField, 
           name = customField.getName,
           fieldTypeId = customField.getFieldTypeId,
           optValue = None,
-          values = multipleListCustomField.getValue.asScala.map(_.getName)
+          values = multipleListCustomField.getValue.asScala.toSeq.map(_.getName)
         )
       case _ => throw new RuntimeException()
     }
@@ -109,7 +109,7 @@ private[common] class CustomFieldWrites @Inject()() extends Writes[CustomField, 
           name = customField.getName,
           fieldTypeId = customField.getFieldTypeId,
           optValue = None,
-          values = checkBoxCustomField.getValue.asScala.map(_.getName)
+          values = checkBoxCustomField.getValue.asScala.toSeq.map(_.getName)
         )
       case _ => throw new RuntimeException()
     }

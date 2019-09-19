@@ -8,7 +8,7 @@ import com.nulabinc.backlog.migration.common.service._
 import com.nulabinc.backlog4j.conf.BacklogPackageConfigure
 import com.nulabinc.backlog4j.IssueType
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -52,7 +52,7 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
 
   private[this] def createPropertyValue(): PropertyValue = {
     val issueTypes = try {
-      backlog.getIssueTypes(apiConfig.projectKey).asScala
+      backlog.getIssueTypes(apiConfig.projectKey).asScala.toSeq
     } catch {
       case _: Throwable => Seq.empty[IssueType]
     }

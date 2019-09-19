@@ -4,7 +4,7 @@ import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import javax.inject.Inject
 import com.nulabinc.backlog4j.Status
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -12,6 +12,6 @@ import scala.collection.JavaConverters._
 class StatusServiceImpl @Inject()(backlog: BacklogAPIClient) extends StatusService {
 
   override def allStatuses(): Seq[Status] =
-    backlog.getStatuses.asScala
+    backlog.getStatuses.asScala.toSeq
 
 }

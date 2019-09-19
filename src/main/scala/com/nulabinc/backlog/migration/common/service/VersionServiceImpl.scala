@@ -8,7 +8,7 @@ import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, BacklogV
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option.{AddVersionParams, UpdateVersionParams}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -18,7 +18,7 @@ class VersionServiceImpl @Inject()(implicit val versionWrites: VersionWrites, pr
     with Logging {
 
   override def allVersions(): Seq[BacklogVersion] =
-    backlog.getVersions(projectKey.value).asScala.map(Convert.toBacklog(_))
+    backlog.getVersions(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
 
   override def add(backlogVersion: BacklogVersion): Option[BacklogVersion] = {
     val params = new AddVersionParams(projectKey.value, backlogVersion.name)

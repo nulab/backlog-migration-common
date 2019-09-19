@@ -9,7 +9,7 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option.AddIssueTypeParams
 import com.nulabinc.backlog4j.Project
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -19,7 +19,7 @@ class IssueTypeServiceImpl @Inject()(implicit val issueTypeWrites: IssueTypeWrit
     with Logging {
 
   override def allIssueTypes(): Seq[BacklogIssueType] =
-    backlog.getIssueTypes(projectKey.value).asScala.map(Convert.toBacklog(_))
+    backlog.getIssueTypes(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
 
   override def add(issueType: BacklogIssueType): BacklogIssueType = {
     val params = new AddIssueTypeParams(projectKey.value, issueType.name, Project.IssueTypeColor.strValueOf(issueType.color))

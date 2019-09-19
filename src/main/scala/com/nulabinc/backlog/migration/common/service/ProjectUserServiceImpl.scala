@@ -8,7 +8,7 @@ import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, BacklogU
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.BacklogAPIException
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -19,7 +19,7 @@ class ProjectUserServiceImpl @Inject()(implicit val userWrites: UserWrites, proj
 
   override def allProjectUsers(projectId: Long): Seq[BacklogUser] = {
     try {
-      backlog.getProjectUsers(projectId).asScala.map(Convert.toBacklog(_))
+      backlog.getProjectUsers(projectId).asScala.toSeq.map(Convert.toBacklog(_))
     } catch {
       case e: BacklogAPIException =>
         logger.error(e.getMessage, e)
