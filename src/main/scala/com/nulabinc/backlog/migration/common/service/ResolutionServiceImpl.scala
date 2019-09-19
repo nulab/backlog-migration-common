@@ -4,7 +4,7 @@ import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import javax.inject.Inject
 import com.nulabinc.backlog4j.Resolution
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -12,6 +12,6 @@ import scala.collection.JavaConverters._
 class ResolutionServiceImpl @Inject()(backlog: BacklogAPIClient) extends ResolutionService {
 
   override def allResolutions(): Seq[Resolution] =
-    backlog.getResolutions.asScala
+    backlog.getResolutions.asScala.toSeq
 
 }

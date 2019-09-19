@@ -11,6 +11,6 @@ trait IssueCategoryService {
 
   def add(backlogIssueCategory: BacklogIssueCategory): BacklogIssueCategory
 
-  def remove(issueCategoryId: Long)
+  def remove(issueCategoryId: Long): Unit
 
 }

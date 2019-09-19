@@ -11,6 +11,6 @@ trait IssueTypeService {
 
   def add(issueType: BacklogIssueType): BacklogIssueType
 
-  def remove(issueTypeId: Long, defaultIssueTypeId: Long)
+  def remove(issueTypeId: Long, defaultIssueTypeId: Long): Unit
 
 }

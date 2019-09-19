@@ -10,7 +10,7 @@ import com.nulabinc.backlog4j.Issue.PriorityType
 import com.nulabinc.backlog4j.api.option.{GetIssuesCountParams, GetIssuesParams}
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -171,7 +171,7 @@ class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
   }
 
   private[this] def getValues(params: ImportIssueParams, name: String): Seq[String] = {
-    params.getParamList.asScala.filter(p => p.getName == name).map(_.getValue)
+    params.getParamList.asScala.toSeq.filter(p => p.getName == name).map(_.getValue)
   }
 
 }

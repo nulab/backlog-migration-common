@@ -9,7 +9,7 @@ import com.nulabinc.backlog.migration.common.service.CommentServiceImpl
 import com.nulabinc.backlog.migration.{SimpleFixture, TestModule, TestPropertyResolver}
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -84,7 +84,7 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
   }
 
   private[this] def getValues(params: ImportUpdateIssueParams, name: String): Seq[String] = {
-    params.getParamList.asScala.filter(p => p.getName == name).map(_.getValue)
+    params.getParamList.asScala.toSeq.filter(p => p.getName == name).map(_.getValue)
   }
 
 }

@@ -10,7 +10,7 @@ import com.nulabinc.backlog.migration.common.domain.BacklogAttachment
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.internal.file.AttachmentDataImpl
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -33,7 +33,7 @@ class AttachmentServiceImpl @Inject()(implicit val attachmentWrites: AttachmentW
 
   def allAttachmentsOfIssue(issueId: Long): Either[Throwable, Seq[BacklogAttachment]] = {
     try {
-      val attachments = backlog.getIssueAttachments(issueId).asScala
+      val attachments = backlog.getIssueAttachments(issueId).asScala.toSeq
       Right(attachments.map(Convert.toBacklog(_)))
     } catch {
       case e: Throwable =>

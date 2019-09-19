@@ -7,7 +7,7 @@ import com.nulabinc.backlog.migration.common.domain._
 import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUtil}
 import com.nulabinc.backlog4j.Issue
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -32,14 +32,14 @@ private[common] class IssueWrites @Inject()(implicit val userWrites: UserWrites,
       optActualHours = Option(issue.getActualHours).map(_.floatValue()),
       optIssueTypeName = Some(issue.getIssueType.getName),
       statusName = issue.getStatus.getName,
-      categoryNames = issue.getCategory.asScala.map(_.getName),
-      versionNames = issue.getVersions.asScala.map(_.getName),
-      milestoneNames = issue.getMilestone.asScala.map(_.getName),
+      categoryNames = issue.getCategory.asScala.toSeq.map(_.getName),
+      versionNames = issue.getVersions.asScala.toSeq.map(_.getName),
+      milestoneNames = issue.getMilestone.asScala.toSeq.map(_.getName),
       priorityName = Option(issue.getPriority).map(_.getName).getOrElse(""),
       optAssignee = Option(issue.getAssignee).map(Convert.toBacklog(_)),
       attachments = Seq.empty[BacklogAttachment],
-      sharedFiles = issue.getSharedFiles.asScala.map(Convert.toBacklog(_)),
-      customFields = issue.getCustomFields.asScala.flatMap(Convert.toBacklog(_)),
+      sharedFiles = issue.getSharedFiles.asScala.toSeq.map(Convert.toBacklog(_)),
+      customFields = issue.getCustomFields.asScala.toSeq.flatMap(Convert.toBacklog(_)),
       notifiedUsers = Seq.empty[BacklogUser],
       operation = toBacklogOperation(issue)
     )

@@ -8,7 +8,7 @@ import com.nulabinc.backlog.migration.common.domain.{BacklogIssueCategory, Backl
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option.AddCategoryParams
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -18,7 +18,7 @@ class IssueCategoryServiceImpl @Inject()(implicit val categoryWrites: CategoryWr
     with Logging {
 
   override def allIssueCategories(): Seq[BacklogIssueCategory] =
-    backlog.getCategories(projectKey.value).asScala.map(Convert.toBacklog(_))
+    backlog.getCategories(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
 
   override def add(backlogIssueCategory: BacklogIssueCategory): BacklogIssueCategory = {
     val params = new AddCategoryParams(projectKey.value, backlogIssueCategory.name)

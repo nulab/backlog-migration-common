@@ -11,7 +11,7 @@ import com.nulabinc.backlog4j.api.option._
 import com.nulabinc.backlog4j.internal.json.customFields._
 import com.nulabinc.backlog4j.BacklogAPIException
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -24,7 +24,7 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
 
   override def allCustomFieldSettings(): Seq[BacklogCustomFieldSetting] =
     try {
-      backlog.getCustomFields(projectKey.value).asScala.map(Convert.toBacklog(_))
+      backlog.getCustomFields(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
     } catch {
       case api: BacklogAPIException if api.getMessage.contains("current plan is not customField available.") =>
         logger.warn(api.getMessage, api)

@@ -4,7 +4,7 @@ import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import javax.inject.Inject
 import com.nulabinc.backlog4j.Priority
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -12,6 +12,6 @@ import scala.collection.JavaConverters._
 class PriorityServiceImpl @Inject()(backlog: BacklogAPIClient) extends PriorityService {
 
   override def allPriorities(): Seq[Priority] =
-    backlog.getPriorities.asScala
+    backlog.getPriorities.asScala.toSeq
 
 }

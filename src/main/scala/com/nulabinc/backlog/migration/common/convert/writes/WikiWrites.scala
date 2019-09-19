@@ -7,7 +7,7 @@ import com.nulabinc.backlog.migration.common.domain.BacklogWiki
 import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUtil}
 import com.nulabinc.backlog4j.{Attachment, SharedFile, Wiki}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -38,7 +38,7 @@ private[common] class WikiWrites @Inject()(implicit val userWrites: UserWrites,
 
   private[this] def getSharedFiles(wiki: Wiki): Seq[SharedFile] = {
     try {
-      wiki.getSharedFiles.asScala
+      wiki.getSharedFiles.asScala.toSeq
     } catch {
       case e: Throwable =>
         logger.warn(e.getMessage, e)
@@ -48,7 +48,7 @@ private[common] class WikiWrites @Inject()(implicit val userWrites: UserWrites,
 
   private[this] def getAttachments(wiki: Wiki): Seq[Attachment] = {
     try {
-      wiki.getAttachments.asScala
+      wiki.getAttachments.asScala.toSeq
     } catch {
       case e: Throwable =>
         logger.warn(e.getMessage, e)

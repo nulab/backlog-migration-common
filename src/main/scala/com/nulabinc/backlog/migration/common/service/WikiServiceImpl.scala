@@ -13,7 +13,7 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option.{AddWikiAttachmentParams, GetWikisParams, UpdateWikiParams}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -23,7 +23,7 @@ class WikiServiceImpl @Inject()(implicit val wikiWrites: WikiWrites, projectKey:
     with Logging {
 
   override def allWikis(): Seq[BacklogWiki] =
-    backlog.getWikis(projectKey.value).asScala.map(Convert.toBacklog(_))
+    backlog.getWikis(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
 
   override def wikiOfId(wikiId: Long): BacklogWiki = {
     Convert.toBacklog(backlog.getWiki(wikiId))

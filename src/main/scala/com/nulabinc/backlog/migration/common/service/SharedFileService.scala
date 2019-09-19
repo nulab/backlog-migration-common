@@ -7,8 +7,8 @@ import com.nulabinc.backlog.migration.common.domain.{BacklogIssue, BacklogWiki}
   */
 trait SharedFileService {
 
-  def linkIssueSharedFile(issueId: Long, backlogIssue: BacklogIssue)
+  def linkIssueSharedFile(issueId: Long, backlogIssue: BacklogIssue): Unit
 
-  def linkWikiSharedFile(wikiId: Long, backlogWiki: BacklogWiki)
+  def linkWikiSharedFile(wikiId: Long, backlogWiki: BacklogWiki): Unit
 
 }

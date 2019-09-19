@@ -6,7 +6,7 @@ import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.domain.BacklogUser
 import com.nulabinc.backlog.migration.common.convert.writes.UserWrites
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -14,7 +14,7 @@ import scala.collection.JavaConverters._
 class UserServiceImpl @Inject()(implicit val userWrites: UserWrites, backlog: BacklogAPIClient) extends UserService {
 
   override def allUsers(): Seq[BacklogUser] =
-    backlog.getUsers.asScala.map(Convert.toBacklog(_))
+    backlog.getUsers.asScala.toSeq.map(Convert.toBacklog(_))
 
   override def myself(): BacklogUser =
     Convert.toBacklog(backlog.getMyself)
