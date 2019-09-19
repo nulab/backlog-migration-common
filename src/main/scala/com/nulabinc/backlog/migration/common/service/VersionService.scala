@@ -13,6 +13,6 @@ trait VersionService {
 
   def update(versionId: Long, name: String): Option[BacklogVersion]
 
-  def remove(versionId: Long)
+  def remove(versionId: Long): Unit
 
 }

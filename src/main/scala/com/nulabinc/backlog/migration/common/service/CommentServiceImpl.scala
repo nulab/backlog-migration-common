@@ -13,7 +13,7 @@ import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType, StatusType}
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option.{QueryParams, UpdateIssueParams}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida
@@ -42,7 +42,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
         val optLastId = for { lastComment <- commentsPart.lastOption } yield {
           lastComment.getId
         }
-        loop(optLastId, comments union commentsPart, offset + 100)
+        loop(optLastId, comments concat commentsPart, offset + 100)
       } else comments
 
     loop(None, Seq.empty[IssueComment], 0).sortWith((c1, c2) => c1.getCreated.before(c2.getCreated)).map(Convert.toBacklog(_))

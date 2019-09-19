@@ -9,6 +9,6 @@ trait GroupService {
 
   def allGroups(): Seq[BacklogGroup]
 
-  def create(group: BacklogGroup, propertyResolver: PropertyResolver)
+  def create(group: BacklogGroup, propertyResolver: PropertyResolver): Unit
 
 }

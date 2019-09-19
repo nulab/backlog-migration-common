@@ -5,7 +5,7 @@ import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.domain.{BacklogIssue, BacklogProjectKey, BacklogSharedFile, BacklogWiki}
 import com.nulabinc.backlog.migration.common.utils.Logging
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * @author uchida

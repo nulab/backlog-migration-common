@@ -9,6 +9,6 @@ trait ProjectUserService {
 
   def allProjectUsers(projectId: Long): Seq[BacklogUser]
 
-  def add(userId: Long)
+  def add(userId: Long): Unit
 
 }

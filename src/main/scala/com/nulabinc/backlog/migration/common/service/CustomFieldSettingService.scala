@@ -12,12 +12,12 @@ trait CustomFieldSettingService {
 
   def setAddParams(backlogCustomFieldSetting: BacklogCustomFieldSetting): AddCustomFieldParams
 
-  def add(setAddParam: BacklogCustomFieldSetting => AddCustomFieldParams)(backlogCustomFieldSetting: BacklogCustomFieldSetting)
+  def add(setAddParam: BacklogCustomFieldSetting => AddCustomFieldParams)(backlogCustomFieldSetting: BacklogCustomFieldSetting): Unit
 
   def setUpdateParams(propertyResolver: PropertyResolver)(backlogCustomFieldSetting: BacklogCustomFieldSetting): Option[UpdateCustomFieldParams]
 
-  def update(setUpdateParams: BacklogCustomFieldSetting => Option[UpdateCustomFieldParams])(backlogCustomFieldSetting: BacklogCustomFieldSetting)
+  def update(setUpdateParams: BacklogCustomFieldSetting => Option[UpdateCustomFieldParams])(backlogCustomFieldSetting: BacklogCustomFieldSetting): Unit
 
-  def remove(customFieldSettingId: Long)
+  def remove(customFieldSettingId: Long): Unit
 
 }

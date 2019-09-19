@@ -40,12 +40,12 @@ trait IssueService {
 
   def createDummy(projectId: Long, propertyResolver: PropertyResolver): Issue
 
-  def delete(issueId: Long)
+  def delete(issueId: Long): Unit
 
-  def deleteAttachment(issueId: Long, attachmentId: Long, createdUserId: Long, created: String)
+  def deleteAttachment(issueId: Long, attachmentId: Long, createdUserId: Long, created: String): Unit
 
-  def addIssuesParams(params: GetIssuesParams, filter: Option[String])
+  def addIssuesParams(params: GetIssuesParams, filter: Option[String]): Unit
 
-  def addIssuesCountParams(params: GetIssuesCountParams, filter: Option[String])
+  def addIssuesCountParams(params: GetIssuesCountParams, filter: Option[String]): Unit
 
 }

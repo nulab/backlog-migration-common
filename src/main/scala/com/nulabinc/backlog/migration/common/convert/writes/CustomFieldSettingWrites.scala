@@ -24,7 +24,7 @@ class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends W
         description = customFieldSetting.getDescription,
         typeId = customFieldSetting.getFieldTypeId,
         required = customFieldSetting.isRequired,
-        applicableIssueTypes = toApplicableIssueTypes(customFieldSetting.getApplicableIssueTypes, propertyValue.issueTypes),
+        applicableIssueTypes = toApplicableIssueTypes(customFieldSetting.getApplicableIssueTypes.toIndexedSeq, propertyValue.issueTypes),
         property = BacklogCustomFieldTextProperty(customFieldSetting.getFieldTypeId),
         delete = false
       )
