@@ -100,7 +100,7 @@ trait SimpleFixture {
   val textCustomFieldSetting =
     BacklogCustomFieldSetting(
       optId = Some(textCustomFieldId),
-      name = textCustomFieldName,
+      rawName = textCustomFieldName,
       description = "",
       typeId = FieldType.Text.getIntValue,
       required = true,
@@ -118,7 +118,7 @@ trait SimpleFixture {
   val textAreaCustomFieldSetting =
     BacklogCustomFieldSetting(
       optId = Some(textAreaCustomFieldId),
-      name = textAreaCustomFieldName,
+      rawName = textAreaCustomFieldName,
       description = "",
       typeId = FieldType.TextArea.getIntValue,
       required = true,
@@ -136,7 +136,7 @@ trait SimpleFixture {
   val numericCustomFieldSetting =
     BacklogCustomFieldSetting(
       optId = Some(numericCustomFieldId),
-      name = numericCustomFieldName,
+      rawName = numericCustomFieldName,
       description = "",
       typeId = FieldType.Numeric.getIntValue,
       required = true,
@@ -158,7 +158,7 @@ trait SimpleFixture {
   val dateCustomFieldSetting =
     BacklogCustomFieldSetting(
       optId = Some(dateCustomFieldId),
-      name = dateCustomFieldName,
+      rawName = dateCustomFieldName,
       description = "",
       typeId = FieldType.Date.getIntValue,
       required = true,
@@ -180,7 +180,7 @@ trait SimpleFixture {
   val singleListCustomFieldSetting =
     BacklogCustomFieldSetting(
       optId = Some(singleListCustomFieldId),
-      name = singleListCustomFieldName,
+      rawName = singleListCustomFieldName,
       description = "",
       typeId = FieldType.SingleList.getIntValue,
       required = true,
@@ -200,7 +200,7 @@ trait SimpleFixture {
   val multipleListCustomFieldSetting =
     BacklogCustomFieldSetting(
       optId = Some(multipleListCustomFieldId),
-      name = multipleListCustomFieldName,
+      rawName = multipleListCustomFieldName,
       description = "",
       typeId = FieldType.MultipleList.getIntValue,
       required = true,
@@ -220,7 +220,7 @@ trait SimpleFixture {
   val checkBoxCustomFieldSetting =
     BacklogCustomFieldSetting(
       optId = Some(checkBoxCustomFieldId),
-      name = checkBoxCustomFieldName,
+      rawName = checkBoxCustomFieldName,
       description = "",
       typeId = FieldType.CheckBox.getIntValue,
       required = true,
@@ -240,7 +240,7 @@ trait SimpleFixture {
   val radioCustomFieldSetting =
     BacklogCustomFieldSetting(
       optId = Some(radioCustomFieldId),
-      name = radioCustomFieldName,
+      rawName = radioCustomFieldName,
       description = "",
       typeId = FieldType.Radio.getIntValue,
       required = true,

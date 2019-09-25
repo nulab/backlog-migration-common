@@ -83,11 +83,7 @@ object BacklogUnmarshaller {
   def backlogCustomFieldSettings(backlogPaths: BacklogPaths): Seq[BacklogCustomFieldSetting] =
     IOUtil
       .input(backlogPaths.customFieldSettingsJson)
-      .map(json => {
-        val wrapper =
-          JsonParser(json).convertTo[BacklogCustomFieldSettingsWrapper]
-        wrapper.backlogCustomFieldSettings
-      })
+      .map(json => JsonParser(json).convertTo[BacklogCustomFieldSettings].settings)
       .getOrElse(Seq.empty[BacklogCustomFieldSetting])
 
 }

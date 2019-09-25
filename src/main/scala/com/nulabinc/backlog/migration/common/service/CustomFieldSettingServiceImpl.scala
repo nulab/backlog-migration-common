@@ -22,16 +22,18 @@ class CustomFieldSettingServiceImpl @Inject()(implicit val customFieldSettingWri
     extends CustomFieldSettingService
     with Logging {
 
-  override def allCustomFieldSettings(): Seq[BacklogCustomFieldSetting] =
+  override def allCustomFieldSettings(): BacklogCustomFieldSettings =
     try {
-      backlog.getCustomFields(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
+      BacklogCustomFieldSettings(
+        backlog.getCustomFields(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
+      )
     } catch {
       case api: BacklogAPIException if api.getMessage.contains("current plan is not customField available.") =>
         logger.warn(api.getMessage, api)
-        Seq.empty[BacklogCustomFieldSetting]
+        BacklogCustomFieldSettings.empty
       case e: Throwable =>
         logger.error(e.getMessage, e)
-        Seq.empty[BacklogCustomFieldSetting]
+        BacklogCustomFieldSettings.empty
     }
 
   override def remove(customFieldSettingId: Long) = {
