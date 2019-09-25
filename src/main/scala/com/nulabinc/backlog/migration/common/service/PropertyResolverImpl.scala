@@ -2,7 +2,6 @@ package com.nulabinc.backlog.migration.common.service
 
 import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogVersion}
 import com.nulabinc.backlog.migration.common.utils.Logging
-import com.nulabinc.backlog.migration.common.domain._
 
 /**
   * @author uchida
@@ -40,12 +39,9 @@ class PropertyResolverImpl(customFieldSettingService: CustomFieldSettingService,
   }
 
   override def optResolvedCustomFieldSetting(name: String): Option[BacklogCustomFieldSetting] = {
-    def condition(customFieldSetting: BacklogCustomFieldSetting): Boolean = {
-      customFieldSetting.name.trim == name.trim
-    }
-    val optCustomFieldSetting = customFieldSettings.find(condition)
+    val optCustomFieldSetting = customFieldSettings.findByName(name)
     if (optCustomFieldSetting.isEmpty) {
-      logger.debug(s"[Custom Field not found.]:${name}:${customFieldSettings.map(_.name).mkString(",")}")
+      logger.debug(s"[Custom Field not found.]:${name}:${customFieldSettings.settings.map(_.name).mkString(",")}")
     }
     optCustomFieldSetting
   }

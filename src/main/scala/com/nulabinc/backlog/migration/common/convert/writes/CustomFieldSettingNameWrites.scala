@@ -15,7 +15,7 @@ class CustomFieldSettingNameWrites @Inject()() extends Writes[String, BacklogCus
   override def writes(name: String): BacklogCustomFieldSetting = {
     BacklogCustomFieldSetting(
       optId = None,
-      name = name,
+      rawName = name,
       description = "",
       typeId = FieldType.Text.getIntValue,
       required = false,

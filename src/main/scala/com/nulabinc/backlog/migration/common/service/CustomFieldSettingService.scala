@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
-import com.nulabinc.backlog.migration.common.domain.BacklogCustomFieldSetting
+import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogCustomFieldSettings}
 import com.nulabinc.backlog4j.api.option.{AddCustomFieldParams, UpdateCustomFieldParams}
 
 /**
@@ -8,7 +8,7 @@ import com.nulabinc.backlog4j.api.option.{AddCustomFieldParams, UpdateCustomFiel
   */
 trait CustomFieldSettingService {
 
-  def allCustomFieldSettings(): Seq[BacklogCustomFieldSetting]
+  def allCustomFieldSettings(): BacklogCustomFieldSettings
 
   def setAddParams(backlogCustomFieldSetting: BacklogCustomFieldSetting): AddCustomFieldParams
 

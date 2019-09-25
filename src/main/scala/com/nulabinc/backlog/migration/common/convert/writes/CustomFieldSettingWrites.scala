@@ -20,7 +20,7 @@ class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends W
     val backlogCustomFieldSetting =
       BacklogCustomFieldSetting(
         optId = Some(customFieldSetting.getId),
-        name = customFieldSetting.getName,
+        rawName = customFieldSetting.getName,
         description = customFieldSetting.getDescription,
         typeId = customFieldSetting.getFieldTypeId,
         required = customFieldSetting.isRequired,
