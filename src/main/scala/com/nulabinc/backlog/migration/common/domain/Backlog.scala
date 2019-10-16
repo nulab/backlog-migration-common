@@ -154,6 +154,7 @@ case class BacklogWiki(optId: Option[Long],
                        optContent: Option[String],
                        attachments: Seq[BacklogAttachment],
                        sharedFiles: Seq[BacklogSharedFile],
+                       tags: Seq[BacklogWikiTag],
                        optCreatedUser: Option[BacklogUser],
                        optCreated: Option[String],
                        optUpdatedUser: Option[BacklogUser],
@@ -164,6 +165,8 @@ case class BacklogWiki(optId: Option[Long],
       case _        => throw new RuntimeException("Wiki id is empty.")
     }
 }
+
+case class BacklogWikiTag(id: Long, name: String)
 
 case class BacklogCustomFieldSetting(
   optId: Option[Long],
