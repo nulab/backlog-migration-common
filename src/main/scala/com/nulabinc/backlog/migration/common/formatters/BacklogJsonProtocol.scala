@@ -47,7 +47,6 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   }
 
   implicit val BacklogWikiTagFormat                     = jsonFormat2(BacklogWikiTag)
-  implicit val BacklogWikiFormat                        = jsonFormat10(BacklogWiki)
   implicit val BacklogCustomFieldInitialDateFormat      = jsonFormat3(BacklogCustomFieldInitialDate)
   implicit val BacklogCustomFieldTextPropertyFormat     = jsonFormat1(BacklogCustomFieldTextProperty)
   implicit val BacklogCustomFieldNumericPropertyFormat  = jsonFormat5(BacklogCustomFieldNumericProperty)
@@ -93,6 +92,12 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
 
   implicit val BacklogCustomFieldSettingsFormat: RootJsonFormat[BacklogCustomFieldSettings] =
     jsonFormat(BacklogCustomFieldSettings.apply, "backlogCustomFieldSettings")
+
+  implicit val BacklogWikiFormat: RootJsonFormat[BacklogWiki] =
+    jsonFormat(
+      BacklogWiki.apply,
+      "optId", "name", "optContent", "attachments", "sharedFiles", "tags", "optCreatedUser", "optCreated", "optUpdatedUser", "optUpdated"
+    )
 
   implicit val BacklogVersionFormat                     = jsonFormat6(BacklogVersion)
   implicit val BacklogVersionsWrapperFormat             = jsonFormat1(BacklogVersionsWrapper)
