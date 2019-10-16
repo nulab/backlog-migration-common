@@ -1,7 +1,8 @@
-package com.nulabinc.backlog.migration.common.domain
+package com.nulabinc.backlog.migration.common.formatters
 
+import com.nulabinc.backlog.migration.common.domain._
 import com.nulabinc.backlog4j.CustomField.FieldType
-import spray.json.{DefaultJsonProtocol, JsNumber, JsValue, RootJsonFormat, _}
+import spray.json.{DefaultJsonProtocol, JsNumber, JsString, JsValue, RootJsonFormat, _}
 
 import scala.math.BigDecimal
 
@@ -45,7 +46,8 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
     }
   }
 
-  implicit val BacklogWikiFormat                        = jsonFormat9(BacklogWiki)
+  implicit val BacklogWikiTagFormat                     = jsonFormat2(BacklogWikiTag)
+  implicit val BacklogWikiFormat                        = jsonFormat10(BacklogWiki)
   implicit val BacklogCustomFieldInitialDateFormat      = jsonFormat3(BacklogCustomFieldInitialDate)
   implicit val BacklogCustomFieldTextPropertyFormat     = jsonFormat1(BacklogCustomFieldTextProperty)
   implicit val BacklogCustomFieldNumericPropertyFormat  = jsonFormat5(BacklogCustomFieldNumericProperty)
