@@ -154,16 +154,30 @@ case class BacklogWiki(optId: Option[Long],
                        optContent: Option[String],
                        attachments: Seq[BacklogAttachment],
                        sharedFiles: Seq[BacklogSharedFile],
+                       tags: Seq[BacklogWikiTag],
                        optCreatedUser: Option[BacklogUser],
                        optCreated: Option[String],
                        optUpdatedUser: Option[BacklogUser],
                        optUpdated: Option[String]) {
+
+  private val tagFormat: BacklogWikiTag => String = tag => s"[${tag.name}]"
+
   def id: Long =
     optId match {
       case Some(id) => id
       case _        => throw new RuntimeException("Wiki id is empty.")
     }
+
+  def nameWithTags: BacklogWiki = {
+    val head = if (tags.nonEmpty) tags.map(tagFormat).mkString + " " else ""
+    this.copy(
+      name = head + this.name
+    )
+  }
+
 }
+
+case class BacklogWikiTag(id: Long, name: String)
 
 case class BacklogCustomFieldSetting(
   optId: Option[Long],

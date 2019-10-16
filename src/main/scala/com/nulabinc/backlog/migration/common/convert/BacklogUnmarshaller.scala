@@ -11,7 +11,7 @@ import spray.json.JsonParser
   */
 object BacklogUnmarshaller {
 
-  import BacklogJsonProtocol._
+  import com.nulabinc.backlog.migration.common.formatters.BacklogJsonProtocol._
 
   def wiki(path: Path): Option[BacklogWiki] =
     IOUtil.input(path).map(JsonParser(_).convertTo[BacklogWiki])
