@@ -2,7 +2,7 @@
 name := "backlog-migration-common"
 
 libraryDependencies ++= Seq(
-  "com.nulab-inc"         %  "backlog4j"        % "2.3.0",
+  "com.nulab-inc"         %  "backlog4j"        % "2.3.3",
   "org.fusesource.jansi"  %  "jansi"            % "1.17",
   "com.osinka.i18n"       %% "scala-i18n"       % "1.0.3",
   "ch.qos.logback"        %  "logback-classic"  % "1.2.3",
