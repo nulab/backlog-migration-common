@@ -22,7 +22,6 @@ object ServiceInjector {
         bind(classOf[ProjectService]).to(classOf[ProjectServiceImpl])
         bind(classOf[SpaceService]).to(classOf[SpaceServiceImpl])
         bind(classOf[UserService]).to(classOf[UserServiceImpl])
-        bind(classOf[StatusService]).to(classOf[StatusServiceImpl])
         bind(classOf[PriorityService]).to(classOf[PriorityServiceImpl])
         bind(classOf[BacklogPaths]).toInstance(new BacklogPaths(apiConfig.projectKey))
       }
