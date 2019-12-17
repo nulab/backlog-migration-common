@@ -104,4 +104,6 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogSpaceFormat                       = jsonFormat3(BacklogSpace)
   implicit val BacklogEnvironmentFormat                 = jsonFormat2(BacklogEnvironment)
 
+  implicit val backlogStatusNameFormat = jsonFormat1(BacklogStatusName)
+
 }
