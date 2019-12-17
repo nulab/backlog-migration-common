@@ -1,7 +1,16 @@
 
 name := "backlog-migration-common"
 
+val catsVersion = "2.0.0"
+val monixVersion = "3.1.0"
+
 libraryDependencies ++= Seq(
+  "org.typelevel"         %% "cats-core"        % catsVersion,
+  "org.typelevel"         %% "cats-kernel"      % catsVersion,
+  "org.typelevel"         %% "cats-macros"      % catsVersion,
+  "io.monix"              %% "monix"            % monixVersion,
+  "io.monix"              %% "monix-eval"       % monixVersion,
+  "io.monix"              %% "monix-reactive"   % monixVersion,
   "com.nulab-inc"         %  "backlog4j"        % "2.3.3",
   "org.fusesource.jansi"  %  "jansi"            % "1.17",
   "com.osinka.i18n"       %% "scala-i18n"       % "1.0.3",
