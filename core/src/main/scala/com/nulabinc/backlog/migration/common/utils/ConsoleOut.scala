@@ -25,9 +25,8 @@ object ConsoleOut extends Logging {
     println(value, space, YELLOW)
   }
 
-  def info(value: String, space: Int = 0) = {
+  def info(value: String, space: Int = 0): Unit =
     println(value, space, BLUE)
-  }
 
   def println(value: String, space: Int = 0, color: Ansi.Color = BLACK): PrintStream = {
     logger.info(value)
