@@ -13,17 +13,14 @@ object ConsoleOut extends Logging {
 
   val outStream: PrintStream = System.out
 
-  def error(value: String, space: Int = 0) = {
+  def error(value: String, space: Int = 0): Unit =
     println(value, space, RED)
-  }
 
-  def success(value: String, space: Int = 0) = {
+  def success(value: String, space: Int = 0): Unit =
     println(value, space, GREEN)
-  }
 
-  def warning(value: String, space: Int = 0) = {
+  def warning(value: String, space: Int = 0): Unit =
     println(value, space, YELLOW)
-  }
 
   def info(value: String, space: Int = 0): Unit =
     println(value, space, BLUE)
