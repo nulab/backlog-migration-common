@@ -104,4 +104,15 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogSpaceFormat                       = jsonFormat3(BacklogSpace)
   implicit val BacklogEnvironmentFormat                 = jsonFormat2(BacklogEnvironment)
 
+  implicit object BacklogStatusNameFormat extends JsonFormat[BacklogStatusName] {
+    override def read(json: JsValue): BacklogStatusName =
+      json match {
+        case JsString(value) => BacklogStatusName(value)
+        case other => deserializationError(s"Invalid BacklogStatusName input: $other")
+      }
+
+    override def write(obj: BacklogStatusName): JsValue =
+      JsString(obj.value)
+  }
+
 }
