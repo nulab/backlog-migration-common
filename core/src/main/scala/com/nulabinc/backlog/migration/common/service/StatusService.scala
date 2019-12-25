@@ -1,12 +1,12 @@
 package com.nulabinc.backlog.migration.common.service
 
-import com.nulabinc.backlog4j.Status
+import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 
 /**
   * @author uchida
   */
 trait StatusService {
 
-  def allStatuses(): Seq[Status]
+  def allStatuses(): BacklogStatuses
 
 }

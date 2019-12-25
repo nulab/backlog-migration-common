@@ -112,7 +112,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
       }
 
     override def write(obj: BacklogStatusName): JsValue =
-      JsString(obj.value)
+      JsString(obj.trimmed)
   }
 
 }
