@@ -9,6 +9,9 @@ case class BacklogStatuses(private val values: Seq[BacklogStatus]) {
   def findByName(name: BacklogStatusName): Option[BacklogStatus] =
     values.find(_.name == name)
 
+  def map[B](f: BacklogStatus => B): Seq[B] =
+    values.map(f)
+
 }
 
 case class BacklogStatusName(private val value: String) {
