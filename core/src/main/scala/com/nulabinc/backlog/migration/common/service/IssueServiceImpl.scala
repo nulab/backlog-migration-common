@@ -403,7 +403,7 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
         params.priorities(priorityIds.flatMap(StringUtil.safeStringToInt).map(Issue.PriorityType.valueOf).asJava)
       }
       for { assigneeIds <- uri.query.paramMap.get("assigneeId[]") } yield {
-        params.assignerIds(assigneeIds.asJava)
+        params.assigneeIds(assigneeIds.asJava)
       }
       for { createdUserIds <- uri.query.paramMap.get("createdUserId[]") } yield {
         params.createdUserIds(createdUserIds.asJava)

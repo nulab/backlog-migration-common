@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
-import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogVersion}
+import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogStatusName, BacklogVersion}
 import com.nulabinc.backlog.migration.common.utils.Logging
 
 /**
@@ -81,16 +81,14 @@ class PropertyResolverImpl(customFieldSettingService: CustomFieldSettingService,
     optUser.map(_.id)
   }
 
-  override def tryResolvedStatusId(name: String): Int = {
-    val optStatus = statuses.find(_.getName.trim == name.trim)
-    if (optStatus.isEmpty) {
-      logger.debug(s"[Status not found.]:${name}:${statuses.map(_.getName).mkString(",")}")
-    }
-    optStatus match {
-      case Some(status) => status.getId
-      case _            => throw new RuntimeException("Status not found.")
-    }
-  }
+  override def tryResolvedStatusId(name: BacklogStatusName): Int =
+    statuses
+      .findByName(name)
+      .map(_.id)
+      .getOrElse {
+        logger.debug(s"[Status not found.]:${name}:${statuses.availableStatusNames.map(_.trimmed).mkString(",")}")
+        throw new RuntimeException("Status not found.")
+      }
 
   override def optResolvedResolutionId(name: String): Option[Long] = {
     val optResolution = resolutions.find(_.getName.trim == name.trim)

@@ -215,7 +215,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
                               optCurrentIssue: Option[Issue]) = {
     (optCurrentIssue, changeLog.optNewValue) match {
       case (Some(currentIssue), Some(newValue)) =>
-        val newStatusId = propertyResolver.tryResolvedStatusId(newValue)
+        val newStatusId = propertyResolver.tryResolvedStatusId(BacklogStatusName(newValue))
         if (currentIssue.getStatus.getId != newStatusId) {
           if (currentIssue.getStatus.getId == StatusType.Closed.getIntValue) {
             if (newStatusId == StatusType.InProgress.getIntValue) {
@@ -226,7 +226,11 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
           }
         }
       case _ =>
-        for { value <- changeLog.optNewValue } yield params.status(StatusType.valueOf(propertyResolver.tryResolvedStatusId(value)))
+        for {
+          value <- changeLog.optNewValue
+        } yield {
+          params.status(StatusType.valueOf(propertyResolver.tryResolvedStatusId(BacklogStatusName(value))))
+        }
     }
   }
 

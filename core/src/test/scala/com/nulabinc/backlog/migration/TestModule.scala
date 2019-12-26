@@ -4,7 +4,7 @@ import java.io.InputStream
 
 import com.google.inject.AbstractModule
 import com.nulabinc.backlog.migration.common.client.params.ImportIssueParams
-import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogIssue}
+import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogIssue, BacklogStatusName}
 import com.nulabinc.backlog.migration.common.service.IssueService
 import com.nulabinc.backlog.migration.common.service.PropertyResolver
 import com.nulabinc.backlog4j.Issue
@@ -108,7 +108,7 @@ class TestPropertyResolver extends PropertyResolver with SimpleFixture {
     else None
   }
 
-  override def tryResolvedStatusId(name: String): Int = {
+  override def tryResolvedStatusId(name: BacklogStatusName): Int = {
     1
   }
 
