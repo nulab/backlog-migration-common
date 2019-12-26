@@ -22,6 +22,9 @@ class LocalStorageDsl extends StorageDsl[Task] {
 
     for {
       _ <- delete(path)
+      dir = path.toAbsolutePath.toFile.getParentFile
+      dirExists <- exists(dir.toPath)
+      _ = if (dirExists) () else dir.mkdir()
       _ <- write(path, writeStream, StandardOpenOption.CREATE)
     } yield ()
   }
