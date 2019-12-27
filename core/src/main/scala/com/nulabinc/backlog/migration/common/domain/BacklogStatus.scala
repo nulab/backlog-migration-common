@@ -22,14 +22,12 @@ sealed trait BacklogStatus {
   val id: Int
   val name: BacklogStatusName
   val displayOrder: Int
-  val color: String
 }
 
 case class BacklogDefaultStatus(
   id: Int,
   name: BacklogStatusName,
   displayOrder: Int,
-  color: String
 ) extends BacklogStatus
 
 case class BacklogCustomStatus(
@@ -52,7 +50,6 @@ object BacklogStatus {
       BacklogDefaultStatus(
         id = status.getId,
         name = BacklogStatusName(status.getName),
-        displayOrder = status.getDisplayOrder,
-        color = status.getColor.getStrValue
+        displayOrder = status.getDisplayOrder
       )
 }
