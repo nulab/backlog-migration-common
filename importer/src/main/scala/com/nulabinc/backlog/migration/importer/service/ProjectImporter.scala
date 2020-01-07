@@ -1,10 +1,10 @@
 package com.nulabinc.backlog.migration.importer.service
 
 import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain._
+import com.nulabinc.backlog.migration.common.domain.exports.{DeletedBacklogStatus, ExistingBacklogStatus}
 import com.nulabinc.backlog.migration.common.service.{PropertyResolver, _}
 import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging, ProgressBar}
 import com.osinka.i18n.Messages
@@ -76,6 +76,7 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     importCategory()
     importIssueType()
     importCustomField()
+    importStatuses()
   }
 
   private[this] def postExecute(): Unit = {
@@ -146,7 +147,26 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     }
   }
 
-  private[this] def importProjectUser(propertyResolver: PropertyResolver) = {
+  private[this] def importStatuses(): Unit = {
+    val statuses = statusService.allStatuses()
+    val backlogStatuses = BacklogUnmarshaller
+      .statuses(backlogPaths)
+      .filter {
+        case s: ExistingBacklogStatus =>
+          statuses.isCustomStatus(s.status) && statuses.notExistByName(s.name)
+        case s: DeletedBacklogStatus =>
+          statuses.notExistByName(s.name)
+      }
+    val console = (ProgressBar.progress _)(Messages("common.statuses"), Messages("message.importing"), Messages("message.imported"))
+
+    backlogStatuses.zipWithIndex.foreach {
+      case (exportedStatus, index) =>
+//        statusService.add(backlogIssueType)
+        console(index + 1, backlogStatuses.size)
+    }
+  }
+
+  private[this] def importProjectUser(propertyResolver: PropertyResolver): Unit = {
     val projectUsers = BacklogUnmarshaller.projectUsers(backlogPaths)
     val console      = (ProgressBar.progress _)(Messages("common.project_user"), Messages("message.importing"), Messages("message.imported"))
     projectUsers.zipWithIndex.foreach {
