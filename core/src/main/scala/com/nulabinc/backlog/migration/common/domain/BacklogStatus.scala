@@ -12,6 +12,14 @@ case class BacklogStatuses(private val values: Seq[BacklogStatus]) {
   def map[B](f: BacklogStatus => B): Seq[B] =
     values.map(f)
 
+  def isCustomStatus(status: BacklogStatus): Boolean =
+    status match {
+      case _: BacklogDefaultStatus => false
+      case _: BacklogCustomStatus => true
+    }
+
+  def notExistByName(name: BacklogStatusName): Boolean =
+    findByName(name).isEmpty
 }
 
 case class BacklogStatusName(private val value: String) {
