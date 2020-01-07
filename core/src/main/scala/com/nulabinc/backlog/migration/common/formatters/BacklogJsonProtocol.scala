@@ -45,7 +45,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
 
   implicit object BacklogStatusFormat extends RootJsonFormat[BacklogStatus] {
     override def read(json: JsValue): BacklogStatus =
-      json.asJsObject.getFields("type", "status") match {
+      json.asJsObject.getFields("type", "value") match {
         case Seq(JsString(statusType), status) =>
           statusType match {
             case "default" => status.convertTo[BacklogDefaultStatus]
@@ -57,16 +57,12 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
       }
 
     override def write(obj: BacklogStatus): JsValue =
-      JsObject(
-        "type" -> (obj match {
-          case _: BacklogDefaultStatus => JsString("default")
-          case _: BacklogCustomStatus => JsString("custom")
-        }),
-        "status" -> (obj match {
-          case s: BacklogDefaultStatus => s.toJson
-          case s: BacklogCustomStatus => s.toJson
-        })
-      )
+      obj match {
+        case s: BacklogDefaultStatus =>
+          JsObject("type" -> JsString("default"), "value" -> s.toJson)
+        case s: BacklogCustomStatus =>
+          JsObject("type" -> JsString("custom"), "value" -> s.toJson)
+      }
   }
 
   // Issue
