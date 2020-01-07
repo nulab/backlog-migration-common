@@ -1,7 +1,6 @@
 package com.nulabinc.backlog.migration
 
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
-import com.nulabinc.backlog.migration.common.domain._
 import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, _}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue
@@ -62,9 +61,9 @@ trait SimpleFixture {
   val issueTypeName                  = "Task"
   val issueTypeId                    = 30
   val statusId                       = Issue.StatusType.Open.getIntValue
-  val statusName                     = Issue.StatusType.Open.name()
+  val status                         = BacklogDefaultStatus(1, BacklogStatusName("Open"), 1000)
   val statusId1                      = Issue.StatusType.InProgress.getIntValue
-  val statusName1                    = Issue.StatusType.InProgress.name()
+  val status1                        = BacklogDefaultStatus(2, BacklogStatusName("In progress"), 2000)
   val categoryName1                  = "Development"
   val categoryName2                  = "Test"
   val categoryId1                    = 31
@@ -281,8 +280,8 @@ trait SimpleFixture {
 
   val statusChangeLog1 = summaryChangeLog.copy(
     field = BacklogConstantValue.ChangeLog.STATUS,
-    optOriginalValue = Some(statusName),
-    optNewValue = Some(statusName1)
+    optOriginalValue = Some(status.name.trimmed),
+    optNewValue = Some(status1.name.trimmed)
   )
 
   val assignerChangeLog1 = summaryChangeLog.copy(
@@ -515,7 +514,7 @@ trait SimpleFixture {
     optEstimatedHours = Some(estimatedHours),
     optActualHours = Some(actualHours),
     optIssueTypeName = Some(issueTypeName),
-    statusName = statusName,
+    status = status,
     categoryNames = Seq(categoryName1, categoryName2),
     versionNames = Seq(versionName1, versionName2),
     milestoneNames = Seq(versionName3, versionName4),

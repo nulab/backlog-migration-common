@@ -2,7 +2,7 @@ package com.nulabinc.backlog.migration.common.formatters
 
 import com.nulabinc.backlog.migration.common.domain._
 import com.nulabinc.backlog4j.CustomField.FieldType
-import spray.json.{DefaultJsonProtocol, JsNumber, JsString, JsValue, RootJsonFormat, _}
+import spray.json._
 
 import scala.math.BigDecimal
 
@@ -28,7 +28,49 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogChangeLogFormat                   = jsonFormat7(BacklogChangeLog)
   implicit val BacklogCommentFormat                     = jsonFormat7(BacklogComment)
   implicit val BacklogIssueSummaryFormat                = jsonFormat2(BacklogIssueSummary)
-  implicit val BacklogIssueFormat                       = jsonFormat22(BacklogIssue)
+
+  // Status
+  implicit object BacklogStatusNameFormat extends JsonFormat[BacklogStatusName] {
+    override def read(json: JsValue): BacklogStatusName =
+      json match {
+        case JsString(value) => BacklogStatusName(value)
+        case other => deserializationError(s"Invalid BacklogStatusName input: $other")
+      }
+    override def write(obj: BacklogStatusName): JsValue =
+      JsString(obj.trimmed)
+  }
+
+  implicit val BacklogDefaultStatusFormat = jsonFormat3(BacklogDefaultStatus)
+  implicit val BacklogCustomStatusFormat  = jsonFormat4(BacklogCustomStatus)
+
+  implicit object BacklogStatusFormat extends RootJsonFormat[BacklogStatus] {
+    override def read(json: JsValue): BacklogStatus =
+      json.asJsObject.getFields("type", "status") match {
+        case Seq(JsString(statusType), status) =>
+          statusType match {
+            case "default" => status.convertTo[BacklogDefaultStatus]
+            case "custom" => status.convertTo[BacklogCustomStatus]
+            case other => deserializationError(s"Invalid custom status type. Input: $other")
+          }
+        case other =>
+          deserializationError(s"Invalid BacklogStatus JSON format. Input: $other")
+      }
+
+    override def write(obj: BacklogStatus): JsValue =
+      JsObject(
+        "type" -> (obj match {
+          case _: BacklogDefaultStatus => JsString("default")
+          case _: BacklogCustomStatus => JsString("custom")
+        }),
+        "status" -> (obj match {
+          case s: BacklogDefaultStatus => s.toJson
+          case s: BacklogCustomStatus => s.toJson
+        })
+      )
+  }
+
+  // Issue
+  implicit val BacklogIssueFormat = jsonFormat22(BacklogIssue)
 
   implicit object BacklogEventObjectFormat extends RootJsonFormat[BacklogEvent] {
     def write(eventObject: BacklogEvent) =
@@ -104,15 +146,6 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogSpaceFormat                       = jsonFormat3(BacklogSpace)
   implicit val BacklogEnvironmentFormat                 = jsonFormat2(BacklogEnvironment)
 
-  implicit object BacklogStatusNameFormat extends JsonFormat[BacklogStatusName] {
-    override def read(json: JsValue): BacklogStatusName =
-      json match {
-        case JsString(value) => BacklogStatusName(value)
-        case other => deserializationError(s"Invalid BacklogStatusName input: $other")
-      }
 
-    override def write(obj: BacklogStatusName): JsValue =
-      JsString(obj.trimmed)
-  }
 
 }
