@@ -85,6 +85,7 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     removeVersion(propertyResolver)
     removeCategory(propertyResolver)
     removeCustomField(propertyResolver)
+    removeStatus(propertyResolver)
 
     BacklogUnmarshaller.backlogCustomFieldSettings(backlogPaths).filter(!_.delete).foreach { customFieldSetting =>
       customFieldSettingService.update(customFieldSettingService.setUpdateParams(propertyResolver))(customFieldSetting)
@@ -251,6 +252,23 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
         }
       }
     }
+
+  private[this] def removeStatus(propertyResolver: PropertyResolver): Unit =
+    BacklogUnmarshaller
+      .statuses(backlogPaths)
+      .flatMap {
+        case s: DeletedBacklogStatus => Some(s.name)
+        case _: ExistingBacklogStatus => None
+      }
+      .foreach { name =>
+        val statusId = propertyResolver.tryResolvedStatusId(name)
+
+        try {
+          statusService.remove(statusId)
+        } catch {
+          case ex: Throwable => logger.warn(s"Remove status [${name.trimmed}] failed. ${ex.getMessage}")
+        }
+      }
 
   private[this] def buildPropertyResolver(): PropertyResolver =
     new PropertyResolverImpl(customFieldSettingService,

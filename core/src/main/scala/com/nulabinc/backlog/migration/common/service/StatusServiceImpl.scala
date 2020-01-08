@@ -49,6 +49,9 @@ class StatusServiceImpl @Inject()(backlog: BacklogAPIClient, projectKey: Backlog
       new UpdateOrderOfStatusParams(projectKey.value, ids.asJava)
     )
 
+  override def remove(id: Int): Unit =
+    backlog.removeStatus(projectKey.value, id, 1) // Any status id is OK
+
   private def defaultStatuses(): BacklogStatuses =
     BacklogStatuses(
       backlog
