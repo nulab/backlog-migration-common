@@ -42,7 +42,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   }
 
   implicit val BacklogDefaultStatusFormat = jsonFormat3(BacklogDefaultStatus)
-  implicit val BacklogCustomStatusFormat  = jsonFormat4(BacklogCustomStatus)
+  implicit val BacklogCustomStatusFormat  = jsonFormat4(BacklogCustomStatus.apply)
 
   implicit object BacklogStatusFormat extends RootJsonFormat[BacklogStatus] {
     override def read(json: JsValue): BacklogStatus =

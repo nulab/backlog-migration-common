@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
-import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
+import com.nulabinc.backlog.migration.common.domain.{BacklogCustomStatus, BacklogStatuses}
 
 /**
   * @author uchida
@@ -8,5 +8,7 @@ import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 trait StatusService {
 
   def allStatuses(): BacklogStatuses
+
+  def add(status: BacklogCustomStatus): Unit
 
 }

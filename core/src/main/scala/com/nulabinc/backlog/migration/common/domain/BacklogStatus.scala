@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.domain
 
+import com.nulabinc.backlog4j.Project.CustomStatusColor
 import com.nulabinc.backlog4j.{Issue, Status}
 
 case class BacklogStatuses(private val values: Seq[BacklogStatus]) {
@@ -44,6 +45,16 @@ case class BacklogCustomStatus(
   displayOrder: Int,
   color: String
 ) extends BacklogStatus
+
+object BacklogCustomStatus {
+  def create(name: BacklogStatusName): BacklogCustomStatus =
+    BacklogCustomStatus(
+      id = Int.MinValue,
+      name = name,
+      displayOrder = Int.MinValue,
+      color = CustomStatusColor.Color1.getStrValue
+    )
+}
 
 object BacklogStatus {
   def from(status: Status): BacklogStatus =

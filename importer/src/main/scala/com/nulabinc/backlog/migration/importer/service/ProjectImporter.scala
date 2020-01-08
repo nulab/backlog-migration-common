@@ -161,7 +161,15 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
 
     backlogStatuses.zipWithIndex.foreach {
       case (exportedStatus, index) =>
-//        statusService.add(backlogIssueType)
+        exportedStatus match {
+          case backlogStatus: ExistingBacklogStatus =>
+            backlogStatus.status match {
+              case _: BacklogDefaultStatus => ()
+              case s: BacklogCustomStatus => statusService.add(s)
+            }
+          case s: DeletedBacklogStatus =>
+            statusService.add(BacklogCustomStatus.create(s.name))
+        }
         console(index + 1, backlogStatuses.size)
     }
   }
