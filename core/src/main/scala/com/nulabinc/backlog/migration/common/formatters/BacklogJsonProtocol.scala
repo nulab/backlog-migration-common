@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.common.formatters
 
 import com.nulabinc.backlog.migration.common.domain._
+import com.nulabinc.backlog.migration.common.domain.exports.{BacklogStatusForExport, DeletedBacklogStatus, ExistingBacklogStatus}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import spray.json._
 
@@ -41,7 +42,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   }
 
   implicit val BacklogDefaultStatusFormat = jsonFormat3(BacklogDefaultStatus)
-  implicit val BacklogCustomStatusFormat  = jsonFormat4(BacklogCustomStatus)
+  implicit val BacklogCustomStatusFormat  = jsonFormat4(BacklogCustomStatus.apply)
 
   implicit object BacklogStatusFormat extends RootJsonFormat[BacklogStatus] {
     override def read(json: JsValue): BacklogStatus =
@@ -142,6 +143,36 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogSpaceFormat                       = jsonFormat3(BacklogSpace)
   implicit val BacklogEnvironmentFormat                 = jsonFormat2(BacklogEnvironment)
 
+  implicit val existingBacklogStatusFormat = jsonFormat(ExistingBacklogStatus.apply _, "status")
+  implicit val deletedBacklogStatusFormat  = jsonFormat(DeletedBacklogStatus.apply _, "status")
 
+  // Export and Import
+  implicit object BacklogStatusForExportFormat extends RootJsonFormat[BacklogStatusForExport] {
+    override def read(json: JsValue): BacklogStatusForExport =
+      json.asJsObject.getFields("type", "value") match {
+        case Seq(JsString(valueType), status) =>
+          valueType match {
+            case "existing" => status.convertTo[ExistingBacklogStatus]
+            case "deleted" => status.convertTo[DeletedBacklogStatus]
+            case other => deserializationError(s"Invalid status type. input: $other")
+          }
+        case other =>
+          deserializationError(s"Invalid status json. input: $other")
+      }
+
+    override def write(obj: BacklogStatusForExport): JsValue =
+      obj match {
+        case s: ExistingBacklogStatus =>
+          JsObject(
+            "type" -> JsString("existing"),
+            "value" -> s.toJson
+          )
+        case s: DeletedBacklogStatus =>
+          JsObject(
+            "type" -> JsString("deleted"),
+            "status" -> s.toJson
+          )
+      }
+  }
 
 }

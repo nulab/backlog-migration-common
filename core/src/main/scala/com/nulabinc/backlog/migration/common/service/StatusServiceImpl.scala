@@ -1,8 +1,10 @@
 package com.nulabinc.backlog.migration.common.service
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
-import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, BacklogStatus, BacklogStatuses}
+import com.nulabinc.backlog.migration.common.domain.{BacklogCustomStatus, BacklogProjectKey, BacklogStatus, BacklogStatuses}
 import com.nulabinc.backlog4j.BacklogAPIException
+import com.nulabinc.backlog4j.Project.CustomStatusColor
+import com.nulabinc.backlog4j.api.option.AddStatusParams
 import javax.inject.Inject
 
 import scala.jdk.CollectionConverters._
@@ -29,6 +31,15 @@ class StatusServiceImpl @Inject()(backlog: BacklogAPIClient, projectKey: Backlog
         throw ex
     }.getOrElse(defaultStatuses())
 
+  override def add(status: BacklogCustomStatus): Unit =
+    backlog.addStatus(
+      new AddStatusParams(
+        projectKey.value,
+        status.name.trimmed,
+        CustomStatusColor.strValueOf(status.color)
+      )
+    )
+
   private def defaultStatuses(): BacklogStatuses =
     BacklogStatuses(
       backlog
@@ -37,4 +48,5 @@ class StatusServiceImpl @Inject()(backlog: BacklogAPIClient, projectKey: Backlog
         .toSeq
         .map(BacklogStatus.from)
     )
+
 }

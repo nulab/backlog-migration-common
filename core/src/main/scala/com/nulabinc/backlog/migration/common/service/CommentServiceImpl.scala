@@ -2,16 +2,16 @@ package com.nulabinc.backlog.migration.common.service
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.client.params._
-import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.{CommentWrites, IssueWrites}
 import com.nulabinc.backlog.migration.common.domain._
 import com.nulabinc.backlog.migration.common.utils.{Logging, StringUtil}
 import com.nulabinc.backlog4j.CustomField.FieldType
-import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType, StatusType}
+import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option.{QueryParams, UpdateIssueParams}
+import javax.inject.Inject
 
 import scala.jdk.CollectionConverters._
 
@@ -212,27 +212,10 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
   private[this] def setStatus(params: ImportUpdateIssueParams,
                               changeLog: BacklogChangeLog,
                               propertyResolver: PropertyResolver,
-                              optCurrentIssue: Option[Issue]) = {
-    (optCurrentIssue, changeLog.optNewValue) match {
-      case (Some(currentIssue), Some(newValue)) =>
-        val newStatusId = propertyResolver.tryResolvedStatusId(BacklogStatusName(newValue))
-        if (currentIssue.getStatus.getId != newStatusId) {
-          if (currentIssue.getStatus.getId == StatusType.Closed.getIntValue) {
-            if (newStatusId == StatusType.InProgress.getIntValue) {
-              params.status(StatusType.valueOf(newStatusId))
-            }
-          } else {
-            params.status(StatusType.valueOf(newStatusId))
-          }
-        }
-      case _ =>
-        for {
-          value <- changeLog.optNewValue
-        } yield {
-          params.status(StatusType.valueOf(propertyResolver.tryResolvedStatusId(BacklogStatusName(value))))
-        }
+                              optCurrentIssue: Option[Issue]): Unit =
+    changeLog.optNewValue.foreach { newValue =>
+      params.statusId(propertyResolver.tryResolvedStatusId(BacklogStatusName(newValue)))
     }
-  }
 
   private[this] def setAssignee(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, propertyResolver: PropertyResolver): Object =
     changeLog.optNewValue match {

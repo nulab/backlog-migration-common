@@ -1,10 +1,10 @@
 package com.nulabinc.backlog.migration.importer.service
 
 import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain._
+import com.nulabinc.backlog.migration.common.domain.exports.{DeletedBacklogStatus, ExistingBacklogStatus}
 import com.nulabinc.backlog.migration.common.service.{PropertyResolver, _}
 import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging, ProgressBar}
 import com.osinka.i18n.Messages
@@ -30,7 +30,7 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
                                                   priorityService: PriorityService)
     extends Logging {
 
-  def execute(fitIssueKey: Boolean, retryCount: Int) = {
+  def execute(fitIssueKey: Boolean, retryCount: Int): Unit = {
     val project = BacklogUnmarshaller.project(backlogPaths)
     projectService.create(project) match {
       case Right(project) =>
@@ -68,7 +68,7 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     issuesImporter.execute(project, propertyResolver, fitIssueKey, retryCount)
   }
 
-  private[this] def preExecute() = {
+  private[this] def preExecute(): Unit = {
     val propertyResolver = buildPropertyResolver()
     importGroup(propertyResolver)
     importProjectUser(propertyResolver)
@@ -76,9 +76,10 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     importCategory()
     importIssueType()
     importCustomField()
+    importStatuses()
   }
 
-  private[this] def postExecute() = {
+  private[this] def postExecute(): Unit = {
     val propertyResolver = buildPropertyResolver()
 
     removeVersion(propertyResolver)
@@ -90,7 +91,7 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     }
   }
 
-  private[this] def importGroup(propertyResolver: PropertyResolver) = {
+  private[this] def importGroup(propertyResolver: PropertyResolver): Unit = {
     val groups = groupService.allGroups()
     def exists(group: BacklogGroup): Boolean = {
       groups.exists(_.name == group.name)
@@ -104,7 +105,7 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     }
   }
 
-  private[this] def importVersion() = {
+  private[this] def importVersion(): Unit = {
     val versions = versionService.allVersions()
     def exists(version: BacklogVersion): Boolean = {
       versions.exists(_.name == version.name)
@@ -118,7 +119,7 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     }
   }
 
-  private[this] def importCategory() = {
+  private[this] def importCategory(): Unit = {
     val categories = issueCategoryService.allIssueCategories()
     def exists(issueCategory: BacklogIssueCategory): Boolean = {
       categories.exists(_.name == issueCategory.name)
@@ -132,7 +133,7 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     }
   }
 
-  private[this] def importIssueType() = {
+  private[this] def importIssueType(): Unit = {
     val issueTypes = issueTypeService.allIssueTypes()
     def exists(issueType: BacklogIssueType): Boolean = {
       issueTypes.exists(_.name == issueType.name)
@@ -146,7 +147,34 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     }
   }
 
-  private[this] def importProjectUser(propertyResolver: PropertyResolver) = {
+  private[this] def importStatuses(): Unit = {
+    val statuses = statusService.allStatuses()
+    val backlogStatuses = BacklogUnmarshaller
+      .statuses(backlogPaths)
+      .filter {
+        case s: ExistingBacklogStatus =>
+          statuses.isCustomStatus(s.status) && statuses.notExistByName(s.name)
+        case s: DeletedBacklogStatus =>
+          statuses.notExistByName(s.name)
+      }
+    val console = (ProgressBar.progress _)(Messages("common.statuses"), Messages("message.importing"), Messages("message.imported"))
+
+    backlogStatuses.zipWithIndex.foreach {
+      case (exportedStatus, index) =>
+        exportedStatus match {
+          case backlogStatus: ExistingBacklogStatus =>
+            backlogStatus.status match {
+              case _: BacklogDefaultStatus => ()
+              case s: BacklogCustomStatus => statusService.add(s)
+            }
+          case s: DeletedBacklogStatus =>
+            statusService.add(BacklogCustomStatus.create(s.name))
+        }
+        console(index + 1, backlogStatuses.size)
+    }
+  }
+
+  private[this] def importProjectUser(propertyResolver: PropertyResolver): Unit = {
     val projectUsers = BacklogUnmarshaller.projectUsers(backlogPaths)
     val console      = (ProgressBar.progress _)(Messages("common.project_user"), Messages("message.importing"), Messages("message.imported"))
     projectUsers.zipWithIndex.foreach {
@@ -170,7 +198,7 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     }
   }
 
-  private[this] def removeVersion(propertyResolver: PropertyResolver) = {
+  private[this] def removeVersion(propertyResolver: PropertyResolver): Unit = {
     BacklogUnmarshaller.versions(backlogPaths).filter(_.delete).foreach { version =>
       for {
         versionId <- propertyResolver.optResolvedVersionId(version.name)
@@ -184,7 +212,7 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     }
   }
 
-  private[this] def removeCategory(propertyResolver: PropertyResolver) = {
+  private[this] def removeCategory(propertyResolver: PropertyResolver): Unit = {
     BacklogUnmarshaller.issueCategories(backlogPaths).filter(_.delete).foreach { category =>
       for {
         issueCategoryId <- propertyResolver.optResolvedCategoryId(category.name)
@@ -198,7 +226,7 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     }
   }
 
-  private[this] def removeCustomField(propertyResolver: PropertyResolver) =
+  private[this] def removeCustomField(propertyResolver: PropertyResolver): Unit =
     BacklogUnmarshaller.backlogCustomFieldSettings(backlogPaths).filter(_.delete).foreach { backlogCustomFieldSetting =>
       for {
         targetCustomFieldSetting <- propertyResolver.optResolvedCustomFieldSetting(backlogCustomFieldSetting.name)
@@ -212,7 +240,7 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
       }
     }
 
-  private[this] def buildPropertyResolver(): PropertyResolver = {
+  private[this] def buildPropertyResolver(): PropertyResolver =
     new PropertyResolverImpl(customFieldSettingService,
                              issueTypeService,
                              issueCategoryService,
@@ -221,6 +249,5 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
                              userService,
                              statusService,
                              priorityService)
-  }
 
 }
