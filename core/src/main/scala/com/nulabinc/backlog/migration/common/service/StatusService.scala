@@ -13,4 +13,6 @@ trait StatusService {
 
   def updateOrder(ids: Seq[Int]): Unit
 
+  def remove(id: Int): Unit
+
 }
