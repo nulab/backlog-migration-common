@@ -170,7 +170,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
         case s: DeletedBacklogStatus =>
           JsObject(
             "type" -> JsString("deleted"),
-            "status" -> s.toJson
+            "value" -> s.toJson
           )
       }
   }
