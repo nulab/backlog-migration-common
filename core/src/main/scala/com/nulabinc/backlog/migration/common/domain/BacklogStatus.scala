@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration.common.domain
 
-import com.nulabinc.backlog4j.Status
+import com.nulabinc.backlog4j.{Issue, Status}
 
 case class BacklogStatuses(private val values: Seq[BacklogStatus]) {
 
@@ -39,7 +39,7 @@ case class BacklogCustomStatus(
 
 object BacklogStatus {
   def from(status: Status): BacklogStatus =
-    if (status.getStatusType == -1)
+    if (status.getStatusType == Issue.StatusType.Custom)
       BacklogCustomStatus(
         id = status.getId,
         name = BacklogStatusName(status.getName),
