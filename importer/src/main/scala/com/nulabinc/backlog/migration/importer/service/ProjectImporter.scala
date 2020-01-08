@@ -148,30 +148,42 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
   }
 
   private[this] def importStatuses(): Unit = {
-    val statuses = statusService.allStatuses()
-    val backlogStatuses = BacklogUnmarshaller
-      .statuses(backlogPaths)
+    val projectStatuses = statusService.allStatuses()
+    val willExistDestinationStatuses = BacklogUnmarshaller.statuses(backlogPaths) // Status ids are old.
+
+    // Import Statuses excluding default statuses
+    val mustImportCustomStatuses = willExistDestinationStatuses
       .filter {
         case s: ExistingBacklogStatus =>
-          statuses.isCustomStatus(s.status) && statuses.notExistByName(s.name)
+          projectStatuses.isCustomStatus(s.status) && projectStatuses.notExistByName(s.name)
         case s: DeletedBacklogStatus =>
-          statuses.notExistByName(s.name)
+          projectStatuses.notExistByName(s.name)
+      }
+      .flatMap {
+        case backlogStatus: ExistingBacklogStatus =>
+          backlogStatus.status match {
+            case _: BacklogDefaultStatus => None
+            case s: BacklogCustomStatus => Some(s)
+          }
+        case s: DeletedBacklogStatus =>
+          Some(BacklogCustomStatus.create(s.name))
       }
     val console = (ProgressBar.progress _)(Messages("common.statuses"), Messages("message.importing"), Messages("message.imported"))
 
-    backlogStatuses.zipWithIndex.foreach {
+    val importedCustomStatuses = mustImportCustomStatuses.zipWithIndex.map {
       case (exportedStatus, index) =>
-        exportedStatus match {
-          case backlogStatus: ExistingBacklogStatus =>
-            backlogStatus.status match {
-              case _: BacklogDefaultStatus => ()
-              case s: BacklogCustomStatus => statusService.add(s)
-            }
-          case s: DeletedBacklogStatus =>
-            statusService.add(BacklogCustomStatus.create(s.name))
-        }
-        console(index + 1, backlogStatuses.size)
+        val added = statusService.add(exportedStatus)
+        console(index + 1, mustImportCustomStatuses.size)
+        added.copy(displayOrder = exportedStatus.displayOrder) // Added display order is always 3999. Must update from old one.
     }
+
+    // Update display orders
+    val updatedAllDestinationStatusIds = projectStatuses
+      .append(importedCustomStatuses)
+      .sortBy(_.displayOrder)
+      .map(_.id)
+
+    statusService.updateOrder(updatedAllDestinationStatusIds)
   }
 
   private[this] def importProjectUser(propertyResolver: PropertyResolver): Unit = {

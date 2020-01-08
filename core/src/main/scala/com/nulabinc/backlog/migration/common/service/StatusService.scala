@@ -9,6 +9,8 @@ trait StatusService {
 
   def allStatuses(): BacklogStatuses
 
-  def add(status: BacklogCustomStatus): Unit
+  def add(status: BacklogCustomStatus): BacklogCustomStatus
+
+  def updateOrder(ids: Seq[Int]): Unit
 
 }
