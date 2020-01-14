@@ -2,7 +2,7 @@ package com.nulabinc.backlog.migration.common.dsl
 
 import java.nio.file.Path
 
-trait StorageDsl[F[_]] {
+trait StorageDSL[F[_]] {
 
   def readFile(path: Path): F[String]
 

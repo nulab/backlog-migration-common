@@ -4,13 +4,13 @@ import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, StandardOpenOption}
 
-import com.nulabinc.backlog.migration.common.dsl.StorageDsl
+import com.nulabinc.backlog.migration.common.dsl.StorageDSL
 import monix.eval.Task
 import monix.reactive.Observable
 
 import scala.util.control.NonFatal
 
-class LocalStorageDsl extends StorageDsl[Task] {
+class LocalStorageDSL extends StorageDSL[Task] {
 
   override def readFile(path: Path): Task[String] = Task {
     new String(Files.readAllBytes(path), StandardCharsets.UTF_8)
