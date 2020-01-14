@@ -27,7 +27,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogCustomFieldFormat                 = jsonFormat4(BacklogCustomField)
   implicit val BacklogAttributeInfoFormat               = jsonFormat2(BacklogAttributeInfo)
   implicit val BacklogChangeLogFormat                   = jsonFormat7(BacklogChangeLog)
-  implicit val BacklogCommentFormat                     = jsonFormat7(BacklogComment)
+  implicit val BacklogCommentFormat                     = jsonFormat7(BacklogComment.apply)
   implicit val BacklogIssueSummaryFormat                = jsonFormat2(BacklogIssueSummary)
 
   // Status
@@ -41,7 +41,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
       JsString(obj.trimmed)
   }
 
-  implicit val BacklogDefaultStatusFormat = jsonFormat3(BacklogDefaultStatus)
+  implicit val BacklogDefaultStatusFormat = jsonFormat3(BacklogDefaultStatus.apply)
   implicit val BacklogCustomStatusFormat  = jsonFormat4(BacklogCustomStatus.apply)
 
   implicit object BacklogStatusFormat extends RootJsonFormat[BacklogStatus] {

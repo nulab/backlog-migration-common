@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.domain
 
+import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.domain.support.{Identifier, Undefined}
 
 /**
@@ -126,7 +127,38 @@ case class BacklogComment(eventType: String,
                           notifications: Seq[BacklogNotification],
                           optCreatedUser: Option[BacklogUser],
                           optCreated: Option[String])
-    extends BacklogEvent
+    extends BacklogEvent {
+
+  def statusChangeLogs: Seq[BacklogChangeLog] =
+    changeLogs.filter(_.field == BacklogConstantValue.ChangeLog.STATUS)
+}
+
+object BacklogComment {
+  def statusComment(optIssueId: Option[Long],
+                    optOriginalValue: Option[BacklogStatusName],
+                    optNewValue: Option[BacklogStatusName],
+                    optCreatedUser: Option[BacklogUser],
+                    optCreated: Option[String]): BacklogComment =
+    BacklogComment(
+      eventType = "comment",
+      optIssueId = optIssueId,
+      optContent = None,
+      changeLogs = Seq(
+        BacklogChangeLog(
+          field = BacklogConstantValue.ChangeLog.STATUS,
+          optOriginalValue = optOriginalValue.map(_.trimmed),
+          optNewValue = optNewValue.map(_.trimmed),
+          optAttachmentInfo = None,
+          optAttributeInfo = None,
+          optNotificationInfo = None,
+          mustDeleteAttachment = false
+        )
+      ),
+      notifications = Seq(),
+      optCreatedUser = optCreatedUser,
+      optCreated = optCreated
+    )
+}
 
 case class BacklogAttachment(optId: Option[Long], name: String)
 
