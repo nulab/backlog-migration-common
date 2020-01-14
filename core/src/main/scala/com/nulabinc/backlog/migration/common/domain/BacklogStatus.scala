@@ -37,6 +37,12 @@ sealed trait BacklogStatus {
   val id: Int
   val name: BacklogStatusName
   val displayOrder: Int
+
+  def isCustomStatus: Boolean =
+    this match {
+      case _: BacklogCustomStatus => true
+      case _: BacklogDefaultStatus => false
+    }
 }
 
 case class BacklogDefaultStatus(
