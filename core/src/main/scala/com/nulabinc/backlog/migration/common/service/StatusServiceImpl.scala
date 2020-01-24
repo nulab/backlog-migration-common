@@ -54,6 +54,7 @@ class StatusServiceImpl @Inject()(backlog: BacklogAPIClient,
       case ex: BacklogAPIException if ex.getMessage.contains("Undefined resource") =>
         logger.warn("Your backlog doesn't support the updateOrder API", ex)
       case ex =>
+        logger.error(s"UpdateOrder API error. Message: ${ex.getMessage}", ex)
         throw ex
     }.getOrElse(())
 
