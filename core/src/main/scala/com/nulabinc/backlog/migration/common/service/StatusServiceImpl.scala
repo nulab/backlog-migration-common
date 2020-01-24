@@ -2,6 +2,7 @@ package com.nulabinc.backlog.migration.common.service
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.domain.{BacklogCustomStatus, BacklogProjectKey, BacklogStatus, BacklogStatuses}
+import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.BacklogAPIException
 import com.nulabinc.backlog4j.Project.CustomStatusColor
 import com.nulabinc.backlog4j.api.option.{AddStatusParams, UpdateOrderOfStatusParams}
@@ -13,7 +14,8 @@ import scala.util.Try
 /**
   * @author uchida
   */
-class StatusServiceImpl @Inject()(backlog: BacklogAPIClient, projectKey: BacklogProjectKey) extends StatusService {
+class StatusServiceImpl @Inject()(backlog: BacklogAPIClient,
+                                  projectKey: BacklogProjectKey) extends StatusService with Logging {
 
   override def allStatuses(): BacklogStatuses =
     Try {
@@ -31,7 +33,6 @@ class StatusServiceImpl @Inject()(backlog: BacklogAPIClient, projectKey: Backlog
         throw ex
     }.getOrElse(defaultStatuses())
 
-
   override def add(status: BacklogCustomStatus): BacklogCustomStatus = {
     val added = backlog.addStatus(
       new AddStatusParams(
@@ -45,9 +46,16 @@ class StatusServiceImpl @Inject()(backlog: BacklogAPIClient, projectKey: Backlog
   }
 
   override def updateOrder(ids: Seq[Int]): Unit =
-    backlog.updateOrderOfStatus(
-      new UpdateOrderOfStatusParams(projectKey.value, ids.asJava)
-    )
+    Try {
+      backlog.updateOrderOfStatus(
+        new UpdateOrderOfStatusParams(projectKey.value, ids.asJava)
+      )
+    }.recover {
+      case ex: BacklogAPIException if ex.getMessage.contains("Undefined resource") =>
+        logger.warn("Your backlog doesn't support the updateOrder API", ex)
+      case ex =>
+        throw ex
+    }.getOrElse(())
 
   override def remove(id: Int): Unit =
     backlog.removeStatus(projectKey.value, id, 1) // Any status id is OK
