@@ -1,7 +1,7 @@
 
 name := "backlog-migration-common"
 
-val catsVersion = "2.0.0"
+val catsVersion = "2.1.0"
 val monixVersion = "3.1.0"
 
 libraryDependencies ++= Seq(
@@ -16,10 +16,10 @@ libraryDependencies ++= Seq(
   "com.osinka.i18n"       %% "scala-i18n"       % "1.0.3",
   "ch.qos.logback"        %  "logback-classic"  % "1.2.3",
   "com.typesafe"          %  "config"           % "1.3.3",
-  "com.google.inject"     %  "guice"            % "4.2.0",
+  "com.google.inject"     %  "guice"            % "4.2.2",
   "io.spray"              %% "spray-json"       % "1.3.5",
   "net.codingwell"        %% "scala-guice"      % "4.2.6",
   "io.lemonlabs"          %% "scala-uri"        % "1.5.1",
   "com.github.pathikrit"  %% "better-files"     % "3.8.0",
-  "org.scalatest"         %% "scalatest"        % "3.0.8"   % Test
+  "org.scalatest"         %% "scalatest"        % "3.1.0"   % Test
 )
