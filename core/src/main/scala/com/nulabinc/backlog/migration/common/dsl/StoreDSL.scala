@@ -1,13 +1,14 @@
 package com.nulabinc.backlog.migration.common.dsl
 
 import com.nulabinc.backlog.migration.common.domain.Types.AnyId
-import com.nulabinc.backlog.migration.common.dsl.DBIOTypes.{DBIORead, DBIOStream}
+import com.nulabinc.backlog.migration.common.dsl.DBIOTypes.{DBIORead, DBIOStream, DBIOWrite}
 import monix.reactive.Observable
 import slick.dbio.Effect.{All, Read, Write}
 import slick.dbio.{DBIOAction, NoStream, StreamingDBIO}
 
 trait StoreDSL[F[_]] {
   def read[A](a: DBIORead[A]): F[A]
+  def write[A](a: DBIOWrite): F[Int]
   def stream[A](a: DBIOStream[A]): F[Observable[A]]
 }
 
