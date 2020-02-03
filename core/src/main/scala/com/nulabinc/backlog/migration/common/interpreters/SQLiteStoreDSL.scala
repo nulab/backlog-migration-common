@@ -2,8 +2,8 @@ package com.nulabinc.backlog.migration.common.interpreters
 
 import java.nio.file.Path
 
-import com.nulabinc.backlog.migration.common.dsl.DBIOTypes.{DBIORead, DBIOStream, DBIOWrite}
 import com.nulabinc.backlog.migration.common.dsl.StoreDSL
+import com.nulabinc.backlog.migration.common.persistence.sqlite.DBIOTypes._
 import monix.eval.Task
 import monix.reactive.Observable
 import slick.jdbc.SQLiteProfile.api._
