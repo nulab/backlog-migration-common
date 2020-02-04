@@ -2,7 +2,6 @@ package com.nulabinc.backlog.migration.common.interpreters
 
 import java.nio.file.Path
 
-import com.nulabinc.backlog.migration.common.domain.Types.AnyId
 import com.nulabinc.backlog.migration.common.dsl.StoreDSL
 import com.nulabinc.backlog.migration.common.persistence.sqlite.DBIOTypes._
 import monix.eval.Task
@@ -17,7 +16,7 @@ case class SQLiteStoreDSL(dbPath: Path) extends StoreDSL[Task] {
     db.run(a)
   }
 
-  def write[A](a: DBIOWrite): Task[AnyId] = Task.deferFuture {
+  def write(a: DBIOWrite): Task[Int] = Task.deferFuture {
     db.run(a)
   }
 
