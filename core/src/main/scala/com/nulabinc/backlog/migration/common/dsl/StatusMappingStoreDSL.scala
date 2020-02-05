@@ -1,9 +1,10 @@
 package com.nulabinc.backlog.migration.common.dsl
 
 import com.nulabinc.backlog.migration.common.domain.mappings.StatusMapping
-import com.nulabinc.backlog.migration.common.persistence.sqlite.DBIOTypes.DBIOWrite
+import com.nulabinc.backlog.migration.common.persistence.sqlite.DBIOTypes.{DBIORead, DBIOWrite}
 
 trait StatusMappingQuery[A] {
+  def findQuery(mapping: StatusMapping[A]): DBIORead[Option[StatusMapping[A]]]
   def saveQuery(mapping: StatusMapping[A]): DBIOWrite
 }
 
