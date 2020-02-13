@@ -25,8 +25,6 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
     extends CommentService
     with Logging {
 
-  private val SINGLE_LIST_CUSTOM_FIELD_NOT_SET = -1
-
   override def allCommentsOfIssue(issueId: Long): Seq[BacklogComment] = {
     val allCount = backlog.getIssueCommentCount(issueId)
 
@@ -383,7 +381,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
             item   <- property.items.find(_.name == value)
             itemId <- item.optId
           } yield params.singleListCustomField(id, itemId)
-        case _ => params.singleListCustomField(id, SINGLE_LIST_CUSTOM_FIELD_NOT_SET)
+        case _ => params.singleEmptyListCustomField(id)
       }
     }
 
