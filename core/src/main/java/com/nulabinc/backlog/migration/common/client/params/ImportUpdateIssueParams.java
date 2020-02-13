@@ -38,7 +38,7 @@ public class ImportUpdateIssueParams extends UpdateIssueParams {
         return this;
     }
 
-    public UpdateIssueParams singleEmptyListCustomField(long customFieldId) {
+    public UpdateIssueParams emptySingleListCustomField(long customFieldId) {
         parameters.add(new NameValuePair("customField_" + String.valueOf(customFieldId), ""));
         return this;
     }

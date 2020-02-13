@@ -381,7 +381,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
             item   <- property.items.find(_.name == value)
             itemId <- item.optId
           } yield params.singleListCustomField(id, itemId)
-        case _ => params.singleEmptyListCustomField(id)
+        case _ => params.emptySingleListCustomField(id)
       }
     }
 
