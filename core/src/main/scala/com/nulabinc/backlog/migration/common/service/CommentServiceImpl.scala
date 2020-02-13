@@ -387,18 +387,22 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
 
   private[this] def setMultipleListCustomField(params: ImportUpdateIssueParams,
                                                changeLog: BacklogChangeLog,
-                                               customFieldSetting: BacklogCustomFieldSetting) =
+                                               customFieldSetting: BacklogCustomFieldSetting): Unit =
     (changeLog.optNewValue, customFieldSetting.property, customFieldSetting.optId) match {
       case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id)) =>
         val newValues: Seq[String] = value.split(",").toSeq.map(_.trim)
-
         val listItems   = newValues.filter(isItemExists(property))
         val stringItems = newValues.filterNot(isItemExists(property))
-
         val itemIds = listItems.flatMap(findItem(property)).flatMap(_.optId)
+
         params.multipleListCustomField(id, itemIds.map(Long.box).asJava)
         params.customFieldOtherValue(id, stringItems.mkString(","))
+        ()
+      case (None, _: BacklogCustomFieldMultipleProperty, Some(id)) =>
+        params.multipleListCustomField(id, List.empty[Long].map(Long.box).asJava)
+        params.customFieldOtherValue(id, (""))
       case _ =>
+        logger.warn("Unknown pattern of multiple list")
     }
 
   private[this] def findItem(property: BacklogCustomFieldMultipleProperty)(newValue: String): Option[BacklogItem] =
