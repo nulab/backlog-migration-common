@@ -25,8 +25,6 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
     extends CommentService
     with Logging {
 
-  private val SINGLE_LIST_CUSTOM_FIELD_NOT_SET = -1
-
   override def allCommentsOfIssue(issueId: Long): Seq[BacklogComment] = {
     val allCount = backlog.getIssueCommentCount(issueId)
 
@@ -378,36 +376,39 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
                                              customFieldSetting: BacklogCustomFieldSetting) =
     for { id <- customFieldSetting.optId } yield {
       (changeLog.optNewValue, customFieldSetting.property) match {
-        case (Some(value), property: BacklogCustomFieldMultipleProperty) if (value.nonEmpty) =>
+        case (Some(value), property: BacklogCustomFieldMultipleProperty) if value.nonEmpty =>
           for {
             item   <- property.items.find(_.name == value)
             itemId <- item.optId
           } yield params.singleListCustomField(id, itemId)
-        case _ => params.singleListCustomField(id, SINGLE_LIST_CUSTOM_FIELD_NOT_SET)
+        case _ => params.emptySingleListCustomField(id)
       }
     }
 
   private[this] def setMultipleListCustomField(params: ImportUpdateIssueParams,
                                                changeLog: BacklogChangeLog,
-                                               customFieldSetting: BacklogCustomFieldSetting) =
+                                               customFieldSetting: BacklogCustomFieldSetting): Unit =
     (changeLog.optNewValue, customFieldSetting.property, customFieldSetting.optId) match {
       case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id)) =>
         val newValues: Seq[String] = value.split(",").toSeq.map(_.trim)
+        val listItems   = newValues.filter(isItemExists(property))
+        val stringItems = newValues.filterNot(isItemExists(property))
+        val itemIds = listItems.flatMap(findItem(property)).flatMap(_.optId)
 
-        def findItem(newValue: String): Option[BacklogItem] = {
-          property.items.find(_.name == newValue)
-        }
-
-        def isItem(value: String): Boolean = {
-          findItem(value).isDefined
-        }
-        val listItems   = newValues.filter(isItem)
-        val stringItems = newValues.filterNot(isItem)
-
-        val itemIds = listItems.flatMap(findItem).flatMap(_.optId)
         params.multipleListCustomField(id, itemIds.map(Long.box).asJava)
         params.customFieldOtherValue(id, stringItems.mkString(","))
+        ()
+      case (None, _: BacklogCustomFieldMultipleProperty, Some(id)) =>
+        params.multipleListCustomField(id, List.empty[Long].map(Long.box).asJava)
+        params.customFieldOtherValue(id, (""))
       case _ =>
+        logger.warn("Unknown pattern of multiple list")
     }
+
+  private[this] def findItem(property: BacklogCustomFieldMultipleProperty)(newValue: String): Option[BacklogItem] =
+    property.items.find(_.name == newValue)
+
+  private[this] def isItemExists(property: BacklogCustomFieldMultipleProperty)(target: String): Boolean =
+    findItem(property)(target).isDefined
 
 }

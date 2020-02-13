@@ -31,11 +31,15 @@ public class ImportUpdateIssueParams extends UpdateIssueParams {
     public ImportUpdateIssueParams updatedUserId(long updatedUserId) {
         parameters.add(new NameValuePair("updatedUserId", String.valueOf(updatedUserId)));
         return this;
-
     }
 
     public ImportUpdateIssueParams updated(String updated) {
         parameters.add(new NameValuePair("updated", updated));
+        return this;
+    }
+
+    public UpdateIssueParams emptySingleListCustomField(long customFieldId) {
+        parameters.add(new NameValuePair("customField_" + String.valueOf(customFieldId), ""));
         return this;
     }
 
