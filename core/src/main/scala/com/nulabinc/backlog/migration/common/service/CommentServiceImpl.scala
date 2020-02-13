@@ -376,7 +376,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
                                              customFieldSetting: BacklogCustomFieldSetting) =
     for { id <- customFieldSetting.optId } yield {
       (changeLog.optNewValue, customFieldSetting.property) match {
-        case (Some(value), property: BacklogCustomFieldMultipleProperty) if (value.nonEmpty) =>
+        case (Some(value), property: BacklogCustomFieldMultipleProperty) if value.nonEmpty =>
           for {
             item   <- property.items.find(_.name == value)
             itemId <- item.optId
@@ -392,20 +392,19 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
       case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id)) =>
         val newValues: Seq[String] = value.split(",").toSeq.map(_.trim)
 
-        def findItem(newValue: String): Option[BacklogItem] = {
-          property.items.find(_.name == newValue)
-        }
+        val listItems   = newValues.filter(isItemExists(property))
+        val stringItems = newValues.filterNot(isItemExists(property))
 
-        def isItem(value: String): Boolean = {
-          findItem(value).isDefined
-        }
-        val listItems   = newValues.filter(isItem)
-        val stringItems = newValues.filterNot(isItem)
-
-        val itemIds = listItems.flatMap(findItem).flatMap(_.optId)
+        val itemIds = listItems.flatMap(findItem(property)).flatMap(_.optId)
         params.multipleListCustomField(id, itemIds.map(Long.box).asJava)
         params.customFieldOtherValue(id, stringItems.mkString(","))
       case _ =>
     }
+
+  private[this] def findItem(property: BacklogCustomFieldMultipleProperty)(newValue: String): Option[BacklogItem] =
+    property.items.find(_.name == newValue)
+
+  private[this] def isItemExists(property: BacklogCustomFieldMultipleProperty)(target: String): Boolean =
+    findItem(property)(target).isDefined
 
 }
