@@ -377,11 +377,15 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
     for { id <- customFieldSetting.optId } yield {
       (changeLog.optNewValue, customFieldSetting.property) match {
         case (Some(value), property: BacklogCustomFieldMultipleProperty) if value.nonEmpty =>
-          for {
-            item   <- property.items.find(_.name == value)
-            itemId <- item.optId
-          } yield params.singleListCustomField(id, itemId)
-        case _ => params.emptySingleListCustomField(id)
+          property.items
+            .find(_.name == value)
+            .flatMap(_.optId)
+            .map(itemId => params.singleListCustomField(id, itemId))
+            .getOrElse {
+              logger.error("Cannot find a custom status item. Item name: " + value)
+            }
+        case _ =>
+          params.emptySingleListCustomField(id)
       }
     }
 
@@ -390,10 +394,15 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
                                                customFieldSetting: BacklogCustomFieldSetting): Unit =
     (changeLog.optNewValue, customFieldSetting.property, customFieldSetting.optId) match {
       case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id)) =>
-        val newValues: Seq[String] = value.split(",").toSeq.map(_.trim)
-        val listItems   = newValues.filter(isItemExists(property))
+        val newValues = value.split(",").toSeq.map(_.trim)
+        val listItems = newValues.filter(isItemExists(property))
         val stringItems = newValues.filterNot(isItemExists(property))
         val itemIds = listItems.flatMap(findItem(property)).flatMap(_.optId)
+
+        // BLGMIGRATION-868
+        newValues.diff(listItems).foreach { missingValue =>
+          logger.error("Cannot find custom field value. Maybe it was renamed. Name: " + missingValue)
+        }
 
         params.multipleListCustomField(id, itemIds.map(Long.box).asJava)
         params.customFieldOtherValue(id, stringItems.mkString(","))
@@ -401,6 +410,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
       case (None, _: BacklogCustomFieldMultipleProperty, Some(id)) =>
         params.multipleListCustomField(id, List.empty[Long].map(Long.box).asJava)
         params.customFieldOtherValue(id, (""))
+        ()
       case _ =>
         logger.warn("Unknown pattern of multiple list")
     }
