@@ -6,7 +6,7 @@ import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.{CommentWrites, IssueWrites}
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.utils.{Logging, StringUtil}
+import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging, StringUtil}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
 import com.nulabinc.backlog4j._
@@ -382,7 +382,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
             .flatMap(_.optId)
             .map(itemId => params.singleListCustomField(id, itemId))
             .getOrElse {
-              logger.error("Cannot find a custom status item. Item name: " + value)
+              ConsoleOut.error("Cannot find a custom status item. Item name: " + value)
             }
         case _ =>
           params.emptySingleListCustomField(id)
@@ -401,7 +401,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
 
         // BLGMIGRATION-868
         newValues.diff(listItems).foreach { missingValue =>
-          logger.error("Cannot find custom field value. Maybe it was renamed. Name: " + missingValue)
+          ConsoleOut.error("Cannot find custom field value. Maybe it was renamed. Name: " + missingValue)
         }
 
         params.multipleListCustomField(id, itemIds.map(Long.box).asJava)
