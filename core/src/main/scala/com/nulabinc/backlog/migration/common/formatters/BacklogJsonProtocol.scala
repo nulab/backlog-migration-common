@@ -1,7 +1,7 @@
 package com.nulabinc.backlog.migration.common.formatters
 
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.domain.exports.{BacklogStatusForExport, DeletedBacklogStatus, ExistingBacklogStatus}
+import com.nulabinc.backlog.migration.common.domain.exports.{DeletedExportedBacklogStatus, ExistingExportedBacklogStatus, ExportedBacklogIssue, ExportedBacklogStatus}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import spray.json._
 
@@ -143,31 +143,31 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogSpaceFormat                       = jsonFormat3(BacklogSpace)
   implicit val BacklogEnvironmentFormat                 = jsonFormat2(BacklogEnvironment)
 
-  implicit val existingBacklogStatusFormat = jsonFormat(ExistingBacklogStatus.apply _, "status")
-  implicit val deletedBacklogStatusFormat  = jsonFormat(DeletedBacklogStatus.apply _, "status")
+  implicit val existingBacklogStatusFormat = jsonFormat(ExistingExportedBacklogStatus.apply _, "status")
+  implicit val deletedBacklogStatusFormat  = jsonFormat(DeletedExportedBacklogStatus.apply _, "status")
 
   // Export and Import
-  implicit object BacklogStatusForExportFormat extends RootJsonFormat[BacklogStatusForExport] {
-    override def read(json: JsValue): BacklogStatusForExport =
+  implicit object ExportedBacklogStatusFormat extends RootJsonFormat[ExportedBacklogStatus] {
+    override def read(json: JsValue): ExportedBacklogStatus =
       json.asJsObject.getFields("type", "value") match {
         case Seq(JsString(valueType), status) =>
           valueType match {
-            case "existing" => status.convertTo[ExistingBacklogStatus]
-            case "deleted" => status.convertTo[DeletedBacklogStatus]
+            case "existing" => status.convertTo[ExistingExportedBacklogStatus]
+            case "deleted" => status.convertTo[DeletedExportedBacklogStatus]
             case other => deserializationError(s"Invalid status type. input: $other")
           }
         case other =>
           deserializationError(s"Invalid status json. input: $other")
       }
 
-    override def write(obj: BacklogStatusForExport): JsValue =
+    override def write(obj: ExportedBacklogStatus): JsValue =
       obj match {
-        case s: ExistingBacklogStatus =>
+        case s: ExistingExportedBacklogStatus =>
           JsObject(
             "type" -> JsString("existing"),
             "value" -> s.toJson
           )
-        case s: DeletedBacklogStatus =>
+        case s: DeletedExportedBacklogStatus =>
           JsObject(
             "type" -> JsString("deleted"),
             "value" -> s.toJson
@@ -175,4 +175,5 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
       }
   }
 
+  implicit val exportedBacklogIssueFormat = jsonFormat21(ExportedBacklogIssue)
 }

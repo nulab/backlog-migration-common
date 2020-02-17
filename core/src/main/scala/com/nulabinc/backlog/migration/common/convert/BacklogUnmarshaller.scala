@@ -3,7 +3,7 @@ package com.nulabinc.backlog.migration.common.convert
 import better.files.{File => Path}
 import com.nulabinc.backlog.migration.common.domain._
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
-import com.nulabinc.backlog.migration.common.domain.exports.BacklogStatusForExport
+import com.nulabinc.backlog.migration.common.domain.exports.ExportedBacklogStatus
 import com.nulabinc.backlog.migration.common.utils.IOUtil
 import spray.json.JsonParser
 
@@ -61,11 +61,11 @@ object BacklogUnmarshaller {
       })
       .getOrElse(Seq.empty[BacklogIssueType])
 
-  def statuses(backlogPaths: BacklogPaths): Seq[BacklogStatusForExport] =
+  def statuses(backlogPaths: BacklogPaths): Seq[ExportedBacklogStatus] =
     IOUtil
       .input(backlogPaths.statusesJson)
       .map { json =>
-        JsonParser(json).convertTo[Seq[BacklogStatusForExport]]
+        JsonParser(json).convertTo[Seq[ExportedBacklogStatus]]
       }
       .getOrElse(Seq())
 

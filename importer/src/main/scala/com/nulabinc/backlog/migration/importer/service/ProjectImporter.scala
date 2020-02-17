@@ -4,7 +4,7 @@ import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.domain.exports.{DeletedBacklogStatus, ExistingBacklogStatus}
+import com.nulabinc.backlog.migration.common.domain.exports.{DeletedExportedBacklogStatus, ExistingExportedBacklogStatus}
 import com.nulabinc.backlog.migration.common.service.{PropertyResolver, _}
 import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging, ProgressBar}
 import com.osinka.i18n.Messages
@@ -155,18 +155,18 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     // Import Statuses excluding default statuses
     val mustImportCustomStatuses = willExistDestinationStatuses
       .filter {
-        case s: ExistingBacklogStatus =>
+        case s: ExistingExportedBacklogStatus =>
           projectStatuses.isCustomStatus(s.status) && projectStatuses.notExistByName(s.name)
-        case s: DeletedBacklogStatus =>
+        case s: DeletedExportedBacklogStatus =>
           projectStatuses.notExistByName(s.name)
       }
       .flatMap {
-        case backlogStatus: ExistingBacklogStatus =>
+        case backlogStatus: ExistingExportedBacklogStatus =>
           backlogStatus.status match {
             case _: BacklogDefaultStatus => None
             case s: BacklogCustomStatus => Some(s)
           }
-        case s: DeletedBacklogStatus =>
+        case s: DeletedExportedBacklogStatus =>
           Some(BacklogCustomStatus.create(s.name))
       }
     val console = (ProgressBar.progress _)(Messages("common.statuses"), Messages("message.importing"), Messages("message.imported"))
@@ -257,8 +257,8 @@ private[importer] class ProjectImporter @Inject()(backlogPaths: BacklogPaths,
     BacklogUnmarshaller
       .statuses(backlogPaths)
       .flatMap {
-        case s: DeletedBacklogStatus => Some(s.name)
-        case _: ExistingBacklogStatus => None
+        case s: DeletedExportedBacklogStatus => Some(s.name)
+        case _: ExistingExportedBacklogStatus => None
       }
       .foreach { name =>
         val statusId = propertyResolver.tryResolvedStatusId(name)

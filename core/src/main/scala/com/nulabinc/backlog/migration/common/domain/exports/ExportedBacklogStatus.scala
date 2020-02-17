@@ -2,13 +2,13 @@ package com.nulabinc.backlog.migration.common.domain.exports
 
 import com.nulabinc.backlog.migration.common.domain.{BacklogStatus, BacklogStatusName}
 
-sealed trait BacklogStatusForExport{
+sealed trait ExportedBacklogStatus{
   val name: BacklogStatusName
 }
 
-case class ExistingBacklogStatus(status: BacklogStatus) extends BacklogStatusForExport {
+case class ExistingExportedBacklogStatus(status: BacklogStatus) extends ExportedBacklogStatus {
   override val name: BacklogStatusName = status.name
 }
 
-case class DeletedBacklogStatus(name: BacklogStatusName) extends BacklogStatusForExport
+case class DeletedExportedBacklogStatus(name: BacklogStatusName) extends ExportedBacklogStatus
 
