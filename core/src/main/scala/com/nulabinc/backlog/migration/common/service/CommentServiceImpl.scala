@@ -5,6 +5,7 @@ import com.nulabinc.backlog.migration.common.client.params._
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.{CommentWrites, IssueWrites}
+import com.nulabinc.backlog.migration.common.domain.IssueTags.SourceIssue
 import com.nulabinc.backlog.migration.common.domain._
 import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging, StringUtil}
 import com.nulabinc.backlog4j.CustomField.FieldType
@@ -98,7 +99,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
 
     //changelog
     backlogComment.changeLogs.foreach { changeLog =>
-      setChangeLog(changeLog, params, toRemoteIssueId, propertyResolver, postAttachment, optCurrentIssue)
+      setChangeLog(changeLog, params, toRemoteIssueId, propertyResolver, postAttachment, optCurrentIssue, backlogComment.optIssueId.map(Id[SourceIssue]), backlogComment.optCreated)
     }
 
     params
@@ -124,9 +125,11 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
                                  toRemoteIssueId: (Long) => Option[Long],
                                  propertyResolver: PropertyResolver,
                                  postAttachment: (String) => Option[Long],
-                                 optCurrentIssue: Option[Issue]) = {
+                                 optCurrentIssue: Option[Issue],
+                                 optSrcIssueId: Option[Id[SourceIssue]],
+                                 optCreated: Option[String]) = {
     if (changeLog.optAttributeInfo.nonEmpty) {
-      setCustomField(params, changeLog, propertyResolver)
+      setCustomField(params, changeLog, propertyResolver, optSrcIssueId, optCreated)
     } else if (changeLog.optAttachmentInfo.nonEmpty) {
       setAttachment(params, changeLog, postAttachment)
     } else setAttr(params, changeLog, toRemoteIssueId, propertyResolver, optCurrentIssue)
@@ -287,7 +290,11 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
       id       <- postAttachment(fileName)
     } yield params.attachmentIds(Seq(Long.box(id)).asJava)
 
-  private[this] def setCustomField(params: ImportUpdateIssueParams, changeLog: BacklogChangeLog, propertyResolver: PropertyResolver) =
+  private[this] def setCustomField(params: ImportUpdateIssueParams,
+                                   changeLog: BacklogChangeLog,
+                                   propertyResolver: PropertyResolver,
+                                   optSrcIssueId: Option[Id[SourceIssue]],
+                                   optCreated: Option[String]) =
     for { customFieldSetting <- propertyResolver.optResolvedCustomFieldSetting(changeLog.field) } yield {
       FieldType.valueOf(customFieldSetting.typeId) match {
         case FieldType.Text         => setTextCustomField(params, changeLog, customFieldSetting)
@@ -295,7 +302,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
         case FieldType.Numeric      => setNumericCustomField(params, changeLog, customFieldSetting)
         case FieldType.Date         => setDateCustomField(params, changeLog, customFieldSetting)
         case FieldType.SingleList   => setSingleListCustomField(params, changeLog, customFieldSetting)
-        case FieldType.MultipleList => setMultipleListCustomField(params, changeLog, customFieldSetting)
+        case FieldType.MultipleList => setMultipleListCustomField(params, changeLog, customFieldSetting, optSrcIssueId, optCreated)
         case FieldType.CheckBox     => setCheckBoxCustomField(params, changeLog, customFieldSetting)
         case FieldType.Radio        => setRadioCustomField(params, changeLog, customFieldSetting)
         case _                      =>
@@ -380,18 +387,26 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
           property.items
             .find(_.name == value)
             .flatMap(_.optId)
-            .map(itemId => params.singleListCustomField(id, itemId))
-            .getOrElse {
-              ConsoleOut.error("Cannot find a custom status item. Item name: " + value)
+            .map { itemId =>
+              params.singleListCustomField(id, itemId)
+              ()
             }
+            .getOrElse {
+              ConsoleOut.error(s"Cannot find a custom status item. Item name: $value")
+              ()
+            }
+          ()
         case _ =>
           params.emptySingleListCustomField(id)
+          ()
       }
     }
 
   private[this] def setMultipleListCustomField(params: ImportUpdateIssueParams,
                                                changeLog: BacklogChangeLog,
-                                               customFieldSetting: BacklogCustomFieldSetting): Unit =
+                                               customFieldSetting: BacklogCustomFieldSetting,
+                                               optSrcIssueId: Option[Id[SourceIssue]],
+                                               optCreated: Option[String]): Unit =
     (changeLog.optNewValue, customFieldSetting.property, customFieldSetting.optId) match {
       case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id)) =>
         val newValues = value.split(",").toSeq.map(_.trim)
@@ -401,7 +416,9 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
 
         // BLGMIGRATION-868
         newValues.diff(listItems).foreach { missingValue =>
-          ConsoleOut.error("Cannot find custom field value. Maybe it was renamed. Name: " + missingValue)
+          val srcIssueIdStr = optSrcIssueId.map(_.value).getOrElse("")
+          val createdStr = optCreated.getOrElse("")
+          ConsoleOut.error(s"Cannot find custom field value. Maybe it was renamed. Name: $missingValue Source issue id: $srcIssueIdStr Created: $createdStr")
         }
 
         params.multipleListCustomField(id, itemIds.map(Long.box).asJava)
