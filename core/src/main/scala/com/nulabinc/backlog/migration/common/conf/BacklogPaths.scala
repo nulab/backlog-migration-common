@@ -14,6 +14,8 @@ class BacklogPaths(projectKey: String, basePath: Path = Paths.get("./backlog")) 
 
   def outputPath: BetterFile = basePath
 
+  def dbPath: Path = (outputPath / "data.db").path.toAbsolutePath
+
   def projectDirectoryPath(key: String): BetterFile = outputPath / "project" / key
 
   def projectJson: BetterFile = outputPath / "project.json"
