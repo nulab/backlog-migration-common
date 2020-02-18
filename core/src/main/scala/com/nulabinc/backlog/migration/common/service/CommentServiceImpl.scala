@@ -415,7 +415,7 @@ class CommentServiceImpl @Inject()(implicit val issueWrites: IssueWrites,
         val itemIds = listItems.flatMap(findItem(property)).flatMap(_.optId)
 
         // BLGMIGRATION-868
-        newValues.diff(listItems).foreach { missingValue =>
+        newValues.diff(listItems).filter(_.nonEmpty).foreach { missingValue =>
           val srcIssueIdStr = optSrcIssueId.map(_.value).getOrElse("")
           val createdStr = optCreated.getOrElse("")
           ConsoleOut.error(s"Cannot find custom field value. Maybe it was renamed. Name: $missingValue Source issue id: $srcIssueIdStr Created: $createdStr")
