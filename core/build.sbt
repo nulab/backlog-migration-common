@@ -33,3 +33,11 @@ libraryDependencies ++= Seq(
   "com.chuusai"           %% "shapeless"        % "2.3.3",
   "org.scalatest"         %% "scalatest"        % "3.1.0"   % Test
 )
+
+scalacOptions ++= List(
+  "-unchecked",
+  "-deprecation",
+  "-language:higherKinds",
+  "-language:implicitConversions",
+  "-Ymacro-annotations"
+)
