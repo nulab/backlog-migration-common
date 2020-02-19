@@ -22,13 +22,11 @@ class JansiConsoleDSL extends ConsoleDSL[Task] with Logging {
     }
 
     outStream.flush()
-    outStream
   }
 
   override def boldln(value: String, space: Int, color: Ansi.Color): Task[Unit] = Task.eval {
     logger.info(value)
     outStream.println((" " * space) + bold(value, color))
     outStream.flush()
-    outStream
   }
 }
