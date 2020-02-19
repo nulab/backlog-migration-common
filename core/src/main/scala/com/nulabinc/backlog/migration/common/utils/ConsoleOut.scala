@@ -25,6 +25,7 @@ object ConsoleOut extends Logging {
   def info(value: String, space: Int = 0): Unit =
     println(value, space, BLUE)
 
+  @deprecated("ConsoleDSL[F].println")
   def println(value: String, space: Int = 0, color: Ansi.Color = BLACK): PrintStream = {
     logger.info(value)
     if (color == BLACK) {
@@ -45,6 +46,7 @@ object ConsoleOut extends Logging {
     }
   }
 
+  @deprecated("ConsoleDSL[F].boldln")
   def boldln(value: String, space: Int = 0, color: Ansi.Color = BLACK) = {
     logger.info(value)
     outStream.println((" " * space) + bold(value, color))

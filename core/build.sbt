@@ -16,6 +16,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick"    %% "slick-hikaricp"   % slickVersion,
   "org.xerial"            %  "sqlite-jdbc"      % "3.30.1",
   "com.nulab-inc"         %  "backlog4j"        % "2.3.3",
+  "com.github.mpilquist"  %% "simulacrum"       % "0.19.0",
   "org.fusesource.jansi"  %  "jansi"            % "1.17",
   "com.osinka.i18n"       %% "scala-i18n"       % "1.0.3",
   "ch.qos.logback"        %  "logback-classic"  % "1.2.3",

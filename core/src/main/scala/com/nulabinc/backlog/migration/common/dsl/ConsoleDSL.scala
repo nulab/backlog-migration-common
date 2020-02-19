@@ -2,8 +2,10 @@ package com.nulabinc.backlog.migration.common.dsl
 
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.Color.BLACK
+import simulacrum.typeclass
 
+@typeclass
 trait ConsoleDSL[F[_]] {
-
+  def println(value: String, space: Int = 0, color: Ansi.Color = BLACK): F[Unit]
   def boldln(value: String, space: Int = 0, color: Ansi.Color = BLACK): F[Unit]
 }

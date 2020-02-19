@@ -2,6 +2,9 @@ package com.nulabinc.backlog.migration.common.dsl
 
 import java.nio.file.Path
 
+import simulacrum.typeclass
+
+@typeclass
 trait StorageDSL[F[_]] {
 
   def readFile(path: Path): F[String]
