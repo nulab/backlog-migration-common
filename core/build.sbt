@@ -1,6 +1,10 @@
 
 name := "backlog-migration-common"
 
+version := "0.1.2-SNAPSHOT"
+
+scalaVersion := "2.13.1"
+
 val catsVersion = "2.1.0"
 val monixVersion = "3.1.0"
 val slickVersion = "3.3.2"
