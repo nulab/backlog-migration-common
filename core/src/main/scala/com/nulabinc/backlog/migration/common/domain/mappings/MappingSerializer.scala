@@ -3,7 +3,6 @@ package com.nulabinc.backlog.migration.common.domain.mappings
 import java.nio.charset.{Charset, StandardCharsets}
 
 import monix.reactive.Observable
-import org.apache.commons.csv.CSVRecord
 
 object MappingSerializer {
 
@@ -11,6 +10,13 @@ object MappingSerializer {
 
   def status[A](mappings: Seq[StatusMapping[A]])
                (implicit serializer: Serializer[StatusMapping[A], Seq[String]]): Observable[Array[Byte]] =
+    toObservable(mappings)
+
+  def priority[A](mappings: Seq[PriorityMapping[A]])
+                 (implicit serializer: Serializer[PriorityMapping[A], Seq[String]]): Observable[Array[Byte]] =
+    toObservable(mappings)
+
+  private def toObservable[A](mappings: Seq[A])(implicit serializer: Serializer[A, Seq[String]]): Observable[Array[Byte]] =
     Observable
       .fromIteratorUnsafe(mappings.iterator)
       .map(serializer.serialize)
@@ -22,12 +28,4 @@ object MappingSerializer {
 
   private def toByteArray(str: String): Array[Byte] =
     str.getBytes(charset)
-}
-
-object MappingDeserializer {
-
-  def status[A, F[_]](records: IndexedSeq[CSVRecord])
-               (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]]): IndexedSeq[StatusMapping[A]] =
-    records.map(deserializer.deserialize)
-
 }

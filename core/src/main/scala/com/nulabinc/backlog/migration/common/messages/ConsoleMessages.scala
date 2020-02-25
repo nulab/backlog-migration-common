@@ -3,7 +3,7 @@ package com.nulabinc.backlog.migration.common.messages
 import java.nio.file.Path
 import java.util.Locale
 
-import com.nulabinc.backlog.migration.common.domain.mappings.{Formatter, StatusMapping}
+import com.nulabinc.backlog.migration.common.domain.mappings.{Formatter, PriorityMapping, StatusMapping}
 import com.osinka.i18n.{Lang, Messages}
 
 object ConsoleMessages {
@@ -13,6 +13,7 @@ object ConsoleMessages {
 
   object Mappings {
     private lazy val statusItem = Messages("common.statuses")
+    private lazy val priorityItem = Messages("common.priorities")
 
     def statusMappingMerged[A](filePath: Path, items: Seq[StatusMapping[A]])(implicit formatter: Formatter[StatusMapping[A]]): String =
       mappingMerged(statusItem, filePath, items.map(formatter.format))
@@ -22,6 +23,15 @@ object ConsoleMessages {
 
     def statusMappingCreated(filePath: Path): String =
       mappingFileCreated(statusItem, filePath)
+
+    def priorityMappingMerged[A](filePath: Path, items: Seq[PriorityMapping[A]])(implicit formatter: Formatter[PriorityMapping[A]]): String =
+      mappingMerged(priorityItem, filePath, items.map(formatter.format))
+
+    def priorityMappingNoChanges: String =
+      mappingNoChanges(priorityItem)
+
+    def priorityMappingCreated(filePath: Path): String =
+      mappingFileCreated(priorityItem, filePath)
 
     private def mappingMerged(itemName: String, filePath: Path, mappingStrings: Seq[(String, String)]): String = {
       val formatted = mappingStrings.map {
