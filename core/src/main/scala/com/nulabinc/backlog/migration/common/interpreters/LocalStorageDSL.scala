@@ -12,22 +12,30 @@ import scala.util.control.NonFatal
 
 class LocalStorageDSL extends StorageDSL[Task] {
 
+  private val charset = StandardCharsets.UTF_8
+
   override def readFile(path: Path): Task[String] = Task {
     new String(Files.readAllBytes(path), StandardCharsets.UTF_8)
   }
 
   override def writeFile(path: Path, content: String): Task[Unit] = {
-    val stream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))
+    val stream = new ByteArrayInputStream(content.getBytes(charset))
     val writeStream = Observable.fromInputStreamUnsafe(stream)
 
+    writeNewFile(path, writeStream)
+  }
+
+  override def writeNewFile(path: Path, stream: Observable[Array[Byte]]): Task[Unit] =
     for {
       _ <- delete(path)
       dir = path.toAbsolutePath.toFile.getParentFile
       dirExists <- exists(dir.toPath)
       _ = if (dirExists) () else dir.mkdir()
-      _ <- write(path, writeStream, StandardOpenOption.CREATE)
+      _ <- write(path, stream, StandardOpenOption.CREATE)
     } yield ()
-  }
+
+  override def writeAppendFile(path: Path, stream: Observable[Array[Byte]]): Task[Unit] =
+    write(path, stream, StandardOpenOption.APPEND)
 
   override def exists(path: Path): Task[Boolean] = Task {
     path.toFile.exists()
