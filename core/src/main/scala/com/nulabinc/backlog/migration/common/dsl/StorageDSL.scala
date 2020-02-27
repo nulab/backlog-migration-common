@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.dsl
 
+import java.io.InputStream
 import java.nio.file.Path
 
 import monix.reactive.Observable
@@ -8,7 +9,7 @@ import simulacrum.typeclass
 @typeclass
 trait StorageDSL[F[_]] {
 
-  def readFile(path: Path): F[String]
+  def read[A](path: Path, f: InputStream => A): F[A]
 
   def writeFile(path: Path, content: String): F[Unit]
 

@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration.common.interpreters
 
-import java.io.ByteArrayInputStream
+import java.io.{ByteArrayInputStream, InputStream}
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, StandardOpenOption}
 
@@ -8,14 +8,27 @@ import com.nulabinc.backlog.migration.common.dsl.StorageDSL
 import monix.eval.Task
 import monix.reactive.Observable
 
+import scala.util.Try
 import scala.util.control.NonFatal
 
-class LocalStorageDSL extends StorageDSL[Task] {
+case class LocalStorageDSL() extends StorageDSL[Task] {
 
   private val charset = StandardCharsets.UTF_8
 
-  override def readFile(path: Path): Task[String] = Task {
-    new String(Files.readAllBytes(path), StandardCharsets.UTF_8)
+  override def read[A](path: Path, f: InputStream => A): Task[A] = Task.deferAction { implicit scheduler =>
+    Task.eval {
+      val is = Files.newInputStream(path)
+      Try(f(is))
+        .map { result =>
+          is.close()
+          result
+        }
+        .recover {
+          case NonFatal(ex) =>
+            is.close()
+            throw ex
+        }.get
+    }
   }
 
   override def writeFile(path: Path, content: String): Task[Unit] = {
