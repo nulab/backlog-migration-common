@@ -3,10 +3,7 @@ package com.nulabinc.backlog.migration.common.domain.mappings
 import java.nio.charset.{Charset, StandardCharsets}
 
 import monix.reactive.Observable
-
-trait Serializer[A, B] {
-  def serialize(a: A): B
-}
+import org.apache.commons.csv.CSVRecord
 
 object MappingSerializer {
 
@@ -21,8 +18,16 @@ object MappingSerializer {
       .map(toByteArray)
 
   private def toRow(values: Seq[String]): String =
-    s""""${values.mkString(", ")}"\n""".stripMargin
+    s"""${values.map(s => "\"" + s + "\"" ).mkString(", ")}\n""".stripMargin
 
   private def toByteArray(str: String): Array[Byte] =
     str.getBytes(charset)
+}
+
+object MappingDeserializer {
+
+  def status[A, F[_]](records: IndexedSeq[CSVRecord])
+               (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]]): IndexedSeq[StatusMapping[A]] =
+    records.map(deserializer.deserialize)
+
 }

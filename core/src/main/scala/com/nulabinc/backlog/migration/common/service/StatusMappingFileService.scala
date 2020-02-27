@@ -1,45 +1,56 @@
 package com.nulabinc.backlog.migration.common.service
 
+import java.io.InputStream
+import java.nio.charset.{Charset, StandardCharsets}
 import java.nio.file.Path
 
 import cats.Monad
 import cats.implicits._
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
-import com.nulabinc.backlog.migration.common.domain.mappings.{Formatter, MappingSerializer, Serializer, StatusMapping}
+import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
+import org.apache.commons.csv.{CSVFormat, CSVParser, CSVRecord}
 
-trait StatusMappingFileService[A] {
+import scala.jdk.CollectionConverters._
+
+private case class MergedStatusMapping[A](mergeList: Seq[StatusMapping[A]], addedList: Seq[StatusMapping[A]])
+
+private object MergedStatusMapping {
+  def empty[A]: MergedStatusMapping[A] = MergedStatusMapping[A](mergeList = Seq(), addedList = Seq())
+}
+
+object StatusMappingFileService {
   import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{Mappings => MappingMessages}
 
-  implicit val formatter: Formatter[A]
-  implicit val serializer: Serializer[StatusMapping[A], Seq[String]]
+  private val charset: Charset = StandardCharsets.UTF_8
+  private val csvFormat: CSVFormat = CSVFormat.DEFAULT.withIgnoreEmptyLines().withSkipHeaderRecord()
 
-  def init[F[_]: Monad: StorageDSL: ConsoleDSL](path: Path, mappings: Seq[StatusMapping[A]], srcItems: Seq[A], dstItems: BacklogStatuses): F[Unit] = {
+  def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](path: Path, srcItems: Seq[A], dstItems: BacklogStatuses)
+                                                  (implicit formatter: Formatter[StatusMapping[A]],
+                                                   serializer: Serializer[StatusMapping[A], Seq[String]],
+                                                   deserializer: Deserializer[CSVRecord, StatusMapping[A]]): F[Unit] =
     for {
       exists <- StorageDSL[F].exists(path)
-      result = merge(mappings, srcItems)
       _ <- if (exists) {
-        if (result.addedList.nonEmpty)
-          ConsoleDSL[F].println(MappingMessages.statusMappingMerged(path, result.addedList))
-        else
-          ConsoleDSL[F].println(MappingMessages.statusMappingNoChanges)
+        for {
+          records <- StorageDSL[F].read(path, readLine)
+          mappings = MappingDeserializer.status(records)
+          result = merge(mappings, srcItems)
+          _ <- if (result.addedList.nonEmpty)
+            ConsoleDSL[F].println(MappingMessages.statusMappingMerged(path, result.addedList))
+          else
+            ConsoleDSL[F].println(MappingMessages.statusMappingNoChanges)
+        } yield ()
       } else {
-        // displayCreateMappingFileMessageToConsole
+        val result = merge(Seq(), srcItems)
         for {
           _ <- StorageDSL[F].writeNewFile(path, MappingSerializer.status(result.mergeList))
           _ <- ConsoleDSL[F].println(MappingMessages.statusMappingCreated(path))
         } yield ()
       }
     } yield ()
-  }
 
-  case class MergedStatusMapping[A](mergeList: Seq[StatusMapping[A]], addedList: Seq[StatusMapping[A]])
-
-  object MergedStatusMapping {
-    def empty[A]: MergedStatusMapping[A] = MergedStatusMapping[A](mergeList = Seq(), addedList = Seq())
-  }
-
-  private def merge(mappings: Seq[StatusMapping[A]], srcItems: Seq[A]): MergedStatusMapping[A] =
+  private def merge[A](mappings: Seq[StatusMapping[A]], srcItems: Seq[A]): MergedStatusMapping[A] =
     srcItems.foldLeft(MergedStatusMapping.empty[A]) { (acc, item) =>
       mappings.find(_.src == item) match {
         case Some(value) =>
@@ -49,6 +60,19 @@ trait StatusMappingFileService[A] {
           acc.copy(mergeList = acc.mergeList :+ mapping, addedList = acc.addedList :+ mapping)
       }
     }
+
+  private def readLine(is: InputStream): IndexedSeq[CSVRecord] =
+    CSVParser.parse(is, charset, csvFormat)
+      .getRecords.asScala
+      .foldLeft(IndexedSeq.empty[CSVRecord])( (acc, item) => acc :+ item)
+
+//  private def readCSVFile(is: InputStream): HashMap[String, String] = {
+//    val parser = CSVParser.parse(is, charset, Config.csvFormat)
+//    parser.getRecords.asScala.foldLeft(HashMap.empty[String, String]) {
+//      case (acc, record) =>
+//        acc + (record.get(0) -> record.get(1))
+//    }
+//  }
 
 }
 
