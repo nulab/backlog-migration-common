@@ -5,14 +5,14 @@ import java.nio.file.Path
 import cats.Monad
 import cats.implicits._
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
-import com.nulabinc.backlog.migration.common.domain.mappings.{Formatter, MappingSerializer, StatusMapping}
+import com.nulabinc.backlog.migration.common.domain.mappings.{Formatter, MappingSerializer, Serializer, StatusMapping}
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
 
 trait StatusMappingFileService[A] {
   import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{Mappings => MappingMessages}
 
   implicit val formatter: Formatter[A]
-  implicit val serializer: MappingSerializer[A]
+  implicit val serializer: Serializer[StatusMapping[A], Seq[String]]
 
   def init[F[_]: Monad: StorageDSL: ConsoleDSL](path: Path, mappings: Seq[StatusMapping[A]], srcItems: Seq[A], dstItems: BacklogStatuses): F[Unit] = {
     for {
@@ -26,7 +26,7 @@ trait StatusMappingFileService[A] {
       } else {
         // displayCreateMappingFileMessageToConsole
         for {
-          _ <- StorageDSL[F].writeNewFile(path, serializer.status(result.mergeList)) // TODO
+          _ <- StorageDSL[F].writeNewFile(path, MappingSerializer.status(result.mergeList))
           _ <- ConsoleDSL[F].println(MappingMessages.statusMappingCreated(path))
         } yield ()
       }
