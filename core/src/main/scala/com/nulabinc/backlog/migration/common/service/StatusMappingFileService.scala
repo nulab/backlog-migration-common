@@ -37,7 +37,10 @@ object StatusMappingFileService {
           mappings = MappingDeserializer.status(records)
           result = merge(mappings, srcItems)
           _ <- if (result.addedList.nonEmpty)
-            ConsoleDSL[F].println(MappingMessages.statusMappingMerged(path, result.addedList))
+            for {
+              _ <- StorageDSL[F].writeNewFile(path, MappingSerializer.status(result.mergeList))
+              _ <- ConsoleDSL[F].println(MappingMessages.statusMappingMerged(path, result.addedList))
+            } yield ()
           else
             ConsoleDSL[F].println(MappingMessages.statusMappingNoChanges)
         } yield ()
