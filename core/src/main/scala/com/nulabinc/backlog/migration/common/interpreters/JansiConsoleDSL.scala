@@ -10,7 +10,7 @@ import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.Color._
 import org.fusesource.jansi.Ansi.ansi
 
-class JansiConsoleDSL extends ConsoleDSL[Task] with Logging {
+case class JansiConsoleDSL() extends ConsoleDSL[Task] with Logging {
   private val outStream: PrintStream = System.out
 
   override def println(value: String, space: Int, color: Ansi.Color): Task[Unit] = Task.eval {

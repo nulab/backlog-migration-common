@@ -14,8 +14,8 @@ object ConsoleMessages {
   object Mappings {
     private lazy val statusItem = Messages("common.statuses")
 
-    def statusMappingMerged[A](filePath: Path, items: Seq[StatusMapping[A]])(implicit format: Formatter[A]): String =
-      mappingMerged(statusItem, filePath, items.map(format.status))
+    def statusMappingMerged[A](filePath: Path, items: Seq[StatusMapping[A]])(implicit formatter: Formatter[StatusMapping[A]]): String =
+      mappingMerged(statusItem, filePath, items.map(formatter.format))
 
     def statusMappingNoChanges: String =
       mappingNoChanges(statusItem)
