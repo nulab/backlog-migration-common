@@ -8,19 +8,21 @@ trait Serializer[A, B] {
   def serialize(a: A): B
 }
 
-trait MappingSerializer[A] {
+object MappingSerializer {
 
   private val charset: Charset = StandardCharsets.UTF_8
 
-  private implicit class StringByteOps(str: String) {
-    def toByteArray: Array[Byte] = str.getBytes(charset)
-  }
-
-  val statusSerializer: Serializer[StatusMapping[A], String]
-
-  def status(mappings: Seq[StatusMapping[A]]): Observable[Array[Byte]] =
+  def status[A](mappings: Seq[StatusMapping[A]])
+               (implicit serializer: Serializer[StatusMapping[A], Seq[String]]): Observable[Array[Byte]] =
     Observable
       .fromIteratorUnsafe(mappings.iterator)
-      .map(statusSerializer.serialize)
-      .map(_.toByteArray)
+      .map(serializer.serialize)
+      .map(toRow)
+      .map(toByteArray)
+
+  private def toRow(values: Seq[String]): String =
+    s""""${values.mkString(", ")}"\n""".stripMargin
+
+  private def toByteArray(str: String): Array[Byte] =
+    str.getBytes(charset)
 }
