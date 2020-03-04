@@ -1,7 +1,5 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.io.InputStream
-import java.nio.charset.{Charset, StandardCharsets}
 import java.nio.file.Path
 
 import cats.Monad
@@ -9,9 +7,7 @@ import cats.implicits._
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
 import com.nulabinc.backlog4j.Priority
-import org.apache.commons.csv.{CSVFormat, CSVParser, CSVRecord}
-
-import scala.jdk.CollectionConverters._
+import org.apache.commons.csv.CSVRecord
 
 private case class MergedPriorityMapping[A](mergeList: Seq[PriorityMapping[A]], addedList: Seq[PriorityMapping[A]])
 
@@ -22,9 +18,6 @@ private object MergedPriorityMapping {
 object PriorityMappingFileService {
   import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{Mappings => MappingMessages}
 
-  private val charset: Charset = StandardCharsets.UTF_8
-  private val csvFormat: CSVFormat = CSVFormat.DEFAULT.withIgnoreEmptyLines().withSkipHeaderRecord()
-
   def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](path: Path, srcItems: Seq[A], dstItems: Seq[Priority])
                                                   (implicit formatter: Formatter[PriorityMapping[A]],
                                                    serializer: Serializer[PriorityMapping[A], Seq[String]],
@@ -33,7 +26,7 @@ object PriorityMappingFileService {
       exists <- StorageDSL[F].exists(path)
       _ <- if (exists) {
         for {
-          records <- StorageDSL[F].read(path, readLine)
+          records <- StorageDSL[F].read(path, MappingFileService.readLine)
           mappings = MappingDeserializer.priority(records)
           result = merge(mappings, srcItems)
           _ <- if (result.addedList.nonEmpty)
@@ -63,19 +56,6 @@ object PriorityMappingFileService {
           acc.copy(mergeList = acc.mergeList :+ mapping, addedList = acc.addedList :+ mapping)
       }
     }
-
-  private def readLine(is: InputStream): IndexedSeq[CSVRecord] =
-    CSVParser.parse(is, charset, csvFormat)
-      .getRecords.asScala
-      .foldLeft(IndexedSeq.empty[CSVRecord])( (acc, item) => acc :+ item)
-
-//  private def readCSVFile(is: InputStream): HashMap[String, String] = {
-//    val parser = CSVParser.parse(is, charset, Config.csvFormat)
-//    parser.getRecords.asScala.foldLeft(HashMap.empty[String, String]) {
-//      case (acc, record) =>
-//        acc + (record.get(0) -> record.get(1))
-//    }
-//  }
 
 }
 

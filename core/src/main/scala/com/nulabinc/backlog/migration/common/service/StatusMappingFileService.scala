@@ -1,6 +1,5 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.io.InputStream
 import java.nio.charset.{Charset, StandardCharsets}
 import java.nio.file.Path
 
@@ -9,9 +8,7 @@ import cats.implicits._
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
-import org.apache.commons.csv.{CSVFormat, CSVParser, CSVRecord}
-
-import scala.jdk.CollectionConverters._
+import org.apache.commons.csv.{CSVFormat, CSVRecord}
 
 private case class MergedStatusMapping[A](mergeList: Seq[StatusMapping[A]], addedList: Seq[StatusMapping[A]])
 
@@ -33,7 +30,7 @@ object StatusMappingFileService {
       exists <- StorageDSL[F].exists(path)
       _ <- if (exists) {
         for {
-          records <- StorageDSL[F].read(path, readLine)
+          records <- StorageDSL[F].read(path, MappingFileService.readLine)
           mappings = MappingDeserializer.status(records)
           result = merge(mappings, srcItems)
           _ <- if (result.addedList.nonEmpty)
@@ -63,19 +60,6 @@ object StatusMappingFileService {
           acc.copy(mergeList = acc.mergeList :+ mapping, addedList = acc.addedList :+ mapping)
       }
     }
-
-  private def readLine(is: InputStream): IndexedSeq[CSVRecord] =
-    CSVParser.parse(is, charset, csvFormat)
-      .getRecords.asScala
-      .foldLeft(IndexedSeq.empty[CSVRecord])( (acc, item) => acc :+ item)
-
-//  private def readCSVFile(is: InputStream): HashMap[String, String] = {
-//    val parser = CSVParser.parse(is, charset, Config.csvFormat)
-//    parser.getRecords.asScala.foldLeft(HashMap.empty[String, String]) {
-//      case (acc, record) =>
-//        acc + (record.get(0) -> record.get(1))
-//    }
-//  }
 
 }
 
