@@ -19,9 +19,6 @@ private object MergedStatusMapping {
 object StatusMappingFileService {
   import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{Mappings => MappingMessages}
 
-  private val charset: Charset = StandardCharsets.UTF_8
-  private val csvFormat: CSVFormat = CSVFormat.DEFAULT.withIgnoreEmptyLines().withSkipHeaderRecord()
-
   def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](path: Path, srcItems: Seq[A], dstItems: BacklogStatuses)
                                                   (implicit formatter: Formatter[StatusMapping[A]],
                                                    serializer: Serializer[StatusMapping[A], Seq[String]],
