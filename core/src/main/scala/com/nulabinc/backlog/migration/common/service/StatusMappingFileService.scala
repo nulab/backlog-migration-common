@@ -1,6 +1,5 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.nio.charset.{Charset, StandardCharsets}
 import java.nio.file.Path
 
 import cats.Monad
@@ -8,7 +7,7 @@ import cats.implicits._
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
-import org.apache.commons.csv.{CSVFormat, CSVRecord}
+import org.apache.commons.csv.CSVRecord
 
 private case class MergedStatusMapping[A](mergeList: Seq[StatusMapping[A]], addedList: Seq[StatusMapping[A]])
 
@@ -22,7 +21,10 @@ object StatusMappingFileService {
   def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](path: Path, srcItems: Seq[A], dstItems: BacklogStatuses)
                                                   (implicit formatter: Formatter[StatusMapping[A]],
                                                    serializer: Serializer[StatusMapping[A], Seq[String]],
-                                                   deserializer: Deserializer[CSVRecord, StatusMapping[A]]): F[Unit] =
+                                                   deserializer: Deserializer[CSVRecord, StatusMapping[A]],
+                                                   mappingHeader: MappingHeader[StatusMapping[_]]): F[Unit] = {
+    val header = MappingSerializer.fromHeader(mappingHeader)
+
     for {
       exists <- StorageDSL[F].exists(path)
       _ <- if (exists) {
@@ -32,7 +34,7 @@ object StatusMappingFileService {
           result = merge(mappings, srcItems)
           _ <- if (result.addedList.nonEmpty)
             for {
-              _ <- StorageDSL[F].writeNewFile(path, MappingSerializer.status(result.mergeList))
+              _ <- StorageDSL[F].writeNewFile(path, header +: MappingSerializer.status(result.mergeList))
               _ <- ConsoleDSL[F].println(MappingMessages.statusMappingMerged(path, result.addedList))
             } yield ()
           else
@@ -41,11 +43,12 @@ object StatusMappingFileService {
       } else {
         val result = merge(Seq(), srcItems)
         for {
-          _ <- StorageDSL[F].writeNewFile(path, MappingSerializer.status(result.mergeList))
+          _ <- StorageDSL[F].writeNewFile(path, header +: MappingSerializer.status(result.mergeList))
           _ <- ConsoleDSL[F].println(MappingMessages.statusMappingCreated(path))
         } yield ()
       }
     } yield ()
+  }
 
   private def merge[A](mappings: Seq[StatusMapping[A]], srcItems: Seq[A]): MergedStatusMapping[A] =
     srcItems.foldLeft(MergedStatusMapping.empty[A]) { (acc, item) =>

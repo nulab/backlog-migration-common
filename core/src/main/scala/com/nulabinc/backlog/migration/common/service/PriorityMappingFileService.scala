@@ -21,7 +21,10 @@ object PriorityMappingFileService {
   def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](path: Path, srcItems: Seq[A], dstItems: Seq[Priority])
                                                   (implicit formatter: Formatter[PriorityMapping[A]],
                                                    serializer: Serializer[PriorityMapping[A], Seq[String]],
-                                                   deserializer: Deserializer[CSVRecord, PriorityMapping[A]]): F[Unit] =
+                                                   deserializer: Deserializer[CSVRecord, PriorityMapping[A]],
+                                                   mappingHeader: MappingHeader[PriorityMapping[_]]): F[Unit] = {
+    val header = MappingSerializer.fromHeader(mappingHeader)
+
     for {
       exists <- StorageDSL[F].exists(path)
       _ <- if (exists) {
@@ -31,7 +34,7 @@ object PriorityMappingFileService {
           result = merge(mappings, srcItems)
           _ <- if (result.addedList.nonEmpty)
             for {
-              _ <- StorageDSL[F].writeNewFile(path, MappingSerializer.priority(result.mergeList))
+              _ <- StorageDSL[F].writeNewFile(path, header +: MappingSerializer.priority(result.mergeList))
               _ <- ConsoleDSL[F].println(MappingMessages.priorityMappingMerged(path, result.addedList))
             } yield ()
           else
@@ -40,11 +43,12 @@ object PriorityMappingFileService {
       } else {
         val result = merge(Seq(), srcItems)
         for {
-          _ <- StorageDSL[F].writeNewFile(path, MappingSerializer.priority(result.mergeList))
+          _ <- StorageDSL[F].writeNewFile(path, header +: MappingSerializer.priority(result.mergeList))
           _ <- ConsoleDSL[F].println(MappingMessages.priorityMappingCreated(path))
         } yield ()
       }
     } yield ()
+  }
 
   private def merge[A](mappings: Seq[PriorityMapping[A]], srcItems: Seq[A]): MergedPriorityMapping[A] =
     srcItems.foldLeft(MergedPriorityMapping.empty[A]) { (acc, item) =>

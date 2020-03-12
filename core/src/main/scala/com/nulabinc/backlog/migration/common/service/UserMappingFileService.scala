@@ -21,7 +21,10 @@ object UserMappingFileService {
   def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](path: Path, srcItems: Seq[A], dstItems: Seq[BacklogUser])
                                                   (implicit formatter: Formatter[UserMapping[A]],
                                                    serializer: Serializer[UserMapping[A], Seq[String]],
-                                                   deserializer: Deserializer[CSVRecord, UserMapping[A]]): F[Unit] =
+                                                   deserializer: Deserializer[CSVRecord, UserMapping[A]],
+                                                   mappingHeader: MappingHeader[UserMapping[_]]): F[Unit] = {
+    val header = MappingSerializer.fromHeader(mappingHeader)
+
     for {
       exists <- StorageDSL[F].exists(path)
       _ <- if (exists) {
@@ -31,7 +34,7 @@ object UserMappingFileService {
           result = merge(mappings, srcItems)
           _ <- if (result.addedList.nonEmpty)
             for {
-              _ <- StorageDSL[F].writeNewFile(path, MappingSerializer.user(result.mergeList))
+              _ <- StorageDSL[F].writeNewFile(path, header +: MappingSerializer.user(result.mergeList))
               _ <- ConsoleDSL[F].println(MappingMessages.userMappingMerged(path, result.addedList))
             } yield ()
           else
@@ -40,11 +43,12 @@ object UserMappingFileService {
       } else {
         val result = merge(Seq(), srcItems)
         for {
-          _ <- StorageDSL[F].writeNewFile(path, MappingSerializer.user(result.mergeList))
+          _ <- StorageDSL[F].writeNewFile(path, header +: MappingSerializer.user(result.mergeList))
           _ <- ConsoleDSL[F].println(MappingMessages.userMappingCreated(path))
         } yield ()
       }
     } yield ()
+  }
 
   private def merge[A](mappings: Seq[UserMapping[A]], srcItems: Seq[A]): MergedUserMapping[A] =
     srcItems.foldLeft(MergedUserMapping.empty[A]) { (acc, item) =>

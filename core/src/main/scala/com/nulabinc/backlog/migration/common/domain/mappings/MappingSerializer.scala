@@ -20,6 +20,9 @@ object MappingSerializer {
              (implicit serializer: Serializer[UserMapping[A], Seq[String]]): Observable[Array[Byte]] =
     toObservable(mappings)
 
+  def fromHeader(header: MappingHeader[Mapping[_]]): Array[Byte] =
+    toByteArray(toRow(header.headers))
+
   private def toObservable[A](mappings: Seq[A])(implicit serializer: Serializer[A, Seq[String]]): Observable[Array[Byte]] =
     Observable
       .fromIteratorUnsafe(mappings.iterator)
