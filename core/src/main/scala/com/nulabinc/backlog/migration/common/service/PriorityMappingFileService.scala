@@ -29,7 +29,8 @@ object PriorityMappingFileService {
       exists <- StorageDSL[F].exists(path)
       _ <- if (exists) {
         for {
-          records <- StorageDSL[F].read(path, MappingFileService.readLine)
+          recordsWithHeader <- StorageDSL[F].read(path, MappingFileService.readLine)
+          records = recordsWithHeader.tail
           mappings = MappingDeserializer.priority(records)
           result = merge(mappings, srcItems)
           _ <- if (result.addedList.nonEmpty)
