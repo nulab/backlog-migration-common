@@ -2,34 +2,37 @@ package com.nulabinc.backlog.migration.common.domain.mappings
 
 trait UserMapping[A] extends Mapping[A] {
   val src: A
-  val optDst: Option[BacklogUserMappingItem]
+  val dst: BacklogUserMappingItem
 }
 
 object UserMapping {
-  def create[A](srcItem: A): UserMapping[A] =
+  def create[A](srcItem: A, isNAISpace: Boolean): UserMapping[A] =
     new UserMapping[A] {
-      override val src: A = srcItem
-      override val optDst: Option[BacklogUserMappingItem] = None
+      override val src: A =
+        srcItem
+      override val dst: BacklogUserMappingItem =
+        if (isNAISpace) BacklogUserMappingItem.from(None, "mail")
+        else BacklogUserMappingItem.from(None, "id")
     }
 }
 
 sealed trait BacklogUserMappingItem{
-  val value: String
+  val optValue: Option[String]
   val mappingType: String
 }
 
 object BacklogUserMappingItem {
-  def from(value: String, mappingType: String): BacklogUserMappingItem =
+  def from(optValue: Option[String], mappingType: String): BacklogUserMappingItem =
     mappingType match {
-      case "id" => BacklogUserIdMappingItem(value)
-      case "mail" => BacklogUserMailMappingItem(value)
+      case "id" => BacklogUserIdMappingItem(optValue)
+      case "mail" => BacklogUserMailMappingItem(optValue)
       case others => throw new RuntimeException(s"Invalid user mapping item. Type: $others") // TODO
     }
 }
 
-case class BacklogUserIdMappingItem(value: String) extends BacklogUserMappingItem {
+case class BacklogUserIdMappingItem(optValue: Option[String]) extends BacklogUserMappingItem {
   override val mappingType: String = "id"
 }
-case class BacklogUserMailMappingItem(value: String) extends BacklogUserMappingItem {
+case class BacklogUserMailMappingItem(optValue: Option[String]) extends BacklogUserMappingItem {
   override val mappingType: String = "mail"
 }

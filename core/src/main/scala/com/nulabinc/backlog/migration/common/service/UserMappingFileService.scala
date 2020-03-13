@@ -4,6 +4,7 @@ import java.nio.file.Path
 
 import cats.Monad
 import cats.implicits._
+import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.domain.BacklogUser
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
@@ -18,7 +19,9 @@ private object MergedUserMapping {
 object UserMappingFileService {
   import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{Mappings => MappingMessages}
 
-  def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](path: Path, srcItems: Seq[A], dstItems: Seq[BacklogUser])
+  def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](path: Path, srcItems: Seq[A],
+                                                   dstItems: Seq[BacklogUser],
+                                                   dstApiConfiguration: BacklogApiConfiguration)
                                                   (implicit formatter: Formatter[UserMapping[A]],
                                                    serializer: Serializer[UserMapping[A], Seq[String]],
                                                    deserializer: Deserializer[CSVRecord, UserMapping[A]],
@@ -29,9 +32,10 @@ object UserMappingFileService {
       exists <- StorageDSL[F].exists(path)
       _ <- if (exists) {
         for {
-          records <- StorageDSL[F].read(path, MappingFileService.readLine)
+          recordsWithHeader <- StorageDSL[F].read(path, MappingFileService.readLine)
+          records = recordsWithHeader.tail
           mappings = MappingDeserializer.user(records)
-          result = merge(mappings, srcItems)
+          result = merge(mappings, srcItems, dstApiConfiguration.isNAISpace)
           _ <- if (result.addedList.nonEmpty)
             for {
               _ <- StorageDSL[F].writeNewFile(path, header +: MappingSerializer.user(result.mergeList))
@@ -41,7 +45,7 @@ object UserMappingFileService {
             ConsoleDSL[F].println(MappingMessages.userMappingNoChanges)
         } yield ()
       } else {
-        val result = merge(Seq(), srcItems)
+        val result = merge(Seq(), srcItems, dstApiConfiguration.isNAISpace)
         for {
           _ <- StorageDSL[F].writeNewFile(path, header +: MappingSerializer.user(result.mergeList))
           _ <- ConsoleDSL[F].println(MappingMessages.userMappingCreated(path))
@@ -50,13 +54,13 @@ object UserMappingFileService {
     } yield ()
   }
 
-  private def merge[A](mappings: Seq[UserMapping[A]], srcItems: Seq[A]): MergedUserMapping[A] =
+  private def merge[A](mappings: Seq[UserMapping[A]], srcItems: Seq[A], isNAISpace: Boolean): MergedUserMapping[A] =
     srcItems.foldLeft(MergedUserMapping.empty[A]) { (acc, item) =>
       mappings.find(_.src == item) match {
         case Some(value) =>
           acc.copy(mergeList = acc.mergeList :+ value)
         case None =>
-          val mapping = UserMapping.create(item)
+          val mapping = UserMapping.create(item, isNAISpace)
           acc.copy(mergeList = acc.mergeList :+ mapping, addedList = acc.addedList :+ mapping)
       }
     }
