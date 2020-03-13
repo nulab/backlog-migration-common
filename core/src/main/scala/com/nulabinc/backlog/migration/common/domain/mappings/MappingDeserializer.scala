@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.domain.mappings
 
+import com.nulabinc.backlog.migration.common.deserializers.Deserializer
 import org.apache.commons.csv.CSVRecord
 
 object MappingDeserializer {

@@ -2,6 +2,7 @@ package com.nulabinc.backlog.migration.common.domain.mappings
 
 import java.nio.charset.{Charset, StandardCharsets}
 
+import com.nulabinc.backlog.migration.common.serializers.Serializer
 import monix.reactive.Observable
 
 object MappingSerializer {
