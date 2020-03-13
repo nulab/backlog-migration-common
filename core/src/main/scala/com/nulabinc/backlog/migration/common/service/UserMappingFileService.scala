@@ -30,9 +30,7 @@ object UserMappingFileService {
                                                   (implicit formatter: Formatter[UserMapping[A]],
                                                    serializer: Serializer[UserMapping[A], Seq[String]],
                                                    deserializer: Deserializer[CSVRecord, UserMapping[A]],
-                                                   mappingHeader: MappingHeader[UserMapping[_]]): F[Unit] = {
-    val header = MappingSerializer.fromHeader(mappingHeader)
-
+                                                   header: MappingHeader[UserMapping[_]]): F[Unit] =
     for {
       mappingFileExists <- StorageDSL[F].exists(mappingFilePath)
       _ <- if (mappingFileExists) {
@@ -43,7 +41,7 @@ object UserMappingFileService {
           result = merge(mappings, srcItems, dstApiConfiguration.isNAISpace)
           _ <- if (result.addedList.nonEmpty)
             for {
-              _ <- StorageDSL[F].writeNewFile(mappingFilePath, header +: MappingSerializer.user(result.mergeList))
+              _ <- StorageDSL[F].writeNewFile(mappingFilePath, MappingSerializer.user(result.mergeList))
               _ <- ConsoleDSL[F].println(MappingMessages.userMappingMerged(mappingFilePath, result.addedList))
             } yield ()
           else
@@ -52,13 +50,12 @@ object UserMappingFileService {
       } else {
         val result = merge(Seq(), srcItems, dstApiConfiguration.isNAISpace)
         for {
-          _ <- StorageDSL[F].writeNewFile(mappingFilePath, header +: MappingSerializer.user(result.mergeList))
+          _ <- StorageDSL[F].writeNewFile(mappingFilePath, MappingSerializer.user(result.mergeList))
           _ <- ConsoleDSL[F].println(MappingMessages.userMappingCreated(mappingFilePath))
         } yield ()
       }
-      _ <- StorageDSL[F].writeNewFile(mappingListPath, ???)
+      _ <- StorageDSL[F].writeNewFile(mappingListPath, MappingSerializer.userList(dstItems))
     } yield ()
-  }
 
   private def merge[A](mappings: Seq[UserMapping[A]], srcItems: Seq[A], isNAISpace: Boolean): MergedUserMapping[A] =
     srcItems.foldLeft(MergedUserMapping.empty[A]) { (acc, item) =>
