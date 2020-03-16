@@ -1,4 +1,4 @@
-package com.nulabinc.backlog.migration.common.service
+package com.nulabinc.backlog.migration.common.services
 
 import java.nio.file.Path
 
@@ -11,6 +11,7 @@ import com.nulabinc.backlog.migration.common.dsl.{AppDSL, ConsoleDSL, StorageDSL
 import com.nulabinc.backlog.migration.common.errors.{MappingFileError, MappingFileNotFound}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.serializers.Serializer
+import com.nulabinc.backlog.migration.common.service.MappingFileService
 import com.nulabinc.backlog.migration.common.shared.Result
 import com.nulabinc.backlog.migration.common.shared.Result.Result
 import org.apache.commons.csv.CSVRecord
