@@ -33,8 +33,7 @@ object StatusMappingFileService {
       exists <- StorageDSL[F].exists(mappingFilePath)
       _ <- if (exists) {
         for {
-          recordsWithHeader <- StorageDSL[F].read(mappingFilePath, MappingFileService.readLine)
-          records = recordsWithHeader.tail
+          records <- StorageDSL[F].read(mappingFilePath, MappingFileService.readLine)
           mappings = MappingDeserializer.status(records)
           result = merge(mappings, srcItems)
           _ <- if (result.addedList.nonEmpty)

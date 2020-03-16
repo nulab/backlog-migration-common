@@ -3,6 +3,7 @@ package com.nulabinc.backlog.migration.common.service
 import java.io.InputStream
 import java.nio.charset.{Charset, StandardCharsets}
 
+import monix.reactive.Observable
 import org.apache.commons.csv.{CSVFormat, CSVParser, CSVRecord}
 
 import scala.jdk.CollectionConverters._
@@ -16,13 +17,11 @@ object MappingFileService {
     CSVParser.parse(is, charset, csvFormat)
       .getRecords.asScala
       .foldLeft(IndexedSeq.empty[CSVRecord])( (acc, item) => acc :+ item)
+      .tail // drop header
 
-  //  private def readCSVFile(is: InputStream): HashMap[String, String] = {
-  //    val parser = CSVParser.parse(is, charset, Config.csvFormat)
-  //    parser.getRecords.asScala.foldLeft(HashMap.empty[String, String]) {
-  //      case (acc, record) =>
-  //        acc + (record.get(0) -> record.get(1))
-  //    }
-  //  }
+  def readLineStream(is: InputStream): Observable[CSVRecord] =
+    Observable
+      .fromIteratorUnsafe(CSVParser.parse(is, charset, csvFormat).iterator().asScala)
+      .drop(1)
 
 }

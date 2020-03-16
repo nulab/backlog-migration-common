@@ -35,8 +35,7 @@ object UserMappingFileService {
       mappingFileExists <- StorageDSL[F].exists(mappingFilePath)
       _ <- if (mappingFileExists) {
         for {
-          recordsWithHeader <- StorageDSL[F].read(mappingFilePath, MappingFileService.readLine)
-          records = recordsWithHeader.tail
+          records <- StorageDSL[F].read(mappingFilePath, MappingFileService.readLine)
           mappings = MappingDeserializer.user(records)
           result = merge(mappings, srcItems, dstApiConfiguration.isNAISpace)
           _ <- if (result.addedList.nonEmpty)
