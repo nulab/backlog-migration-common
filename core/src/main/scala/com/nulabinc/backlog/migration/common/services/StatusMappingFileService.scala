@@ -3,6 +3,8 @@ package com.nulabinc.backlog.migration.common.services
 import java.nio.file.Path
 
 import cats.Monad
+import cats.data.Validated.Valid
+import cats.data.ValidatedNec
 import cats.implicits._
 import com.nulabinc.backlog.migration.common.deserializers.Deserializer
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
@@ -11,9 +13,9 @@ import com.nulabinc.backlog.migration.common.dsl.{AppDSL, ConsoleDSL, StorageDSL
 import com.nulabinc.backlog.migration.common.errors.{MappingFileError, MappingFileNotFound}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.serializers.Serializer
-import com.nulabinc.backlog.migration.common.service.MappingFileService
 import com.nulabinc.backlog.migration.common.shared.Result
 import com.nulabinc.backlog.migration.common.shared.Result.Result
+import com.nulabinc.backlog.migration.common.validators.{MappingValidator, MappingValidatorNec}
 import org.apache.commons.csv.CSVRecord
 
 private case class MergedStatusMapping[A](mergeList: Seq[StatusMapping[A]], addedList: Seq[StatusMapping[A]])
@@ -24,6 +26,7 @@ private object MergedStatusMapping {
 
 object StatusMappingFileService {
   import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{Mappings => MappingMessages}
+  import com.nulabinc.backlog.migration.common.shared.syntax._
 
   def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](mappingFilePath: Path,
                                                    mappingListPath: Path,
@@ -58,11 +61,12 @@ object StatusMappingFileService {
       _ <- StorageDSL[F].writeNewFile(mappingListPath, MappingSerializer.statusList(dstItems))
     } yield ()
 
-  def execute[A, F[_]: Monad: AppDSL: StorageDSL: ConsoleDSL](path: Path)
-                                                             (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]]): F[Result[MappingFileError, IndexedSeq[StatusMapping[A]]]] =
+  def execute[A, F[_]: Monad: AppDSL: StorageDSL: ConsoleDSL](path: Path, dstItems: BacklogStatuses)
+                                                             (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]],
+                                                              validator: MappingValidator[StatusMapping[A]]): F[Result[MappingFileError, IndexedSeq[ValidatedStatusMapping[A]]]] =
     for {
       exists <- StorageDSL[F].exists(path)
-      mappings <- if (exists) {
+      unvalidatedMappings <- (if (exists) {
         for {
           records <- StorageDSL[F].read(path, MappingFileService.readLine)
           mappings = MappingDeserializer.status(records)
@@ -71,8 +75,16 @@ object StatusMappingFileService {
         for {
           _ <- ConsoleDSL[F].errorln(MappingMessages.statusMappingFileNotFound(path))
         } yield Result.error(MappingFileNotFound("status", path))
-      }
-    } yield mappings
+      }).handleError
+
+
+//      validatedMappings = unvalidatedMappings.map(MappingValidatorNec.validateStatusMapping(_, dstItems))
+//      result = validatedMappings match {
+//        case Valid(validated) => Result.success(validated)
+//      }
+    } yield {
+???
+    }
 
   private def merge[A](mappings: Seq[StatusMapping[A]], srcItems: Seq[A]): MergedStatusMapping[A] =
     srcItems.foldLeft(MergedStatusMapping.empty[A]) { (acc, item) =>
@@ -84,6 +96,8 @@ object StatusMappingFileService {
           acc.copy(mergeList = acc.mergeList :+ mapping, addedList = acc.addedList :+ mapping)
       }
     }
+
+  private def validate[A](mappings: Seq[StatusMapping[A]]): Result[MappingFileError, Seq[ValidatedStatusMapping[A]]] = ???
 
 }
 

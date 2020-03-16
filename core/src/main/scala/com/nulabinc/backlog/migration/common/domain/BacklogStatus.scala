@@ -25,6 +25,9 @@ case class BacklogStatuses(private val values: Seq[BacklogStatus]) {
       case _: BacklogCustomStatus => true
     }
 
+  def existsByName(name: BacklogStatusName): Boolean =
+    findByName(name).nonEmpty
+
   def notExistByName(name: BacklogStatusName): Boolean =
     findByName(name).isEmpty
 }

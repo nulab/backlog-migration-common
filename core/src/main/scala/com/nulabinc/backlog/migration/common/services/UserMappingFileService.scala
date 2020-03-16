@@ -11,7 +11,6 @@ import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.serializers.Serializer
-import com.nulabinc.backlog.migration.common.service.MappingFileService
 import org.apache.commons.csv.CSVRecord
 
 private case class MergedUserMapping[A](mergeList: Seq[UserMapping[A]], addedList: Seq[UserMapping[A]])

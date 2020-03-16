@@ -14,3 +14,8 @@ object StatusMapping {
 }
 
 case class BacklogStatusMappingItem(value: String) extends AnyVal
+
+trait ValidatedStatusMapping[A] {
+  val src: A
+  val dst: BacklogStatusMappingItem
+}

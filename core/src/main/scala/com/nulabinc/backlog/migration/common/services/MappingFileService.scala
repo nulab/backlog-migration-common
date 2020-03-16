@@ -1,4 +1,4 @@
-package com.nulabinc.backlog.migration.common.service
+package com.nulabinc.backlog.migration.common.services
 
 import java.io.InputStream
 import java.nio.charset.{Charset, StandardCharsets}
@@ -22,6 +22,8 @@ object MappingFileService {
   def readLineStream(is: InputStream): Observable[CSVRecord] =
     Observable
       .fromIteratorUnsafe(CSVParser.parse(is, charset, csvFormat).iterator().asScala)
-      .drop(1)
+      .drop(1) // drop header
+
+
 
 }
