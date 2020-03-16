@@ -13,8 +13,6 @@ import com.nulabinc.backlog.migration.common.dsl.{AppDSL, ConsoleDSL, StorageDSL
 import com.nulabinc.backlog.migration.common.errors.{MappingFileError, MappingFileNotFound}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.serializers.Serializer
-import com.nulabinc.backlog.migration.common.shared.Result
-import com.nulabinc.backlog.migration.common.shared.Result.Result
 import com.nulabinc.backlog.migration.common.validators.{MappingValidator, MappingValidatorNec}
 import org.apache.commons.csv.CSVRecord
 
@@ -27,6 +25,7 @@ private object MergedStatusMapping {
 object StatusMappingFileService {
   import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{Mappings => MappingMessages}
   import com.nulabinc.backlog.migration.common.shared.syntax._
+  import com.nulabinc.backlog.migration.common.shared.Result.syntax._
 
   def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](mappingFilePath: Path,
                                                    mappingListPath: Path,
@@ -63,18 +62,18 @@ object StatusMappingFileService {
 
   def execute[A, F[_]: Monad: AppDSL: StorageDSL: ConsoleDSL](path: Path, dstItems: BacklogStatuses)
                                                              (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]],
-                                                              validator: MappingValidator[StatusMapping[A]]): F[Result[MappingFileError, IndexedSeq[ValidatedStatusMapping[A]]]] =
+                                                              validator: MappingValidator[StatusMapping[A]]): F[Either[MappingFileError, IndexedSeq[ValidatedStatusMapping[A]]]] =
     for {
       exists <- StorageDSL[F].exists(path)
       unvalidatedMappings <- (if (exists) {
         for {
           records <- StorageDSL[F].read(path, MappingFileService.readLine)
           mappings = MappingDeserializer.status(records)
-        } yield Result.success(mappings)
+        } yield Right(mappings)
       } else {
         for {
           _ <- ConsoleDSL[F].errorln(MappingMessages.statusMappingFileNotFound(path))
-        } yield Result.error(MappingFileNotFound("status", path))
+        } yield Left(MappingFileNotFound("status", path))
       }).handleError
 
 
@@ -97,7 +96,7 @@ object StatusMappingFileService {
       }
     }
 
-  private def validate[A](mappings: Seq[StatusMapping[A]]): Result[MappingFileError, Seq[ValidatedStatusMapping[A]]] = ???
+  private def validate[A](mappings: Seq[StatusMapping[A]]): Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] = ???
 
 }
 
