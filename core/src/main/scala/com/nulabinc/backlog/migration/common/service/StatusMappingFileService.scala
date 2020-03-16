@@ -7,9 +7,12 @@ import cats.implicits._
 import com.nulabinc.backlog.migration.common.deserializers.Deserializer
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import com.nulabinc.backlog.migration.common.domain.mappings._
-import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
+import com.nulabinc.backlog.migration.common.dsl.{AppDSL, ConsoleDSL, StorageDSL}
+import com.nulabinc.backlog.migration.common.errors.{MappingFileError, MappingFileNotFound}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.serializers.Serializer
+import com.nulabinc.backlog.migration.common.shared.Result
+import com.nulabinc.backlog.migration.common.shared.Result.Result
 import org.apache.commons.csv.CSVRecord
 
 private case class MergedStatusMapping[A](mergeList: Seq[StatusMapping[A]], addedList: Seq[StatusMapping[A]])
@@ -53,6 +56,22 @@ object StatusMappingFileService {
       }
       _ <- StorageDSL[F].writeNewFile(mappingListPath, MappingSerializer.statusList(dstItems))
     } yield ()
+
+  def execute[A, F[_]: Monad: AppDSL: StorageDSL: ConsoleDSL](path: Path)
+                                                             (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]]): F[Result[MappingFileError, IndexedSeq[StatusMapping[A]]]] =
+    for {
+      exists <- StorageDSL[F].exists(path)
+      mappings <- if (exists) {
+        for {
+          records <- StorageDSL[F].read(path, MappingFileService.readLine)
+          mappings = MappingDeserializer.status(records)
+        } yield Result.success(mappings)
+      } else {
+        for {
+          _ <- ConsoleDSL[F].errorln(MappingMessages.statusMappingFileNotFound(path))
+        } yield Result.error(MappingFileNotFound("status", path))
+      }
+    } yield mappings
 
   private def merge[A](mappings: Seq[StatusMapping[A]], srcItems: Seq[A]): MergedStatusMapping[A] =
     srcItems.foldLeft(MergedStatusMapping.empty[A]) { (acc, item) =>

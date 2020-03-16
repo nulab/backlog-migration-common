@@ -29,4 +29,8 @@ case class JansiConsoleDSL() extends ConsoleDSL[Task] with Logging {
     outStream.println((" " * space) + bold(value, color))
     outStream.flush()
   }
+
+  override def errorln(value: String, space: Int): Task[Unit] =
+    println(value, space, RED)
+
 }

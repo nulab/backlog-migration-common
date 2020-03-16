@@ -13,6 +13,7 @@ object ConsoleOut extends Logging {
 
   val outStream: PrintStream = System.out
 
+  @deprecated("ConsoleDSL[F].errorln")
   def error(value: String, space: Int = 0): Unit =
     println(value, space, RED)
 

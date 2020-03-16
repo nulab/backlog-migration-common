@@ -8,4 +8,5 @@ import simulacrum.typeclass
 trait ConsoleDSL[F[_]] {
   def println(value: String, space: Int = 0, color: Ansi.Color = BLACK): F[Unit]
   def boldln(value: String, space: Int = 0, color: Ansi.Color = BLACK): F[Unit]
+  def errorln(value: String, space: Int = 0): F[Unit]
 }

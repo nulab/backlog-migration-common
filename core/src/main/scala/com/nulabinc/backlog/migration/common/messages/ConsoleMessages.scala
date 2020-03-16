@@ -26,6 +26,9 @@ object ConsoleMessages {
     def statusMappingCreated(filePath: Path): String =
       mappingFileCreated(statusItem, filePath)
 
+    def statusMappingFileNotFound(path: Path): String =
+      mappingFileNotFound(statusItem, path)
+
     def priorityMappingMerged[A](filePath: Path, items: Seq[PriorityMapping[A]])(implicit formatter: Formatter[PriorityMapping[A]]): String =
       mappingMerged(priorityItem, filePath, items.map(formatter.format))
 
@@ -70,5 +73,11 @@ object ConsoleMessages {
          |${Messages("cli.mapping.output_file", itemName)}
          |[${filePath.toAbsolutePath}]
          |--------------------------------------------------""".stripMargin
+
+    private def mappingFileNotFound(itemName: String, path: Path): String =
+      s"""
+         |--------------------------------------------------
+         |${Messages("cli.invalid_setup")}
+       """.stripMargin
   }
 }
