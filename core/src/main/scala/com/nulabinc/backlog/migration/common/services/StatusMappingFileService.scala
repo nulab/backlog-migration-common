@@ -3,7 +3,7 @@ package com.nulabinc.backlog.migration.common.services
 import java.nio.file.Path
 
 import cats.Monad
-import cats.implicits._
+import cats.syntax.all._
 import com.nulabinc.backlog.migration.common.deserializers.Deserializer
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import com.nulabinc.backlog.migration.common.domain.mappings._
@@ -76,18 +76,15 @@ object StatusMappingFileService {
    */
   def execute[A, F[_]: Monad: AppDSL: StorageDSL: ConsoleDSL](path: Path, dstItems: BacklogStatuses)
                                                              (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]],
-                                                              validator: MappingValidator[StatusMapping[A]]): F[Either[MappingFileError, IndexedSeq[ValidatedStatusMapping[A]]]] =
-    for {
-      exists <- StorageDSL[F].exists(path)
-      unvalidated <- getMapping(exists, path).handleError
-//      validatedMappings = unvalidatedMappings.map(MappingValidatorNec.validateStatusMapping(_, dstItems))
-//      result = validatedMappings match {
-//        case Valid(validated) => Result.success(validated)
-//      }
-    } yield {
+                                                              validator: MappingValidator[A]): F[Either[MappingFileError, Seq[ValidatedStatusMapping[A]]]] = {
+    val result = for {
+      _ <- StorageDSL[F].exists(path).orError(MappingFileNotFound("status", path)).handleError
+      unvalidated <- getMappings(path).handleError
+      validated <- validateMappings(unvalidated, dstItems).handleError
+    } yield validated
 
-???
-    }
+    result.value
+  }
 
   /**
    * Merge old mappings and new items.
@@ -111,33 +108,25 @@ object StatusMappingFileService {
   /**
    * Deserialize a mapping file.
    *
-   * @param exists
    * @param path
    * @param deserializer
    * @tparam A
    * @tparam F
    * @return
    */
-  private def getMapping[A, F[_]: Monad: ConsoleDSL: StorageDSL](exists: Boolean, path: Path)
-                                                                (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]]): F[Either[MappingFileError, IndexedSeq[StatusMapping[A]]]] = {
-    val res: F[Either[MappingFileError, IndexedSeq[StatusMapping[A]]]] = if (!exists) {
-      for {
-        _ <- ConsoleDSL[F].errorln(MappingMessages.statusMappingFileNotFound(path))
-      } yield Left(MappingFileNotFound("status", path))
-    } else {
-      for {
-        records <- StorageDSL[F].read(path, MappingFileService.readLine)
-        mappings = MappingDeserializer.status(records)
-      } yield Right(mappings)
-    }
-
-    res.handleError.value
-  }
+  private def getMappings[A, F[_]: Monad: ConsoleDSL: StorageDSL](path: Path)
+                                                                 (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]]): F[Either[MappingFileError, Seq[StatusMapping[A]]]] =
+    for {
+      records <- StorageDSL[F].read(path, MappingFileService.readLine)
+      mappings = MappingDeserializer.status(records)
+    } yield Right(mappings)
 
 
-  private def validate[A](mappings: Seq[StatusMapping[A]], dstItems: BacklogStatuses)
-                         (implicit validator: MappingValidator[A]): Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] = {
-//    mappings.map(MappingValidatorNec.validateStatusMapping(_, dstItems))
+  private def validateMappings[A, F[_]: Monad](mappings: Seq[StatusMapping[A]], dstItems: BacklogStatuses)
+                                              (implicit validator: MappingValidator[A]): F[Either[MappingFileError, Seq[ValidatedStatusMapping[A]]]] = {
+    val a = mappings.map(MappingValidatorNec.validateStatusMapping(_, dstItems))
+
+
     ???
   }
 
