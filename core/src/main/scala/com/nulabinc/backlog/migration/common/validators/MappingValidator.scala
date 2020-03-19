@@ -3,25 +3,16 @@ package com.nulabinc.backlog.migration.common.validators
 import cats.data.ValidatedNec
 import cats.implicits._
 import com.nulabinc.backlog.migration.common.domain.mappings.{BacklogStatusMappingItem, StatusMapping, ValidatedStatusMapping}
-import com.nulabinc.backlog.migration.common.errors.{DestinationItemNotFound, MappingFileError, MappingValueIsEmpty, MappingValueIsNotSpecified}
-import MappingValidatorNec.ValidationResult
 import com.nulabinc.backlog.migration.common.domain.{BacklogStatusName, BacklogStatuses}
-
-trait MappingValidator[A] {
-  def validateSource(src: A): ValidationResult[A]
-}
+import com.nulabinc.backlog.migration.common.errors.{DestinationItemNotFound, MappingValueIsEmpty, MappingValueIsNotSpecified, ValidationError}
 
 sealed trait MappingValidatorNec {
-  type ValidationResult[A] = ValidatedNec[MappingFileError, A]
+  type ValidationResult[A] = ValidatedNec[ValidationError, A]
 
-  def validateStatusMapping[A](unvalidated: StatusMapping[A], dstItems: BacklogStatuses)
-                              (implicit validator: MappingValidator[A]): ValidationResult[ValidatedStatusMapping[A]] =
-    (
-      validator.validateSource(unvalidated.src),
-      validateBacklogStatus(unvalidated.optDst, dstItems)
-    ).mapN { (s, d) =>
+  def validateStatusMapping[A](unvalidated: StatusMapping[A], dstItems: BacklogStatuses): ValidationResult[ValidatedStatusMapping[A]] =
+    validateBacklogStatus(unvalidated.optDst, dstItems).map { d =>
       new ValidatedStatusMapping[A] {
-        override val src: A = s
+        override val src: A = unvalidated.src
         override val dst: BacklogStatusMappingItem = d
       }
     }

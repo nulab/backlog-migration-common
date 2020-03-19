@@ -2,16 +2,18 @@ package com.nulabinc.backlog.migration.common.services
 
 import java.nio.file.Path
 
+import cats.Foldable.ops._
 import cats.Monad
-import cats.syntax.all._
+import cats.Monad.ops._
+import cats.data.Validated.{Invalid, Valid}
 import com.nulabinc.backlog.migration.common.deserializers.Deserializer
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{AppDSL, ConsoleDSL, StorageDSL}
-import com.nulabinc.backlog.migration.common.errors.{MappingFileError, MappingFileNotFound}
+import com.nulabinc.backlog.migration.common.errors.{MappingFileError, MappingFileNotFound, MappingValidationError, ValidationError}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.serializers.Serializer
-import com.nulabinc.backlog.migration.common.validators.{MappingValidator, MappingValidatorNec}
+import com.nulabinc.backlog.migration.common.validators.MappingValidatorNec
 import org.apache.commons.csv.CSVRecord
 
 private case class MergedStatusMapping[A](mergeList: Seq[StatusMapping[A]], addedList: Seq[StatusMapping[A]])
@@ -69,18 +71,16 @@ object StatusMappingFileService {
    * @param path
    * @param dstItems
    * @param deserializer
-   * @param validator
    * @tparam A
    * @tparam F
    * @return
    */
   def execute[A, F[_]: Monad: AppDSL: StorageDSL: ConsoleDSL](path: Path, dstItems: BacklogStatuses)
-                                                             (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]],
-                                                              validator: MappingValidator[A]): F[Either[MappingFileError, Seq[ValidatedStatusMapping[A]]]] = {
+                                                             (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]]): F[Either[MappingFileError, Seq[ValidatedStatusMapping[A]]]] = {
     val result = for {
       _ <- StorageDSL[F].exists(path).orError(MappingFileNotFound("status", path)).handleError
       unvalidated <- getMappings(path).handleError
-      validated <- validateMappings(unvalidated, dstItems).handleError
+      validated <- validateMappings(unvalidated, dstItems).lift.handleError
     } yield validated
 
     result.value
@@ -121,14 +121,31 @@ object StatusMappingFileService {
       mappings = MappingDeserializer.status(records)
     } yield Right(mappings)
 
+  private def validateMappings[A](mappings: Seq[StatusMapping[A]], dstItems: BacklogStatuses): Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] = {
+    val results = mappings.map(validateMapping(_, dstItems)).foldLeft(ValidationResults.empty[A]) { (acc, item) =>
+      item match {
+        case Right(value) => acc.copy(values = acc.values :+ value)
+        case Left(error) => acc.copy(errors = acc.errors ++ error.errors)
+      }
+    }
 
-  private def validateMappings[A, F[_]: Monad](mappings: Seq[StatusMapping[A]], dstItems: BacklogStatuses)
-                                              (implicit validator: MappingValidator[A]): F[Either[MappingFileError, Seq[ValidatedStatusMapping[A]]]] = {
-    val a = mappings.map(MappingValidatorNec.validateStatusMapping(_, dstItems))
-
-
-    ???
+    results.toResult
   }
+
+  private def validateMapping[A](mapping: StatusMapping[A], dstItems: BacklogStatuses): Either[MappingValidationError, ValidatedStatusMapping[A]] =
+    MappingValidatorNec.validateStatusMapping(mapping, dstItems) match {
+      case Valid(value) => Right(value)
+      case Invalid(error) => Left(MappingValidationError(error.toList))
+    }
 
 }
 
+private case class ValidationResults[A](values: Seq[ValidatedStatusMapping[A]] = Seq(), errors: List[ValidationError] = List()) {
+  def toResult: Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] =
+    if (errors.nonEmpty) Left(MappingValidationError(errors))
+    else Right(values)
+}
+
+private object ValidationResults {
+  def empty[A]: ValidationResults[A] = ValidationResults[A]()
+}

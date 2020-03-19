@@ -1,8 +1,8 @@
 package com.nulabinc.backlog.migration.common.shared
 
+import cats.{Applicative, Monad}
 import cats.data.EitherT
 import monix.eval.Task
-
 
 object Result {
 
@@ -12,7 +12,11 @@ object Result {
 
   def error[E, A](error: E): Result[E, A] = Task(Left(error))
 
-  def fromEither[E, A](result: Either[E, A]): Result[E, A] = Task(result)
+  def fromEither[E, A](result: Either[E, A]): Result[E, A] =
+    Task(result)
+
+  def fromEitherF[F[_]: Monad, E, A](result: Either[E, A]): F[Either[E, A]] =
+    Applicative[F].pure(result)
 
   object syntax {
 

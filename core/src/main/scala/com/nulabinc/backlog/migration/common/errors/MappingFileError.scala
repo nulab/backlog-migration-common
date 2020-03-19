@@ -5,6 +5,11 @@ import java.nio.file.Path
 sealed trait MappingFileError
 
 case class MappingFileNotFound(name: String, path: Path) extends MappingFileError
-case object MappingValueIsEmpty extends MappingFileError
-case object MappingValueIsNotSpecified extends MappingFileError
-case class DestinationItemNotFound(value: String) extends MappingFileError
+case class MappingValidationError(errors: List[ValidationError]) extends MappingFileError
+
+
+sealed trait ValidationError
+
+case object MappingValueIsEmpty extends ValidationError
+case object MappingValueIsNotSpecified extends ValidationError
+case class DestinationItemNotFound(value: String) extends ValidationError

@@ -19,6 +19,10 @@ object syntax {
       }
   }
 
+  implicit class EitherOps[F[_]: Monad, E, A](result: Either[E, A]) {
+    def lift: F[Either[E, A]] = Result.fromEitherF(result)
+  }
+
 //    def mapError[E2](f: E => E2): F[Result[E2, A]] =
 //      result.flatMap { inner =>
 //        inner.fold(
