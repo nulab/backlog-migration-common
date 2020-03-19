@@ -13,4 +13,6 @@ object PriorityMapping {
     }
 }
 
-case class BacklogPriorityMappingItem(value: String) extends AnyVal
+case class BacklogPriorityMappingItem(private val str: String) {
+  val value: String = str.trim
+}

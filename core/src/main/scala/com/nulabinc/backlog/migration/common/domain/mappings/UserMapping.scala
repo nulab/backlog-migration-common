@@ -30,9 +30,11 @@ object BacklogUserMappingItem {
     }
 }
 
-case class BacklogUserIdMappingItem(optValue: Option[String]) extends BacklogUserMappingItem {
+case class BacklogUserIdMappingItem(private val optStr: Option[String]) extends BacklogUserMappingItem {
+  override val optValue: Option[String] = optStr.map(_.trim)
   override val mappingType: String = "id"
 }
-case class BacklogUserMailMappingItem(optValue: Option[String]) extends BacklogUserMappingItem {
+case class BacklogUserMailMappingItem(private val optStr: Option[String]) extends BacklogUserMappingItem {
+  override val optValue: Option[String] = optStr.map(_.trim)
   override val mappingType: String = "mail"
 }

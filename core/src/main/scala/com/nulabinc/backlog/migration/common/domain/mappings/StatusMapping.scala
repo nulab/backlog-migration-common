@@ -13,7 +13,9 @@ object StatusMapping {
     }
 }
 
-case class BacklogStatusMappingItem(value: String) extends AnyVal
+case class BacklogStatusMappingItem(private val str: String) {
+  val value: String = str.trim
+}
 
 trait ValidatedStatusMapping[A] {
   val src: A
