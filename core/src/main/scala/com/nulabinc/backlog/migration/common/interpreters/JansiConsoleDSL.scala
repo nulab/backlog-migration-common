@@ -33,4 +33,8 @@ case class JansiConsoleDSL() extends ConsoleDSL[Task] with Logging {
   override def errorln(value: String, space: Int): Task[Unit] =
     println(value, space, RED)
 
+  override def read(message: String): Task[String] = Task.eval {
+    scala.io.StdIn.readLine(message)
+  }
+
 }

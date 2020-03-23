@@ -9,7 +9,7 @@ import cats.data.Validated.{Invalid, Valid}
 import com.nulabinc.backlog.migration.common.deserializers.Deserializer
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import com.nulabinc.backlog.migration.common.domain.mappings._
-import com.nulabinc.backlog.migration.common.dsl.{AppDSL, ConsoleDSL, StorageDSL}
+import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
 import com.nulabinc.backlog.migration.common.errors.{MappingFileError, MappingFileNotFound, MappingValidationError, ValidationError}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.serializers.Serializer
@@ -75,7 +75,7 @@ object StatusMappingFileService {
    * @tparam F
    * @return
    */
-  def execute[A, F[_]: Monad: AppDSL: StorageDSL: ConsoleDSL](path: Path, dstItems: BacklogStatuses)
+  def execute[A, F[_]: Monad: StorageDSL: ConsoleDSL](path: Path, dstItems: BacklogStatuses)
                                                              (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]]): F[Either[MappingFileError, Seq[ValidatedStatusMapping[A]]]] = {
     val result = for {
       _ <- StorageDSL[F].exists(path).orError(MappingFileNotFound("status", path)).handleError

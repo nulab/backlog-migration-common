@@ -13,9 +13,9 @@ object ConsoleMessages {
   val empty: String = Messages("common.empty")
 
   object Mappings {
-    private lazy val statusItem = Messages("common.statuses")
-    private lazy val priorityItem = Messages("common.priorities")
-    private lazy val userItem = Messages("common.users")
+    lazy val statusItem = Messages("common.statuses")
+    lazy val priorityItem = Messages("common.priorities")
+    lazy val userItem = Messages("common.users")
 
     def statusMappingMerged[A](filePath: Path, items: Seq[StatusMapping[A]])(implicit formatter: Formatter[StatusMapping[A]]): String =
       mappingMerged(statusItem, filePath, items.map(formatter.format))

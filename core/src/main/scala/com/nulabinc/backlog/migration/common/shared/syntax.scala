@@ -31,11 +31,17 @@ object syntax {
     def lift: F[Either[E, A]] = Applicative[F].pure(result)
   }
 
-  implicit class OptionOps[F[_]: Monad, A](optValue: Option[F[A]]) {
+  implicit class OptionOps[F[_]: Monad, A](optFValue: Option[F[A]]) {
     def sequence: F[Option[A]] =
-      optValue match {
+      optFValue match {
         case Some(task) => task.map(Some(_))
         case None => Applicative[F].pure(None)
+      }
+
+    def toEither[E](error: E): F[Either[E, A]] =
+      optFValue match {
+        case Some(v: F[A]) => v.map(Right(_))
+        case None => Applicative[F].pure(Left(error))
       }
   }
 }
