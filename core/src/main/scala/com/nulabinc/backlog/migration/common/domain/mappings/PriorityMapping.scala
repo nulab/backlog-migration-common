@@ -16,3 +16,8 @@ object PriorityMapping {
 case class BacklogPriorityMappingItem(private val str: String) {
   val value: String = str.trim
 }
+
+trait ValidatedPriorityMapping[A] {
+  val src: A
+  val dst: BacklogPriorityMappingItem
+}

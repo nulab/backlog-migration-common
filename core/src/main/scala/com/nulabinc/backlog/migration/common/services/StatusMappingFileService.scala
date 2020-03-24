@@ -138,14 +138,15 @@ object StatusMappingFileService {
       case Invalid(error) => Left(MappingValidationError(error.toList))
     }
 
+  private case class ValidationResults[A](values: Seq[ValidatedStatusMapping[A]] = Seq(), errors: List[ValidationError] = List()) {
+    def toResult: Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] =
+      if (errors.nonEmpty) Left(MappingValidationError(errors))
+      else Right(values)
+  }
+
+  private object ValidationResults {
+    def empty[A]: ValidationResults[A] = ValidationResults[A]()
+  }
 }
 
-private case class ValidationResults[A](values: Seq[ValidatedStatusMapping[A]] = Seq(), errors: List[ValidationError] = List()) {
-  def toResult: Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] =
-    if (errors.nonEmpty) Left(MappingValidationError(errors))
-    else Right(values)
-}
 
-private object ValidationResults {
-  def empty[A]: ValidationResults[A] = ValidationResults[A]()
-}
