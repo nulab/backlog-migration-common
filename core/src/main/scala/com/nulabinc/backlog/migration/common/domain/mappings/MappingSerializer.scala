@@ -59,7 +59,7 @@ object MappingSerializer {
       .map(toByteArray)
 
   private def toRow(values: Seq[String]): String =
-    s"""${values.mkString(", ")}\n""".stripMargin
+    s""""${values.mkString("\",\"")}\"\n""".stripMargin
 
   private def toByteArray(str: String): Array[Byte] =
     str.getBytes(charset)
