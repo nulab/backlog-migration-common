@@ -13,9 +13,7 @@ object StatusMapping {
     }
 }
 
-case class BacklogStatusMappingItem(private val str: String) {
-  val value: String = str.trim
-}
+case class BacklogStatusMappingItem(value: String)
 
 trait ValidatedStatusMapping[A] {
   val src: A
