@@ -2,7 +2,8 @@ package com.nulabinc.backlog.migration.common.domain.mappings
 
 trait UserMapping[A] extends Mapping[A] {
   val src: A
-  val dst: BacklogUserMappingItem
+  val optDst: Option[BacklogUserMappingItem]
+  val mappingType: String
 }
 
 object UserMapping {
@@ -10,31 +11,33 @@ object UserMapping {
     new UserMapping[A] {
       override val src: A =
         srcItem
-      override val dst: BacklogUserMappingItem =
-        if (isNAISpace) BacklogUserMappingItem.from(None, "mail")
-        else BacklogUserMappingItem.from(None, "id")
+      override val optDst: Option[BacklogUserMappingItem] =
+        None
+      override val mappingType: String =
+        if (isNAISpace) MailUserMappingType.value
+        else IdUserMappingType.value
     }
 }
 
-sealed trait BacklogUserMappingItem{
-  val optValue: Option[String]
-  val mappingType: String
-}
+sealed abstract class UserMappingType(val value: String)
+case object IdUserMappingType extends UserMappingType("id")
+case object MailUserMappingType extends UserMappingType("mail")
 
-object BacklogUserMappingItem {
-  def from(optValue: Option[String], mappingType: String): BacklogUserMappingItem =
-    mappingType match {
-      case "id" => BacklogUserIdMappingItem(optValue)
-      case "mail" => BacklogUserMailMappingItem(optValue)
-      case others => throw new RuntimeException(s"Invalid user mapping item. Type: $others") // TODO
+object UserMappingType {
+  def from(str: String): UserMappingType =
+    str match {
+      case "id" => IdUserMappingType
+      case "mail" => MailUserMappingType
+      case others => throw new RuntimeException(s"Invalid user mapping type. Input: $others")
     }
 }
 
-case class BacklogUserIdMappingItem(private val optStr: Option[String]) extends BacklogUserMappingItem {
-  override val optValue: Option[String] = optStr.map(_.trim)
-  override val mappingType: String = "id"
+case class BacklogUserMappingItem(private val str: String) {
+  val value: String = str.trim
 }
-case class BacklogUserMailMappingItem(private val optStr: Option[String]) extends BacklogUserMappingItem {
-  override val optValue: Option[String] = optStr.map(_.trim)
-  override val mappingType: String = "mail"
+
+trait ValidatedUserMapping[A] extends Mapping[A] {
+  val src: A
+  val dst: BacklogUserMappingItem
+  val mappingType: UserMappingType
 }
