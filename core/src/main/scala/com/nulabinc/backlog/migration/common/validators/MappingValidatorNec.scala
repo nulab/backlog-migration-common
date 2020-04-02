@@ -44,11 +44,10 @@ sealed trait MappingValidatorNec {
   private def validateBacklogPriority(optDst: Option[BacklogPriorityMappingItem], dstItems: Seq[Priority]): ValidationResult[BacklogPriorityMappingItem] =
     optDst match {
       case Some(dst) =>
-        (
-          validateNonEmptyString(dst.value),
-          if (dstItems.exists(_.getName == dst.value)) BacklogPriorityMappingItem(dst.value).validNec
+        validateNonEmptyString(dst.value).andThen { value =>
+          if (dstItems.exists(_.getName == value)) BacklogPriorityMappingItem(dst.value).validNec
           else DestinationItemNotFound(dst.value).invalidNec
-        ).mapN((_, value) => value)
+        }
       case None =>
         MappingValueIsNotSpecified.invalidNec
     }
@@ -56,11 +55,10 @@ sealed trait MappingValidatorNec {
   private def validateBacklogStatus(optDst: Option[BacklogStatusMappingItem], dstItems: BacklogStatuses): ValidationResult[BacklogStatusMappingItem] =
     optDst match {
       case Some(dst) =>
-        (
-          validateNonEmptyString(dst.value),
-          if (dstItems.existsByName(BacklogStatusName(dst.value))) BacklogStatusMappingItem(dst.value).validNec
+        validateNonEmptyString(dst.value).andThen { value =>
+          if (dstItems.existsByName(BacklogStatusName(value))) BacklogStatusMappingItem(dst.value).validNec
           else DestinationItemNotFound(dst.value).invalidNec
-        ).mapN((_, value) => value)
+        }
       case None =>
         MappingValueIsNotSpecified.invalidNec
     }
@@ -68,18 +66,16 @@ sealed trait MappingValidatorNec {
   private def validateBacklogUser(optDst: Option[BacklogUserMappingItem], mappingTypeStr: String, dstItems: Seq[BacklogUser]): ValidationResult[(UserMappingType, BacklogUserMappingItem)] =
     validateValueIsDefined(optDst).andThen { dst =>
       validateUserMappingType(mappingTypeStr).andThen { mappingType =>
-        (
-          validateNonEmptyString(dst.value),
-          validateUserMappingType(mappingTypeStr),
+        validateNonEmptyString(dst.value).andThen { value =>
           mappingType match {
             case IdUserMappingType =>
-              if (dstItems.map(_.optUserId).exists(_.contains(dst.value))) dst.validNec
-              else DestinationItemNotFound(dst.value).invalidNec
+              if (dstItems.map(_.optUserId).exists(_.contains(value))) (mappingType, BacklogUserMappingItem(value)).validNec
+              else DestinationItemNotFound(value).invalidNec
             case MailUserMappingType =>
-              if (dstItems.map(_.optMailAddress).exists(_.contains(dst.value))) dst.validNec
-              else DestinationItemNotFound(dst.value).invalidNec
+              if (dstItems.map(_.optMailAddress).exists(_.contains(value))) (mappingType, BacklogUserMappingItem(value)).validNec
+              else DestinationItemNotFound(value).invalidNec
           }
-        ).mapN((_, mappingType, dstValue) => (mappingType, dstValue))
+        }
       }
     }
 
