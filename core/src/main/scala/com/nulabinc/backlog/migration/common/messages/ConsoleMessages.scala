@@ -15,10 +15,18 @@ object ConsoleMessages {
   val srcProduct: String = Messages("common.src")
   val dstProduct: String = Messages("common.dst")
 
+  def confirmCanceled: String =
+    s"""
+       |--------------------------------------------------
+       |${Messages("cli.cancel")}""".stripMargin
+
   object Mappings {
     lazy val statusItem = Messages("common.statuses")
     lazy val priorityItem = Messages("common.priorities")
     lazy val userItem = Messages("common.users")
+
+    def needsSetup: String =
+      Messages("cli.mapping.error.setup")
 
     def statusMappingMerged[A](filePath: Path, items: Seq[StatusMapping[A]])(implicit formatter: Formatter[StatusMapping[A]]): String =
       mappingMerged(statusItem, filePath, items.map(formatter.format))
@@ -29,7 +37,7 @@ object ConsoleMessages {
     def statusMappingCreated(filePath: Path): String =
       mappingFileCreated(statusItem, filePath)
 
-    def statusMappingFileNotFound(path: Path): String =
+    def mappingFileNotFound(path: Path): String =
       mappingFileNotFound(statusItem, path)
 
     def priorityMappingMerged[A](filePath: Path, items: Seq[PriorityMapping[A]])(implicit formatter: Formatter[PriorityMapping[A]]): String =
