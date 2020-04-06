@@ -4,7 +4,7 @@ import java.nio.file.Path
 import java.util.Locale
 
 import com.nulabinc.backlog.migration.common.domain.mappings.{Mapping, PriorityMapping, StatusMapping, UserMapping}
-import com.nulabinc.backlog.migration.common.errors.{MappingValidationError, MappingValueIsEmpty}
+import com.nulabinc.backlog.migration.common.errors._
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.osinka.i18n.{Lang, Messages}
 
@@ -67,6 +67,12 @@ object ConsoleMessages {
       val errorStr = error.errors.map {
         case MappingValueIsEmpty(mapping) =>
           mappingItemIsEmpty(itemName, mapping)
+        case MappingValueIsNotSpecified(mapping) =>
+          mappingItemIsEmpty(itemName, mapping)
+        case DestinationItemNotFound(value) =>
+          mappingItemNotExist(itemName, value)
+        case InvalidItemValue(required, input) =>
+          mappingInvalidChoice(required, input)
       }
 
       s"""
@@ -81,7 +87,13 @@ object ConsoleMessages {
           |${Messages("cli.mapping.fix_file", path)}""".stripMargin
 
     private def mappingItemIsEmpty[A](itemName: String, mapping: Mapping[A]): String =
-      s"- ${Messages("cli.mapping.error.empty.item", dstProduct, itemName, mapping.srcDisplayValue)}"
+      s"- ${Messages("cli.mapping.error.empty.item", srcProduct, itemName, mapping.srcDisplayValue)}"
+
+    private def mappingItemNotExist(itemName: String, value: String): String =
+      s"- ${Messages("cli.mapping.error.not_exist.item", itemName, value, dstProduct)}"
+
+    private def mappingInvalidChoice(required: String, input: String): String =
+      s"- ${Messages("cli.mapping.error.invalid_choice", required, input)}"
 
     private def mappingMerged(itemName: String, filePath: Path, mappingStrings: Seq[(String, String)]): String = {
       val formatted = mappingStrings.map {

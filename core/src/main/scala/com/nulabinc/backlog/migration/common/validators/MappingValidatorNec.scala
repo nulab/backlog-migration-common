@@ -41,9 +41,6 @@ sealed trait MappingValidatorNec {
   private def validateNonEmptyString[A](mapping: Mapping[A], value: String): ValidationResult[String] =
     if (value.nonEmpty) value.validNec else MappingValueIsEmpty(mapping).invalidNec
 
-  private def validateValueIsDefined[A](optValue: Option[A]): ValidationResult[A] =
-    optValue.map(_.validNec).getOrElse(MappingValueIsNotSpecified.invalidNec)
-
   private def validateBacklogPriority[A](mapping: PriorityMapping[A], dstItems: Seq[Priority]): ValidationResult[BacklogPriorityMappingItem] =
     mapping.optDst match {
       case Some(dst) =>
@@ -52,7 +49,7 @@ sealed trait MappingValidatorNec {
           else DestinationItemNotFound(dst.value).invalidNec
         }
       case None =>
-        MappingValueIsNotSpecified.invalidNec
+        MappingValueIsNotSpecified(mapping).invalidNec
     }
 
   private def validateBacklogStatus[A](mapping: StatusMapping[A], dstItems: BacklogStatuses): ValidationResult[BacklogStatusMappingItem] =
@@ -63,11 +60,11 @@ sealed trait MappingValidatorNec {
           else DestinationItemNotFound(dst.value).invalidNec
         }
       case None =>
-        MappingValueIsNotSpecified.invalidNec
+        MappingValueIsNotSpecified(mapping).invalidNec
     }
 
   private def validateBacklogUser[A](mapping: UserMapping[A], dstItems: Seq[BacklogUser]): ValidationResult[(UserMappingType, BacklogUserMappingItem)] =
-    validateValueIsDefined(mapping.optDst).andThen { dst =>
+    mapping.optDst.map(_.validNec).getOrElse(MappingValueIsNotSpecified(mapping).invalidNec).andThen { dst =>
       validateNonEmptyString(mapping, dst.value).andThen { value =>
         validateUserMappingType(mapping.mappingType).andThen {
           case mappingType@IdUserMappingType =>
