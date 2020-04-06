@@ -108,25 +108,19 @@ object PriorityMappingFileService {
     } yield Right(mappings)
 
   private def validateMappings[A](mappings: Seq[PriorityMapping[A]], dstItems: Seq[Priority]): Either[MappingFileError, Seq[ValidatedPriorityMapping[A]]] = {
-    val results = mappings.map(validateMapping(_, dstItems)).foldLeft(ValidationResults.empty[A]) { (acc, item) =>
+    val results = mappings.map(MappingValidatorNec.validatePriorityMapping(_, dstItems)).foldLeft(ValidationResults.empty[A]) { (acc, item) =>
       item match {
-        case Right(value) => acc.copy(values = acc.values :+ value)
-        case Left(error) => acc.copy(errors = acc.errors ++ error.errors)
+        case Valid(value) => acc.copy(values = acc.values :+ value)
+        case Invalid(error) => acc.copy(errors = acc.errors ++ error.toList)
       }
     }
 
     results.toResult
   }
 
-  private def validateMapping[A](mapping: PriorityMapping[A], dstItems: Seq[Priority]): Either[MappingValidationError, ValidatedPriorityMapping[A]] =
-    MappingValidatorNec.validatePriorityMapping(mapping, dstItems) match {
-      case Valid(value) => Right(value)
-      case Invalid(error) => Left(MappingValidationError(error.toList))
-    }
-
   private case class ValidationResults[A](values: Seq[ValidatedPriorityMapping[A]] = Seq(), errors: List[ValidationError] = List()) {
     def toResult: Either[MappingFileError, Seq[ValidatedPriorityMapping[A]]] =
-      if (errors.nonEmpty) Left(MappingValidationError(errors))
+      if (errors.nonEmpty) Left(MappingValidationError(values, errors))
       else Right(values)
   }
 

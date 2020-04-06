@@ -3,7 +3,8 @@ package com.nulabinc.backlog.migration.common.messages
 import java.nio.file.Path
 import java.util.Locale
 
-import com.nulabinc.backlog.migration.common.domain.mappings.{PriorityMapping, StatusMapping, UserMapping}
+import com.nulabinc.backlog.migration.common.domain.mappings.{Mapping, PriorityMapping, StatusMapping, UserMapping}
+import com.nulabinc.backlog.migration.common.errors.{MappingValidationError, MappingValueIsEmpty}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.osinka.i18n.{Lang, Messages}
 
@@ -11,6 +12,8 @@ object ConsoleMessages {
   private implicit val userLang: Lang = if (Locale.getDefault.equals(Locale.JAPAN)) Lang("ja") else Lang("en")
 
   val empty: String = Messages("common.empty")
+  val srcProduct: String = Messages("common.src")
+  val dstProduct: String = Messages("common.dst")
 
   object Mappings {
     lazy val statusItem = Messages("common.statuses")
@@ -46,6 +49,39 @@ object ConsoleMessages {
 
     def userMappingCreated(filePath: Path): String =
       mappingFileCreated(userItem, filePath)
+
+    def mappingFileIsBroken(itemName: String): String =
+      s"""
+         |--------------------------------------------------
+         |${Messages("cli.mapping.error.broken_file", itemName)}
+         |--------------------------------------------------
+        """.stripMargin
+
+    def validationError[A](error: MappingValidationError[A]): String = {
+      val itemName = error.mappings match {
+        case _: Seq[PriorityMapping[_]] => priorityItem
+        case _: Seq[StatusMapping[_]] => statusItem
+        case _: Seq[UserMapping[_]] => userItem
+        case _ => "unknown"
+      }
+      val errorStr = error.errors.map {
+        case MappingValueIsEmpty(mapping) =>
+          mappingItemIsEmpty(itemName, mapping)
+      }
+
+      s"""
+         |${Messages("cli.mapping.error", itemName)}
+         |--------------------------------------------------
+         |${errorStr.mkString("\n")}
+         |--------------------------------------------------""".stripMargin
+    }
+
+    def mappingFileNeedsFix(path: Path): String =
+      s"""|--------------------------------------------------
+          |${Messages("cli.mapping.fix_file", path)}""".stripMargin
+
+    private def mappingItemIsEmpty[A](itemName: String, mapping: Mapping[A]): String =
+      s"- ${Messages("cli.mapping.error.empty.item", dstProduct, itemName, mapping.srcDisplayValue)}"
 
     private def mappingMerged(itemName: String, filePath: Path, mappingStrings: Seq[(String, String)]): String = {
       val formatted = mappingStrings.map {

@@ -11,40 +11,43 @@ sealed trait MappingValidatorNec {
   type ValidationResult[A] = ValidatedNec[ValidationError, A]
 
   def validatePriorityMapping[A](unvalidated: PriorityMapping[A], dstItems: Seq[Priority]): ValidationResult[ValidatedPriorityMapping[A]] =
-    validateBacklogPriority(unvalidated.optDst, dstItems).map { d =>
+    validateBacklogPriority(unvalidated, dstItems).map { d =>
       new ValidatedPriorityMapping[A] {
         override val src: A = unvalidated.src
+        override val srcDisplayValue: String = unvalidated.srcDisplayValue
         override val dst: BacklogPriorityMappingItem = d
       }
     }
 
   def validateStatusMapping[A](unvalidated: StatusMapping[A], dstItems: BacklogStatuses): ValidationResult[ValidatedStatusMapping[A]] =
-    validateBacklogStatus(unvalidated.optDst, dstItems).map { d =>
+    validateBacklogStatus(unvalidated, dstItems).map { d =>
       new ValidatedStatusMapping[A] {
         override val src: A = unvalidated.src
+        override val srcDisplayValue: String = unvalidated.srcDisplayValue
         override val dst: BacklogStatusMappingItem = d
       }
     }
 
   def validateUserMapping[A](unvalidated: UserMapping[A], dstItems: Seq[BacklogUser]): ValidationResult[ValidatedUserMapping[A]] =
-    validateBacklogUser(unvalidated.optDst, unvalidated.mappingType, dstItems).map { result =>
+    validateBacklogUser(unvalidated, dstItems).map { result =>
       new ValidatedUserMapping[A] {
         override val src: A = unvalidated.src
+        override val srcDisplayValue: String = unvalidated.srcDisplayValue
         override val dst: BacklogUserMappingItem = result._2
         override val mappingType: UserMappingType = result._1
       }
     }
 
-  private def validateNonEmptyString(value: String): ValidationResult[String] =
-    if (value.nonEmpty) value.validNec else MappingValueIsEmpty.invalidNec
+  private def validateNonEmptyString[A](mapping: Mapping[A], value: String): ValidationResult[String] =
+    if (value.nonEmpty) value.validNec else MappingValueIsEmpty(mapping).invalidNec
 
   private def validateValueIsDefined[A](optValue: Option[A]): ValidationResult[A] =
     optValue.map(_.validNec).getOrElse(MappingValueIsNotSpecified.invalidNec)
 
-  private def validateBacklogPriority(optDst: Option[BacklogPriorityMappingItem], dstItems: Seq[Priority]): ValidationResult[BacklogPriorityMappingItem] =
-    optDst match {
+  private def validateBacklogPriority[A](mapping: PriorityMapping[A], dstItems: Seq[Priority]): ValidationResult[BacklogPriorityMappingItem] =
+    mapping.optDst match {
       case Some(dst) =>
-        validateNonEmptyString(dst.value).andThen { value =>
+        validateNonEmptyString(mapping, dst.value).andThen { value =>
           if (dstItems.exists(_.getName == value)) BacklogPriorityMappingItem(dst.value).validNec
           else DestinationItemNotFound(dst.value).invalidNec
         }
@@ -52,10 +55,10 @@ sealed trait MappingValidatorNec {
         MappingValueIsNotSpecified.invalidNec
     }
 
-  private def validateBacklogStatus(optDst: Option[BacklogStatusMappingItem], dstItems: BacklogStatuses): ValidationResult[BacklogStatusMappingItem] =
-    optDst match {
+  private def validateBacklogStatus[A](mapping: StatusMapping[A], dstItems: BacklogStatuses): ValidationResult[BacklogStatusMappingItem] =
+    mapping.optDst match {
       case Some(dst) =>
-        validateNonEmptyString(dst.value).andThen { value =>
+        validateNonEmptyString(mapping, dst.value).andThen { value =>
           if (dstItems.existsByName(BacklogStatusName(value))) BacklogStatusMappingItem(dst.value).validNec
           else DestinationItemNotFound(dst.value).invalidNec
         }
@@ -63,18 +66,16 @@ sealed trait MappingValidatorNec {
         MappingValueIsNotSpecified.invalidNec
     }
 
-  private def validateBacklogUser(optDst: Option[BacklogUserMappingItem], mappingTypeStr: String, dstItems: Seq[BacklogUser]): ValidationResult[(UserMappingType, BacklogUserMappingItem)] =
-    validateValueIsDefined(optDst).andThen { dst =>
-      validateUserMappingType(mappingTypeStr).andThen { mappingType =>
-        validateNonEmptyString(dst.value).andThen { value =>
-          mappingType match {
-            case IdUserMappingType =>
-              if (dstItems.map(_.optUserId).exists(_.contains(value))) (mappingType, BacklogUserMappingItem(value)).validNec
-              else DestinationItemNotFound(value).invalidNec
-            case MailUserMappingType =>
-              if (dstItems.map(_.optMailAddress).exists(_.contains(value))) (mappingType, BacklogUserMappingItem(value)).validNec
-              else DestinationItemNotFound(value).invalidNec
-          }
+  private def validateBacklogUser[A](mapping: UserMapping[A], dstItems: Seq[BacklogUser]): ValidationResult[(UserMappingType, BacklogUserMappingItem)] =
+    validateValueIsDefined(mapping.optDst).andThen { dst =>
+      validateNonEmptyString(mapping, dst.value).andThen { value =>
+        validateUserMappingType(mapping.mappingType).andThen {
+          case mappingType@IdUserMappingType =>
+            if (dstItems.map(_.optUserId).exists(_.contains(value))) (mappingType, BacklogUserMappingItem(value)).validNec
+            else DestinationItemNotFound(value).invalidNec
+          case mappingType@MailUserMappingType =>
+            if (dstItems.map(_.optMailAddress).exists(_.contains(value))) (mappingType, BacklogUserMappingItem(value)).validNec
+            else DestinationItemNotFound(value).invalidNec
         }
       }
     }

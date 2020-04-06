@@ -2,6 +2,7 @@ package com.nulabinc.backlog.migration.common.domain.mappings
 
 trait UserMapping[A] extends Mapping[A] {
   val src: A
+  val srcDisplayValue: String
   val optDst: Option[BacklogUserMappingItem]
   val mappingType: String
 }
@@ -11,6 +12,8 @@ object UserMapping {
     new UserMapping[A] {
       override val src: A =
         srcItem
+      override val srcDisplayValue: String =
+        ""
       override val optDst: Option[BacklogUserMappingItem] =
         None
       override val mappingType: String =

@@ -122,25 +122,19 @@ object StatusMappingFileService {
     } yield Right(mappings)
 
   private def validateMappings[A](mappings: Seq[StatusMapping[A]], dstItems: BacklogStatuses): Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] = {
-    val results = mappings.map(validateMapping(_, dstItems)).foldLeft(ValidationResults.empty[A]) { (acc, item) =>
+    val results = mappings.map(MappingValidatorNec.validateStatusMapping(_, dstItems)).foldLeft(ValidationResults.empty[A]) { (acc, item) =>
       item match {
-        case Right(value) => acc.copy(values = acc.values :+ value)
-        case Left(error) => acc.copy(errors = acc.errors ++ error.errors)
+        case Valid(value) => acc.copy(values = acc.values :+ value)
+        case Invalid(error) => acc.copy(errors = acc.errors ++ error.toList)
       }
     }
 
     results.toResult
   }
 
-  private def validateMapping[A](mapping: StatusMapping[A], dstItems: BacklogStatuses): Either[MappingValidationError, ValidatedStatusMapping[A]] =
-    MappingValidatorNec.validateStatusMapping(mapping, dstItems) match {
-      case Valid(value) => Right(value)
-      case Invalid(error) => Left(MappingValidationError(error.toList))
-    }
-
   private case class ValidationResults[A](values: Seq[ValidatedStatusMapping[A]] = Seq(), errors: List[ValidationError] = List()) {
     def toResult: Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] =
-      if (errors.nonEmpty) Left(MappingValidationError(errors))
+      if (errors.nonEmpty) Left(MappingValidationError(values, errors))
       else Right(values)
   }
 
