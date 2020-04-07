@@ -28,7 +28,14 @@ object syntax {
   }
 
   implicit class EitherOps[F[_]: Monad, E, A](result: Either[E, A]) {
-    def lift: F[Either[E, A]] = Applicative[F].pure(result)
+    def lift: F[Either[E, A]] =
+      Applicative[F].pure(result)
+
+    def orFail: A =
+      result match {
+        case Right(value) => value
+        case Left(error) => throw new RuntimeException(error.toString)
+      }
   }
 
   implicit class OptionOps[F[_]: Monad, A](optFValue: Option[F[A]]) {

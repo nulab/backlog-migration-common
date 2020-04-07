@@ -87,6 +87,40 @@ object StatusMappingFileService {
   }
 
   /**
+   * Deserialize a mapping file.
+   *
+   * @param path
+   * @param deserializer
+   * @tparam A
+   * @tparam F
+   * @return
+   */
+  def getMappings[A, F[_]: Monad: ConsoleDSL: StorageDSL](path: Path)
+                                                         (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]]): F[Either[MappingFileError, Seq[StatusMapping[A]]]] =
+    for {
+      records <- StorageDSL[F].read(path, MappingFileService.readLine)
+      mappings = MappingDeserializer.status(records)
+    } yield Right(mappings)
+
+  /**
+   * Validate mappings
+   * @param mappings
+   * @param dstItems
+   * @tparam A
+   * @return
+   */
+  def validateMappings[A](mappings: Seq[StatusMapping[A]], dstItems: BacklogStatuses): Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] = {
+    val results = mappings.map(MappingValidatorNec.validateStatusMapping(_, dstItems)).foldLeft(ValidationResults.empty[A]) { (acc, item) =>
+      item match {
+        case Valid(value) => acc.copy(values = acc.values :+ value)
+        case Invalid(error) => acc.copy(errors = acc.errors ++ error.toList)
+      }
+    }
+
+    results.toResult
+  }
+
+  /**
    * Merge old mappings and new items.
    *
    * @param mappings
@@ -104,33 +138,6 @@ object StatusMappingFileService {
           acc.copy(mergeList = acc.mergeList :+ mapping, addedList = acc.addedList :+ mapping)
       }
     }
-
-  /**
-   * Deserialize a mapping file.
-   *
-   * @param path
-   * @param deserializer
-   * @tparam A
-   * @tparam F
-   * @return
-   */
-  private def getMappings[A, F[_]: Monad: ConsoleDSL: StorageDSL](path: Path)
-                                                                 (implicit deserializer: Deserializer[CSVRecord, StatusMapping[A]]): F[Either[MappingFileError, Seq[StatusMapping[A]]]] =
-    for {
-      records <- StorageDSL[F].read(path, MappingFileService.readLine)
-      mappings = MappingDeserializer.status(records)
-    } yield Right(mappings)
-
-  private def validateMappings[A](mappings: Seq[StatusMapping[A]], dstItems: BacklogStatuses): Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] = {
-    val results = mappings.map(MappingValidatorNec.validateStatusMapping(_, dstItems)).foldLeft(ValidationResults.empty[A]) { (acc, item) =>
-      item match {
-        case Valid(value) => acc.copy(values = acc.values :+ value)
-        case Invalid(error) => acc.copy(errors = acc.errors ++ error.toList)
-      }
-    }
-
-    results.toResult
-  }
 
   private case class ValidationResults[A](values: Seq[ValidatedStatusMapping[A]] = Seq(), errors: List[ValidationError] = List()) {
     def toResult: Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] =
