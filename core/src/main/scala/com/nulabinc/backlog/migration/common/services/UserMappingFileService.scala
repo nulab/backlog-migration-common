@@ -83,6 +83,22 @@ object UserMappingFileService {
   }
 
   /**
+   * Deserialize user mappings from a mapping file.
+   *
+   * @param path
+   * @param deserializer
+   * @tparam A
+   * @tparam F
+   * @return
+   */
+  def getMappings[A, F[_]: Monad: StorageDSL](path: Path)
+                                                         (implicit deserializer: Deserializer[CSVRecord, UserMapping[A]]): F[Either[MappingFileError, Seq[UserMapping[A]]]] =
+    for {
+      records <- StorageDSL[F].read(path, MappingFileService.readLine)
+      mappings = MappingDeserializer.user(records)
+    } yield Right(mappings)
+
+  /**
    * Merge old mappings and new items.
    *
    * @param mappings
@@ -100,22 +116,6 @@ object UserMappingFileService {
           acc.copy(mergeList = acc.mergeList :+ mapping, addedList = acc.addedList :+ mapping)
       }
     }
-
-  /**
-   * Deserialize a mapping file.
-   *
-   * @param path
-   * @param deserializer
-   * @tparam A
-   * @tparam F
-   * @return
-   */
-  private def getMappings[A, F[_]: Monad: ConsoleDSL: StorageDSL](path: Path)
-                                                                 (implicit deserializer: Deserializer[CSVRecord, UserMapping[A]]): F[Either[MappingFileError, Seq[UserMapping[A]]]] =
-    for {
-      records <- StorageDSL[F].read(path, MappingFileService.readLine)
-      mappings = MappingDeserializer.user(records)
-    } yield Right(mappings)
 
   private def validateMappings[A](mappings: Seq[UserMapping[A]], dstItems: Seq[BacklogUser]): Either[MappingFileError, Seq[ValidatedUserMapping[A]]] = {
     val results = mappings.map(MappingValidatorNec.validateUserMapping(_, dstItems)).foldLeft(ValidationResults.empty[A]) { (acc, item) =>
