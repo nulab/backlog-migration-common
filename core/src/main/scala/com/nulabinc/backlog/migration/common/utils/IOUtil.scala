@@ -13,7 +13,8 @@ object IOUtil {
     path.createDirectories()
 
   def input(path: Path): Option[String] = {
-    if (!path.isDirectory && path.exists) Some(path.lines(charset = Charset.forName("UTF-8")).mkString)
+    if (!path.isDirectory && path.exists)
+      Some(path.lines(charset = Charset.forName("UTF-8")).mkString)
     else None
   }
 

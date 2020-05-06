@@ -23,7 +23,7 @@ object syntax {
     def orError[E](error: E): F[Either[E, Unit]] =
       result.map {
         case false => Left(error)
-        case true => Right(())
+        case true  => Right(())
       }
   }
 
@@ -34,7 +34,7 @@ object syntax {
     def orFail: A =
       result match {
         case Right(value) => value
-        case Left(error) => throw new RuntimeException(error.toString)
+        case Left(error)  => throw new RuntimeException(error.toString)
       }
   }
 
@@ -42,13 +42,13 @@ object syntax {
     def sequence: F[Option[A]] =
       optFValue match {
         case Some(task) => task.map(Some(_))
-        case None => Applicative[F].pure(None)
+        case None       => Applicative[F].pure(None)
       }
 
     def toEither[E](error: E): F[Either[E, A]] =
       optFValue match {
         case Some(v: F[A]) => v.map(Right(_))
-        case None => Applicative[F].pure(Left(error))
+        case None          => Applicative[F].pure(Left(error))
       }
   }
 }

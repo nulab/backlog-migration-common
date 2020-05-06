@@ -13,7 +13,9 @@ case class BacklogStatuses(private val values: Seq[BacklogStatus]) {
   def map[B](f: BacklogStatus => B): Seq[B] =
     values.map(f)
 
-  def sortBy[B](f: BacklogStatus => B)(implicit ord: Ordering[B]): BacklogStatuses =
+  def sortBy[B](
+      f: BacklogStatus => B
+  )(implicit ord: Ordering[B]): BacklogStatuses =
     BacklogStatuses(values.sortBy(f))
 
   def append(right: Seq[BacklogStatus]): BacklogStatuses =
@@ -22,7 +24,7 @@ case class BacklogStatuses(private val values: Seq[BacklogStatus]) {
   def isCustomStatus(status: BacklogStatus): Boolean =
     status match {
       case _: BacklogDefaultStatus => false
-      case _: BacklogCustomStatus => true
+      case _: BacklogCustomStatus  => true
     }
 
   def existsByName(name: BacklogStatusName): Boolean =
@@ -43,22 +45,22 @@ sealed trait BacklogStatus {
 
   def isCustomStatus: Boolean =
     this match {
-      case _: BacklogCustomStatus => true
+      case _: BacklogCustomStatus  => true
       case _: BacklogDefaultStatus => false
     }
 }
 
 case class BacklogDefaultStatus(
-  id: Int,
-  name: BacklogStatusName,
-  displayOrder: Int,
+    id: Int,
+    name: BacklogStatusName,
+    displayOrder: Int
 ) extends BacklogStatus
 
 case class BacklogCustomStatus(
-  id: Int,
-  name: BacklogStatusName,
-  displayOrder: Int,
-  color: String
+    id: Int,
+    name: BacklogStatusName,
+    displayOrder: Int,
+    color: String
 ) extends BacklogStatus
 
 object BacklogCustomStatus {
@@ -75,7 +77,8 @@ object BacklogCustomStatus {
     BacklogCustomStatus(
       id = Int.MinValue,
       name = name,
-      displayOrder = 3999, // undefined custom status order must be before [Closed]
+      displayOrder =
+        3999, // undefined custom status order must be before [Closed]
       color = CustomStatusColor.Color1.getStrValue
     )
 

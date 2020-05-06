@@ -4,7 +4,11 @@ import java.io.InputStream
 
 import com.google.inject.AbstractModule
 import com.nulabinc.backlog.migration.common.client.params.ImportIssueParams
-import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogIssue, BacklogStatusName}
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogCustomFieldSetting,
+  BacklogIssue,
+  BacklogStatusName
+}
 import com.nulabinc.backlog.migration.common.service.IssueService
 import com.nulabinc.backlog.migration.common.service.PropertyResolver
 import com.nulabinc.backlog4j.Issue
@@ -36,33 +40,63 @@ class TestIssueServiceImpl extends IssueService with SimpleFixture {
 
   override def issueOfKey(key: String): BacklogIssue = ???
 
-  override def optIssueOfParams(projectId: Long, backlogIssue: BacklogIssue): Option[BacklogIssue] = ???
+  override def optIssueOfParams(
+      projectId: Long,
+      backlogIssue: BacklogIssue
+  ): Option[BacklogIssue] = ???
 
-  override def allIssues(projectId: Long, offset: Int, count: Int, filter: Option[String]): Seq[Issue] = ???
+  override def allIssues(
+      projectId: Long,
+      offset: Int,
+      count: Int,
+      filter: Option[String]
+  ): Seq[Issue] = ???
 
   override def countIssues(projectId: Long, filter: Option[String]): Int = ???
 
-  override def downloadIssueAttachment(issueId: Long, attachmentId: Long): Option[(String, InputStream)] = ???
+  override def downloadIssueAttachment(
+      issueId: Long,
+      attachmentId: Long
+  ): Option[(String, InputStream)] = ???
 
-  override def exists(projectId: Long, backlogIssue: BacklogIssue): Boolean = ???
+  override def exists(projectId: Long, backlogIssue: BacklogIssue): Boolean =
+    ???
 
-  override def create(setCreateParam: (BacklogIssue) => ImportIssueParams)(backlogIssue: BacklogIssue): Either[Throwable, BacklogIssue] = ???
+  override def create(setCreateParam: (BacklogIssue) => ImportIssueParams)(
+      backlogIssue: BacklogIssue
+  ): Either[Throwable, BacklogIssue] = ???
 
-  override def createDummy(projectId: Long, propertyResolver: PropertyResolver): Issue = ???
+  override def createDummy(
+      projectId: Long,
+      propertyResolver: PropertyResolver
+  ): Issue = ???
 
   override def delete(issueId: Long): Unit = ???
 
-  override def addIssuesParams(params: GetIssuesParams, filter: Option[String]): Unit = ???
+  override def addIssuesParams(
+      params: GetIssuesParams,
+      filter: Option[String]
+  ): Unit = ???
 
-  override def addIssuesCountParams(params: GetIssuesCountParams, filter: Option[String]): Unit = ???
+  override def addIssuesCountParams(
+      params: GetIssuesCountParams,
+      filter: Option[String]
+  ): Unit = ???
 
-  override def setCreateParam(projectId: Long,
-                              propertyResolver: PropertyResolver,
-                              toRemoteIssueId: (Long) => Option[Long],
-                              postAttachment: (String) => Option[Long],
-                              issueOfId: (Long) => BacklogIssue)(backlogIssue: BacklogIssue): ImportIssueParams = ???
+  override def setCreateParam(
+      projectId: Long,
+      propertyResolver: PropertyResolver,
+      toRemoteIssueId: (Long) => Option[Long],
+      postAttachment: (String) => Option[Long],
+      issueOfId: (Long) => BacklogIssue
+  )(backlogIssue: BacklogIssue): ImportIssueParams = ???
 
-  override def deleteAttachment(issueId: Long, attachmentId: Long, createdUserId: Long, created: String): Unit = ???
+  override def deleteAttachment(
+      issueId: Long,
+      attachmentId: Long,
+      createdUserId: Long,
+      created: String
+  ): Unit = ???
 }
 
 class TestPropertyResolver extends PropertyResolver with SimpleFixture {
@@ -75,13 +109,17 @@ class TestPropertyResolver extends PropertyResolver with SimpleFixture {
     else None
   }
 
-  override def optResolvedCustomFieldSetting(name: String): Option[BacklogCustomFieldSetting] = {
+  override def optResolvedCustomFieldSetting(
+      name: String
+  ): Option[BacklogCustomFieldSetting] = {
     if (name == textCustomFieldName) Some(textCustomFieldSetting)
     else if (name == textAreaCustomFieldName) Some(textAreaCustomFieldSetting)
     else if (name == numericCustomFieldName) Some(numericCustomFieldSetting)
     else if (name == dateCustomFieldName) Some(dateCustomFieldSetting)
-    else if (name == singleListCustomFieldName) Some(singleListCustomFieldSetting)
-    else if (name == multipleListCustomFieldName) Some(multipleListCustomFieldSetting)
+    else if (name == singleListCustomFieldName)
+      Some(singleListCustomFieldSetting)
+    else if (name == multipleListCustomFieldName)
+      Some(multipleListCustomFieldSetting)
     else if (name == checkBoxCustomFieldName) Some(checkBoxCustomFieldSetting)
     else if (name == radioCustomFieldName) Some(radioCustomFieldSetting)
     else None

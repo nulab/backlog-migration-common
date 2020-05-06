@@ -3,11 +3,18 @@ package com.nulabinc.backlog.migration.common.service
 import java.io.InputStream
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
-import com.nulabinc.backlog.migration.common.client.params.{ImportDeleteAttachmentParams, ImportIssueParams}
+import com.nulabinc.backlog.migration.common.client.params.{
+  ImportDeleteAttachmentParams,
+  ImportIssueParams
+}
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.IssueWrites
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUtil}
+import com.nulabinc.backlog.migration.common.utils.{
+  DateUtil,
+  Logging,
+  StringUtil
+}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.PriorityType
 import com.nulabinc.backlog4j._
@@ -21,9 +28,14 @@ import scala.jdk.CollectionConverters._
 /**
   * @author uchida
   */
-class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog: BacklogAPIClient) extends IssueService with Logging {
+class IssueServiceImpl @Inject() (implicit
+    val issueWrites: IssueWrites,
+    backlog: BacklogAPIClient
+) extends IssueService
+    with Logging {
 
-  override def issueOfId(id: Long): BacklogIssue = Convert.toBacklog(backlog.getIssue(id))
+  override def issueOfId(id: Long): BacklogIssue =
+    Convert.toBacklog(backlog.getIssue(id))
 
   override def optIssueOfId(id: Long): Option[Issue] =
     try {
@@ -39,9 +51,13 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
       case _: Throwable => None
     }
 
-  override def issueOfKey(key: String): BacklogIssue = Convert.toBacklog(backlog.getIssue(key))
+  override def issueOfKey(key: String): BacklogIssue =
+    Convert.toBacklog(backlog.getIssue(key))
 
-  override def optIssueOfParams(projectId: Long, backlogIssue: BacklogIssue): Option[BacklogIssue] = {
+  override def optIssueOfParams(
+      projectId: Long,
+      backlogIssue: BacklogIssue
+  ): Option[BacklogIssue] = {
     val params: GetIssuesParams = new GetIssuesParams(List(projectId).asJava)
     for { created <- backlogIssue.operation.optCreated } yield {
       if (created.nonEmpty) {
@@ -51,16 +67,17 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     if (backlogIssue.summary.original.nonEmpty) {
       params.keyword(backlogIssue.summary.original)
     }
-    val issues = try {
-      backlog.getIssues(params).asScala
-    } catch {
-      case e: BacklogAPIException =>
-        logger.error(e.getMessage, e)
-        Seq.empty[Issue]
-    }
+    val issues =
+      try {
+        backlog.getIssues(params).asScala
+      } catch {
+        case e: BacklogAPIException =>
+          logger.error(e.getMessage, e)
+          Seq.empty[Issue]
+      }
     (for {
-      createdUser  <- backlogIssue.operation.optCreatedUser
-      userId       <- createdUser.optUserId
+      createdUser <- backlogIssue.operation.optCreatedUser
+      userId <- createdUser.optUserId
       createdSince <- backlogIssue.operation.optCreated
     } yield {
       val optFoundIssue = issues.find { issue =>
@@ -75,7 +92,12 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     }).flatten
   }
 
-  override def allIssues(projectId: Long, offset: Int, count: Int, filter: Option[String]): Seq[Issue] = {
+  override def allIssues(
+      projectId: Long,
+      offset: Int,
+      count: Int,
+      filter: Option[String]
+  ): Seq[Issue] = {
     val params: GetIssuesParams = new GetIssuesParams(List(projectId).asJava)
     params.offset(offset.toLong)
     params.count(count)
@@ -92,7 +114,9 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
   }
 
   override def countIssues(projectId: Long, filter: Option[String]): Int = {
-    val params: GetIssuesCountParams = new GetIssuesCountParams(List(projectId).asJava)
+    val params: GetIssuesCountParams = new GetIssuesCountParams(
+      List(projectId).asJava
+    )
     addIssuesCountParams(params, filter)
     try {
       backlog.getIssuesCount(params)
@@ -103,9 +127,13 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     }
   }
 
-  override def downloadIssueAttachment(issueId: Long, attachmentId: Long): Option[(String, InputStream)] =
+  override def downloadIssueAttachment(
+      issueId: Long,
+      attachmentId: Long
+  ): Option[(String, InputStream)] =
     try {
-      val attachmentData = backlog.downloadIssueAttachment(issueId, attachmentId)
+      val attachmentData =
+        backlog.downloadIssueAttachment(issueId, attachmentId)
       if (attachmentData.getFilename.isEmpty) {
         None
       } else {
@@ -127,16 +155,17 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     if (backlogIssue.summary.original.nonEmpty) {
       params.keyword(backlogIssue.summary.original)
     }
-    val issues = try {
-      backlog.getIssues(params).asScala
-    } catch {
-      case e: BacklogAPIException =>
-        logger.error(e.getMessage, e)
-        Seq.empty[Issue]
-    }
+    val issues =
+      try {
+        backlog.getIssues(params).asScala
+      } catch {
+        case e: BacklogAPIException =>
+          logger.error(e.getMessage, e)
+          Seq.empty[Issue]
+      }
     (for {
-      createdUser  <- backlogIssue.operation.optCreatedUser
-      userId       <- createdUser.optUserId
+      createdUser <- backlogIssue.operation.optCreatedUser
+      userId <- createdUser.optUserId
       createdSince <- backlogIssue.operation.optCreated
     } yield {
       issues.exists { issue =>
@@ -146,21 +175,33 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     }).getOrElse(false)
   }
 
-  def create(setCreateParam: BacklogIssue => ImportIssueParams)(backlogIssue: BacklogIssue): Either[Throwable, BacklogIssue] = {
-    logger.debug(s"[Start Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.optIssueKey}]----------------------------")
+  def create(
+      setCreateParam: BacklogIssue => ImportIssueParams
+  )(backlogIssue: BacklogIssue): Either[Throwable, BacklogIssue] = {
+    logger.debug(
+      s"[Start Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.optIssueKey}]----------------------------"
+    )
     val result = createIssue(setCreateParam(backlogIssue))
     result match {
       case Right(_) =>
-        logger.debug(s"[Success Finish Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.optIssueKey}]----------------------------")
+        logger.debug(
+          s"[Success Finish Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.optIssueKey}]----------------------------"
+        )
       case Left(_) =>
-        logger.debug(s"[Fail Finish Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.optIssueKey}]----------------------------")
+        logger.debug(
+          s"[Fail Finish Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.optIssueKey}]----------------------------"
+        )
     }
     result
   }
 
-  private[this] def createIssue(params: ImportIssueParams): Either[Throwable, BacklogIssue] =
+  private[this] def createIssue(
+      params: ImportIssueParams
+  ): Either[Throwable, BacklogIssue] =
     try {
-      params.getParamList.asScala.foreach(p => logger.debug(s"        [Issue Parameter]:${p.getName}:${p.getValue}"))
+      params.getParamList.asScala.foreach(p =>
+        logger.debug(s"        [Issue Parameter]:${p.getName}:${p.getValue}")
+      )
       Right(Convert.toBacklog(backlog.importIssue(params)))
     } catch {
       case e: Throwable =>
@@ -168,34 +209,49 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
         Left(e)
     }
 
-  override def setCreateParam(projectId: Long,
-                              propertyResolver: PropertyResolver,
-                              toRemoteIssueId: (Long) => Option[Long],
-                              postAttachment: (String) => Option[Long],
-                              issueOfId: (Long) => BacklogIssue)(backlogIssue: BacklogIssue): ImportIssueParams = {
+  override def setCreateParam(
+      projectId: Long,
+      propertyResolver: PropertyResolver,
+      toRemoteIssueId: (Long) => Option[Long],
+      postAttachment: (String) => Option[Long],
+      issueOfId: (Long) => BacklogIssue
+  )(backlogIssue: BacklogIssue): ImportIssueParams = {
     //issue type
     val issueTypeId = backlogIssue.optIssueTypeName match {
       case Some(issueTypeName) =>
-        propertyResolver.optResolvedIssueTypeId(issueTypeName).getOrElse(propertyResolver.tryDefaultIssueTypeId())
+        propertyResolver
+          .optResolvedIssueTypeId(issueTypeName)
+          .getOrElse(propertyResolver.tryDefaultIssueTypeId())
       case None => propertyResolver.tryDefaultIssueTypeId()
     }
 
     //priority
     val priorityType =
-      propertyResolver.optResolvedPriorityId(backlogIssue.priorityName).map(value => PriorityType.valueOf(value.toInt)).getOrElse(PriorityType.Normal)
+      propertyResolver
+        .optResolvedPriorityId(backlogIssue.priorityName)
+        .map(value => PriorityType.valueOf(value.toInt))
+        .getOrElse(PriorityType.Normal)
 
     //parameter
-    val params: ImportIssueParams = new ImportIssueParams(projectId, backlogIssue.summary.value, issueTypeId, priorityType)
+    val params: ImportIssueParams = new ImportIssueParams(
+      projectId,
+      backlogIssue.summary.value,
+      issueTypeId,
+      priorityType
+    )
 
     //parent issue
-    val optParentIssue: Option[BacklogIssue] = backlogIssue.optParentIssueId.flatMap(toRemoteIssueId(_).map(issueOfId))
+    val optParentIssue: Option[BacklogIssue] =
+      backlogIssue.optParentIssueId.flatMap(toRemoteIssueId(_).map(issueOfId))
 
     //description
     optParentIssue match {
       case Some(parentIssue) if parentIssue.optParentIssueId.nonEmpty =>
         val sb = new StringBuilder()
         sb.append(backlogIssue.description).append("\n")
-        sb.append(Messages("common.parent_issue")).append(":").append(parentIssue.optIssueKey.getOrElse(""))
+        sb.append(Messages("common.parent_issue"))
+          .append(":")
+          .append(parentIssue.optIssueKey.getOrElse(""))
         params.description(sb.toString())
       case Some(parentIssue) if parentIssue.optParentIssueId.isEmpty =>
         params.parentIssueId(parentIssue.id) //parent id
@@ -205,58 +261,72 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     }
 
     //category
-    val categoryIds = backlogIssue.categoryNames.flatMap(propertyResolver.optResolvedCategoryId)
+    val categoryIds =
+      backlogIssue.categoryNames.flatMap(propertyResolver.optResolvedCategoryId)
     params.categoryIds(categoryIds.asJava)
 
     //version
-    val versionIds = backlogIssue.versionNames.flatMap(propertyResolver.optResolvedVersionId)
+    val versionIds =
+      backlogIssue.versionNames.flatMap(propertyResolver.optResolvedVersionId)
     params.versionIds(versionIds.asJava)
 
     //milestone
-    val milestoneIds = backlogIssue.milestoneNames.flatMap(propertyResolver.optResolvedVersionId)
+    val milestoneIds =
+      backlogIssue.milestoneNames.flatMap(propertyResolver.optResolvedVersionId)
     params.milestoneIds(milestoneIds.asJava)
 
     //assignee
     for {
-      user   <- backlogIssue.optAssignee
+      user <- backlogIssue.optAssignee
       userId <- user.optUserId
-      id     <- propertyResolver.optResolvedUserId(userId)
+      id <- propertyResolver.optResolvedUserId(userId)
     } yield params.assigneeId(id)
 
     //start date
-    for { startDate <- backlogIssue.optStartDate } yield params.startDate(startDate)
+    for { startDate <- backlogIssue.optStartDate } yield params.startDate(
+      startDate
+    )
 
     //due date
     for { dueDate <- backlogIssue.optDueDate } yield params.dueDate(dueDate)
 
     //estimated hours
-    for (estimatedHours <- backlogIssue.optEstimatedHours) yield params.estimatedHours(estimatedHours)
+    for (estimatedHours <- backlogIssue.optEstimatedHours)
+      yield params.estimatedHours(estimatedHours)
 
     //actual hours
-    for { actualHours <- backlogIssue.optActualHours } yield params.actualHours(actualHours)
+    for { actualHours <- backlogIssue.optActualHours } yield params.actualHours(
+      actualHours
+    )
 
     //created
-    for { created <- backlogIssue.operation.optCreated } yield params.created(created)
+    for { created <- backlogIssue.operation.optCreated } yield params.created(
+      created
+    )
 
     //created user id
     for {
       createdUser <- backlogIssue.operation.optCreatedUser
-      userId      <- createdUser.optUserId
-      id          <- propertyResolver.optResolvedUserId(userId)
+      userId <- createdUser.optUserId
+      id <- propertyResolver.optResolvedUserId(userId)
     } yield params.createdUserId(id)
 
     //updated
-    for { updated <- backlogIssue.operation.optUpdated } yield params.updated(updated)
+    for { updated <- backlogIssue.operation.optUpdated } yield params.updated(
+      updated
+    )
 
     //updated user id
     for {
       updatedUser <- backlogIssue.operation.optUpdatedUser
-      userId      <- updatedUser.optUserId
-      id          <- propertyResolver.optResolvedUserId(userId)
+      userId <- updatedUser.optUserId
+      id <- propertyResolver.optResolvedUserId(userId)
     } yield params.updatedUserId(id)
 
     //custom fields
-    backlogIssue.customFields.map(setCustomFieldParams).foreach(_(params, propertyResolver))
+    backlogIssue.customFields
+      .map(setCustomFieldParams)
+      .foreach(_(params, propertyResolver))
 
     //attachments
     backlogIssue.attachments.foreach { attachment =>
@@ -266,12 +336,17 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     }
 
     //notified user id
-    val notifiedUserIds = backlogIssue.notifiedUsers.flatMap(_.optUserId).flatMap(propertyResolver.optResolvedUserId)
+    val notifiedUserIds = backlogIssue.notifiedUsers
+      .flatMap(_.optUserId)
+      .flatMap(propertyResolver.optResolvedUserId)
     params.notifiedUserIds(notifiedUserIds.asJava)
     params
   }
 
-  override def createDummy(projectId: Long, propertyResolver: PropertyResolver): Issue = {
+  override def createDummy(
+      projectId: Long,
+      propertyResolver: PropertyResolver
+  ): Issue = {
     //parameter
     val params: ImportIssueParams = new ImportIssueParams(
       projectId,
@@ -288,7 +363,10 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
 
   override def delete(issueId: Long) = backlog.deleteIssue(issueId)
 
-  override def addIssuesParams(params: GetIssuesParams, filter: Option[String]) =
+  override def addIssuesParams(
+      params: GetIssuesParams,
+      filter: Option[String]
+  ) =
     for { queryString <- filter } yield {
       val newQueryString =
         if (queryString.startsWith("?")) queryString else s"?$queryString"
@@ -306,80 +384,107 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
         params.milestoneIds(milestoneIds.asJava)
       }
       for { statusIds <- uri.query.paramMap.get("statusId[]") } yield {
-        params.statuses(statusIds.flatMap(StringUtil.safeStringToInt).map(Issue.StatusType.valueOf).asJava)
+        params.statuses(
+          statusIds
+            .flatMap(StringUtil.safeStringToInt)
+            .map(Issue.StatusType.valueOf)
+            .asJava
+        )
       }
       for { priorityIds <- uri.query.paramMap.get("priorityId[]") } yield {
-        params.priorities(priorityIds.flatMap(StringUtil.safeStringToInt).map(Issue.PriorityType.valueOf).asJava)
+        params.priorities(
+          priorityIds
+            .flatMap(StringUtil.safeStringToInt)
+            .map(Issue.PriorityType.valueOf)
+            .asJava
+        )
       }
       for { assigneeIds <- uri.query.paramMap.get("assigneeId[]") } yield {
         params.assigneeIds(assigneeIds.asJava)
       }
-      for { createdUserIds <- uri.query.paramMap.get("createdUserId[]") } yield {
+      for {
+        createdUserIds <- uri.query.paramMap.get("createdUserId[]")
+      } yield {
         params.createdUserIds(createdUserIds.asJava)
       }
       for { resolutionIds <- uri.query.paramMap.get("resolutionId[]") } yield {
         params.resolutions(
-          resolutionIds.flatMap(StringUtil.safeStringToInt).map(Issue.ResolutionType.valueOf).asJava
+          resolutionIds
+            .flatMap(StringUtil.safeStringToInt)
+            .map(Issue.ResolutionType.valueOf)
+            .asJava
         )
       }
       for {
         parentChild <- uri.query.paramMap.get("parentChild")
-        head        <- parentChild.headOption
+        head <- parentChild.headOption
       } yield {
-        if (head == "0") params.parentChildType(GetIssuesParams.ParentChildType.All)
-        else if (head == "1") params.parentChildType(GetIssuesParams.ParentChildType.NotChild)
-        else if (head == "2") params.parentChildType(GetIssuesParams.ParentChildType.Child)
-        else if (head == "3") params.parentChildType(GetIssuesParams.ParentChildType.NotChildNotParent)
-        else if (head == "4") params.parentChildType(GetIssuesParams.ParentChildType.Parent)
+        if (head == "0")
+          params.parentChildType(GetIssuesParams.ParentChildType.All)
+        else if (head == "1")
+          params.parentChildType(GetIssuesParams.ParentChildType.NotChild)
+        else if (head == "2")
+          params.parentChildType(GetIssuesParams.ParentChildType.Child)
+        else if (head == "3")
+          params.parentChildType(
+            GetIssuesParams.ParentChildType.NotChildNotParent
+          )
+        else if (head == "4")
+          params.parentChildType(GetIssuesParams.ParentChildType.Parent)
       }
       for {
         attachment <- uri.query.paramMap.get("attachment")
-        head       <- attachment.headOption
+        head <- attachment.headOption
       } yield params.attachment(head.toBoolean)
       for {
         sharedFile <- uri.query.paramMap.get("sharedFile")
-        head       <- sharedFile.headOption
+        head <- sharedFile.headOption
       } yield params.sharedFile(head.toBoolean)
       for {
         createdSince <- uri.query.paramMap.get("createdSince")
-        head         <- createdSince.headOption
+        head <- createdSince.headOption
       } yield params.createdSince(head)
       for {
         createdUntil <- uri.query.paramMap.get("createdUntil")
-        head         <- createdUntil.headOption
+        head <- createdUntil.headOption
       } yield params.createdUntil(head)
       for {
         updatedUntil <- uri.query.paramMap.get("updatedUntil")
-        head         <- updatedUntil.headOption
+        head <- updatedUntil.headOption
       } yield params.updatedUntil(head)
       for {
         startDateSince <- uri.query.paramMap.get("startDateSince")
-        head           <- startDateSince.headOption
+        head <- startDateSince.headOption
       } yield params.startDateSince(head)
       for {
         dueDateSince <- uri.query.paramMap.get("dueDateSince")
-        head         <- dueDateSince.headOption
+        head <- dueDateSince.headOption
       } yield params.dueDateSince(head)
       for {
         dueDateUntil <- uri.query.paramMap.get("dueDateUntil")
-        head         <- dueDateUntil.headOption
+        head <- dueDateUntil.headOption
       } yield params.dueDateUntil(head)
       for { ids <- uri.query.paramMap.get("id[]") } yield {
         params.ids(ids.asJava)
       }
-      for { parentIssueIds <- uri.query.paramMap.get("parentIssueId[]") } yield {
+      for {
+        parentIssueIds <- uri.query.paramMap.get("parentIssueId[]")
+      } yield {
         params.parentIssueIds(parentIssueIds.asJava)
       }
       for {
         keyword <- uri.query.paramMap.get("keyword")
-        head    <- keyword.headOption
+        head <- keyword.headOption
       } yield params.keyword(head)
       params.sort(GetIssuesParams.SortKey.Created)
       params.order(GetIssuesParams.Order.Asc)
       params
     }
 
-  override def addIssuesCountParams(params: GetIssuesCountParams, filter: Option[String]) =
+  override def addIssuesCountParams(
+      params: GetIssuesCountParams,
+      filter: Option[String]
+  ) =
     for { queryString <- filter } yield {
       val newQueryString =
         if (queryString.startsWith("?")) queryString else s"?$queryString"
@@ -397,78 +502,108 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
         params.milestoneIds(milestoneIds.asJava)
       }
       for { statusIds <- uri.query.paramMap.get("statusId[]") } yield {
-        params.statuses(statusIds.flatMap(StringUtil.safeStringToInt).map(Issue.StatusType.valueOf).asJava)
+        params.statuses(
+          statusIds
+            .flatMap(StringUtil.safeStringToInt)
+            .map(Issue.StatusType.valueOf)
+            .asJava
+        )
       }
       for { priorityIds <- uri.query.paramMap.get("priorityId[]") } yield {
-        params.priorities(priorityIds.flatMap(StringUtil.safeStringToInt).map(Issue.PriorityType.valueOf).asJava)
+        params.priorities(
+          priorityIds
+            .flatMap(StringUtil.safeStringToInt)
+            .map(Issue.PriorityType.valueOf)
+            .asJava
+        )
       }
       for { assigneeIds <- uri.query.paramMap.get("assigneeId[]") } yield {
         params.assigneeIds(assigneeIds.asJava)
       }
-      for { createdUserIds <- uri.query.paramMap.get("createdUserId[]") } yield {
+      for {
+        createdUserIds <- uri.query.paramMap.get("createdUserId[]")
+      } yield {
         params.createdUserIds(createdUserIds.asJava)
       }
       for { resolutionIds <- uri.query.paramMap.get("resolutionId[]") } yield {
         params.resolutions(
-          resolutionIds.flatMap(StringUtil.safeStringToInt).map(Issue.ResolutionType.valueOf).asJava
+          resolutionIds
+            .flatMap(StringUtil.safeStringToInt)
+            .map(Issue.ResolutionType.valueOf)
+            .asJava
         )
       }
       for {
         parentChild <- uri.query.paramMap.get("parentChild")
-        head        <- parentChild.headOption
+        head <- parentChild.headOption
       } yield {
-        if (head == "0") params.parentChildType(GetIssuesCountParams.ParentChildType.All)
-        else if (head == "1") params.parentChildType(GetIssuesCountParams.ParentChildType.NotChild)
-        else if (head == "2") params.parentChildType(GetIssuesCountParams.ParentChildType.Child)
-        else if (head == "3") params.parentChildType(GetIssuesCountParams.ParentChildType.NotChildNotParent)
-        else if (head == "4") params.parentChildType(GetIssuesCountParams.ParentChildType.Parent)
+        if (head == "0")
+          params.parentChildType(GetIssuesCountParams.ParentChildType.All)
+        else if (head == "1")
+          params.parentChildType(GetIssuesCountParams.ParentChildType.NotChild)
+        else if (head == "2")
+          params.parentChildType(GetIssuesCountParams.ParentChildType.Child)
+        else if (head == "3")
+          params.parentChildType(
+            GetIssuesCountParams.ParentChildType.NotChildNotParent
+          )
+        else if (head == "4")
+          params.parentChildType(GetIssuesCountParams.ParentChildType.Parent)
       }
       for {
         attachment <- uri.query.paramMap.get("attachment")
-        head       <- attachment.headOption
+        head <- attachment.headOption
       } yield params.attachment(head.toBoolean)
       for {
         sharedFile <- uri.query.paramMap.get("sharedFile")
-        head       <- sharedFile.headOption
+        head <- sharedFile.headOption
       } yield params.sharedFile(head.toBoolean)
       for {
         createdSince <- uri.query.paramMap.get("createdSince")
-        head         <- createdSince.headOption
+        head <- createdSince.headOption
       } yield params.createdSince(head)
       for {
         createdUntil <- uri.query.paramMap.get("createdUntil")
-        head         <- createdUntil.headOption
+        head <- createdUntil.headOption
       } yield params.createdUntil(head)
       for {
         updatedUntil <- uri.query.paramMap.get("updatedUntil")
-        head         <- updatedUntil.headOption
+        head <- updatedUntil.headOption
       } yield params.updatedUntil(head)
       for {
         startDateSince <- uri.query.paramMap.get("startDateSince")
-        head           <- startDateSince.headOption
+        head <- startDateSince.headOption
       } yield params.startDateSince(head)
       for {
         dueDateSince <- uri.query.paramMap.get("dueDateSince")
-        head         <- dueDateSince.headOption
+        head <- dueDateSince.headOption
       } yield params.dueDateSince(head)
       for {
         dueDateUntil <- uri.query.paramMap.get("dueDateUntil")
-        head         <- dueDateUntil.headOption
+        head <- dueDateUntil.headOption
       } yield params.dueDateUntil(head)
       for { ids <- uri.query.paramMap.get("id[]") } yield {
         params.ids(ids.asJava)
       }
-      for { parentIssueIds <- uri.query.paramMap.get("parentIssueId[]") } yield {
+      for {
+        parentIssueIds <- uri.query.paramMap.get("parentIssueId[]")
+      } yield {
         params.parentIssueIds(parentIssueIds.asJava)
       }
       for {
         keyword <- uri.query.paramMap.get("keyword")
-        head    <- keyword.headOption
+        head <- keyword.headOption
       } yield params.keyword(head)
     }
 
-  override def deleteAttachment(issueId: Long, attachmentId: Long, createdUserId: Long, created: String): Unit = {
-    val params: ImportDeleteAttachmentParams = new ImportDeleteAttachmentParams()
+  override def deleteAttachment(
+      issueId: Long,
+      attachmentId: Long,
+      createdUserId: Long,
+      created: String
+  ): Unit = {
+    val params: ImportDeleteAttachmentParams =
+      new ImportDeleteAttachmentParams()
     params.createdUserId(createdUserId)
     params.created(created)
 
@@ -480,87 +615,138 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     }
   }
 
-  private[this] def setCustomFieldParams(customField: BacklogCustomField)(params: CreateIssueParams, propertyResolver: PropertyResolver): Unit =
+  private[this] def setCustomFieldParams(
+      customField: BacklogCustomField
+  )(params: CreateIssueParams, propertyResolver: PropertyResolver): Unit =
     for {
-      customFieldSetting <- propertyResolver.optResolvedCustomFieldSetting(customField.name)
+      customFieldSetting <-
+        propertyResolver.optResolvedCustomFieldSetting(customField.name)
     } yield setCustomFieldParams(customField, params, customFieldSetting)
 
-  private[this] def setCustomFieldParams(customField: BacklogCustomField,
-                                         params: CreateIssueParams,
-                                         customFieldSetting: BacklogCustomFieldSetting): Unit = {
+  private[this] def setCustomFieldParams(
+      customField: BacklogCustomField,
+      params: CreateIssueParams,
+      customFieldSetting: BacklogCustomFieldSetting
+  ): Unit = {
     val typeId: Int = customFieldSetting.typeId
     FieldType.valueOf(typeId) match {
-      case FieldType.Text         => setTextCustomField(customField, params, customFieldSetting)
-      case FieldType.TextArea     => setTextAreaCustomField(customField, params, customFieldSetting)
-      case FieldType.Numeric      => setNumericCustomField(customField, params, customFieldSetting)
-      case FieldType.Date         => setDateCustomField(customField, params, customFieldSetting)
-      case FieldType.SingleList   => setSingleListCustomField(customField, params, customFieldSetting)
-      case FieldType.MultipleList => setMultipleListCustomField(customField, params, customFieldSetting)
-      case FieldType.CheckBox     => setCheckBoxCustomField(customField, params, customFieldSetting)
-      case FieldType.Radio        => setRadioCustomField(customField, params, customFieldSetting)
-      case _                      =>
+      case FieldType.Text =>
+        setTextCustomField(customField, params, customFieldSetting)
+      case FieldType.TextArea =>
+        setTextAreaCustomField(customField, params, customFieldSetting)
+      case FieldType.Numeric =>
+        setNumericCustomField(customField, params, customFieldSetting)
+      case FieldType.Date =>
+        setDateCustomField(customField, params, customFieldSetting)
+      case FieldType.SingleList =>
+        setSingleListCustomField(customField, params, customFieldSetting)
+      case FieldType.MultipleList =>
+        setMultipleListCustomField(customField, params, customFieldSetting)
+      case FieldType.CheckBox =>
+        setCheckBoxCustomField(customField, params, customFieldSetting)
+      case FieldType.Radio =>
+        setRadioCustomField(customField, params, customFieldSetting)
+      case _ =>
     }
   }
 
-  private[this] def setTextCustomField(customField: BacklogCustomField, params: CreateIssueParams, customFieldSetting: BacklogCustomFieldSetting) = {
+  private[this] def setTextCustomField(
+      customField: BacklogCustomField,
+      params: CreateIssueParams,
+      customFieldSetting: BacklogCustomFieldSetting
+  ) = {
     for {
       value <- customField.optValue
-      id    <- customFieldSetting.optId
+      id <- customFieldSetting.optId
     } yield params.textCustomField(id, value)
   }
 
-  private[this] def setTextAreaCustomField(customField: BacklogCustomField,
-                                           params: CreateIssueParams,
-                                           customFieldSetting: BacklogCustomFieldSetting) = {
+  private[this] def setTextAreaCustomField(
+      customField: BacklogCustomField,
+      params: CreateIssueParams,
+      customFieldSetting: BacklogCustomFieldSetting
+  ) = {
     for {
       value <- customField.optValue
-      id    <- customFieldSetting.optId
+      id <- customFieldSetting.optId
     } yield params.textAreaCustomField(id, value)
   }
 
-  private[this] def setDateCustomField(customField: BacklogCustomField, params: CreateIssueParams, customFieldSetting: BacklogCustomFieldSetting) = {
+  private[this] def setDateCustomField(
+      customField: BacklogCustomField,
+      params: CreateIssueParams,
+      customFieldSetting: BacklogCustomFieldSetting
+  ) = {
     for {
       value <- customField.optValue
-      id    <- customFieldSetting.optId
+      id <- customFieldSetting.optId
     } yield params.dateCustomField(id, value)
   }
 
-  private[this] def setNumericCustomField(customField: BacklogCustomField,
-                                          params: CreateIssueParams,
-                                          customFieldSetting: BacklogCustomFieldSetting) = {
+  private[this] def setNumericCustomField(
+      customField: BacklogCustomField,
+      params: CreateIssueParams,
+      customFieldSetting: BacklogCustomFieldSetting
+  ) = {
     for {
       value <- customField.optValue
-      id    <- customFieldSetting.optId
-    } yield if (value.nonEmpty) params.numericCustomField(id, StringUtil.safeUnitStringToFloat(value))
+      id <- customFieldSetting.optId
+    } yield
+      if (value.nonEmpty)
+        params.numericCustomField(id, StringUtil.safeUnitStringToFloat(value))
   }
 
-  private[this] def setRadioCustomField(customField: BacklogCustomField, params: CreateIssueParams, customFieldSetting: BacklogCustomFieldSetting) = {
-    (customField.optValue, customFieldSetting.property, customFieldSetting.optId) match {
-      case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id)) =>
+  private[this] def setRadioCustomField(
+      customField: BacklogCustomField,
+      params: CreateIssueParams,
+      customFieldSetting: BacklogCustomFieldSetting
+  ) = {
+    (
+      customField.optValue,
+      customFieldSetting.property,
+      customFieldSetting.optId
+    ) match {
+      case (
+            Some(value),
+            property: BacklogCustomFieldMultipleProperty,
+            Some(id)
+          ) =>
         for {
-          item   <- property.items.find(_.name == value)
+          item <- property.items.find(_.name == value)
           itemId <- item.optId
         } yield params.radioCustomField(id, itemId)
       case _ =>
     }
   }
 
-  private[this] def setSingleListCustomField(customField: BacklogCustomField,
-                                             params: CreateIssueParams,
-                                             customFieldSetting: BacklogCustomFieldSetting) = {
-    (customField.optValue, customFieldSetting.property, customFieldSetting.optId) match {
-      case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id)) =>
+  private[this] def setSingleListCustomField(
+      customField: BacklogCustomField,
+      params: CreateIssueParams,
+      customFieldSetting: BacklogCustomFieldSetting
+  ) = {
+    (
+      customField.optValue,
+      customFieldSetting.property,
+      customFieldSetting.optId
+    ) match {
+      case (
+            Some(value),
+            property: BacklogCustomFieldMultipleProperty,
+            Some(id)
+          ) =>
         for {
-          item   <- property.items.find(_.name == value)
+          item <- property.items.find(_.name == value)
           itemId <- item.optId
         } yield params.singleListCustomField(id, itemId)
       case _ =>
     }
   }
 
-  private[this] def setMultipleListCustomField(customField: BacklogCustomField,
-                                               params: CreateIssueParams,
-                                               customFieldSetting: BacklogCustomFieldSetting) = {
+  private[this] def setMultipleListCustomField(
+      customField: BacklogCustomField,
+      params: CreateIssueParams,
+      customFieldSetting: BacklogCustomFieldSetting
+  ) = {
     (customFieldSetting.property, customFieldSetting.optId) match {
       case (property: BacklogCustomFieldMultipleProperty, Some(id)) =>
         def findItem(value: String): Option[BacklogItem] = {
@@ -569,7 +755,7 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
         def isItem(value: String): Boolean = {
           findItem(value).isDefined
         }
-        val listItems   = customField.values.filter(isItem)
+        val listItems = customField.values.filter(isItem)
         val stringItems = customField.values.filterNot(isItem)
 
         val itemIds = listItems.flatMap(findItem).flatMap(_.optId)
@@ -581,9 +767,11 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
     }
   }
 
-  private[this] def setCheckBoxCustomField(customField: BacklogCustomField,
-                                           params: CreateIssueParams,
-                                           customFieldSetting: BacklogCustomFieldSetting) = {
+  private[this] def setCheckBoxCustomField(
+      customField: BacklogCustomField,
+      params: CreateIssueParams,
+      customFieldSetting: BacklogCustomFieldSetting
+  ) = {
     (customFieldSetting.property, customFieldSetting.optId) match {
       case (property: BacklogCustomFieldMultipleProperty, Some(id)) =>
         def findItem(value: String): Option[BacklogItem] = {
@@ -592,7 +780,7 @@ class IssueServiceImpl @Inject()(implicit val issueWrites: IssueWrites, backlog:
         def isItem(value: String): Boolean = {
           findItem(value).isDefined
         }
-        val listItems   = customField.values.filter(isItem)
+        val listItems = customField.values.filter(isItem)
         val stringItems = customField.values.filterNot(isItem)
 
         val itemIds = listItems.flatMap(findItem).flatMap(_.optId)

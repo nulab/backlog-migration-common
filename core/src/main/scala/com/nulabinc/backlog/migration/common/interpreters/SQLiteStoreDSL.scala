@@ -9,26 +9,34 @@ import monix.execution.Scheduler
 import monix.reactive.Observable
 import slick.jdbc.SQLiteProfile.api._
 
-case class SQLiteStoreDSL(dbPath: Path)(implicit sc: Scheduler) extends StoreDSL[Task] {
+case class SQLiteStoreDSL(dbPath: Path)(implicit sc: Scheduler)
+    extends StoreDSL[Task] {
 
-  private val db = Database.forURL(s"jdbc:sqlite:${dbPath.toAbsolutePath}", driver = "org.sqlite.JDBC")
+  private val db = Database.forURL(
+    s"jdbc:sqlite:${dbPath.toAbsolutePath}",
+    driver = "org.sqlite.JDBC"
+  )
 
-  def read[A](a: DBIORead[A]): Task[A] = Task.deferFuture {
-    db.run(a)
-  }
+  def read[A](a: DBIORead[A]): Task[A] =
+    Task.deferFuture {
+      db.run(a)
+    }
 
-  def write(a: DBIOWrite): Task[Int] = Task.deferFuture {
-    db.run(a)
-  }
+  def write(a: DBIOWrite): Task[Int] =
+    Task.deferFuture {
+      db.run(a)
+    }
 
-  def createTable(a: DBIOSchema): Task[Unit] = Task.deferFuture {
-    db.run(a).map(_ => ())
-  }
+  def createTable(a: DBIOSchema): Task[Unit] =
+    Task.deferFuture {
+      db.run(a).map(_ => ())
+    }
 
-  def stream[A](a: DBIOStream[A]): Task[Observable[A]] = Task.eval {
-    Observable.fromReactivePublisher(
-      db.stream(a)
-    )
-  }
+  def stream[A](a: DBIOStream[A]): Task[Observable[A]] =
+    Task.eval {
+      Observable.fromReactivePublisher(
+        db.stream(a)
+      )
+    }
 
 }

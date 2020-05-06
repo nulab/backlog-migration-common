@@ -10,7 +10,9 @@ import com.nulabinc.backlog4j.Space
 /**
   * @author uchida
   */
-private[common] class SpaceWrites @Inject()() extends Writes[Space, BacklogSpace] with Logging {
+private[common] class SpaceWrites @Inject() ()
+    extends Writes[Space, BacklogSpace]
+    with Logging {
 
   override def writes(space: Space): BacklogSpace = {
     BacklogSpace(

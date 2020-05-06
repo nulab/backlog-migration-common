@@ -10,7 +10,9 @@ trait PropertyResolver {
 
   def optResolvedVersionId(name: String): Option[Long]
 
-  def optResolvedCustomFieldSetting(name: String): Option[BacklogCustomFieldSetting]
+  def optResolvedCustomFieldSetting(
+      name: String
+  ): Option[BacklogCustomFieldSetting]
 
   def optResolvedCategoryId(name: String): Option[Long]
 

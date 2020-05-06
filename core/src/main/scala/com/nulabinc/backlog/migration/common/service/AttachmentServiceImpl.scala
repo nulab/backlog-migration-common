@@ -15,13 +15,18 @@ import scala.jdk.CollectionConverters._
 /**
   * @author uchida
   */
-class AttachmentServiceImpl @Inject()(implicit val attachmentWrites: AttachmentWrites, backlog: BacklogAPIClient)
-    extends AttachmentService
+class AttachmentServiceImpl @Inject() (implicit
+    val attachmentWrites: AttachmentWrites,
+    backlog: BacklogAPIClient
+) extends AttachmentService
     with Logging {
 
-  override def postAttachment(path: String): Either[Throwable, BacklogAttachment] = {
-    val file           = new File(path)
-    val attachmentData = new AttachmentDataImpl(file.getName, new FileInputStream(file))
+  override def postAttachment(
+      path: String
+  ): Either[Throwable, BacklogAttachment] = {
+    val file = new File(path)
+    val attachmentData =
+      new AttachmentDataImpl(file.getName, new FileInputStream(file))
     try {
       Right(Convert.toBacklog(backlog.postAttachment(attachmentData)))
     } catch {
@@ -31,7 +36,9 @@ class AttachmentServiceImpl @Inject()(implicit val attachmentWrites: AttachmentW
     }
   }
 
-  def allAttachmentsOfIssue(issueId: Long): Either[Throwable, Seq[BacklogAttachment]] = {
+  def allAttachmentsOfIssue(
+      issueId: Long
+  ): Either[Throwable, Seq[BacklogAttachment]] = {
     try {
       val attachments = backlog.getIssueAttachments(issueId).asScala.toSeq
       Right(attachments.map(Convert.toBacklog(_)))

@@ -14,9 +14,13 @@ import scala.jdk.CollectionConverters._
 /**
   * @author uchida
   */
-class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends Writes[CustomFieldSetting, BacklogCustomFieldSetting] with Logging {
+class CustomFieldSettingWrites @Inject() (propertyValue: PropertyValue)
+    extends Writes[CustomFieldSetting, BacklogCustomFieldSetting]
+    with Logging {
 
-  override def writes(customFieldSetting: CustomFieldSetting): BacklogCustomFieldSetting = {
+  override def writes(
+      customFieldSetting: CustomFieldSetting
+  ): BacklogCustomFieldSetting = {
     val backlogCustomFieldSetting =
       BacklogCustomFieldSetting(
         optId = Some(customFieldSetting.getId),
@@ -24,70 +28,115 @@ class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends W
         description = customFieldSetting.getDescription,
         typeId = customFieldSetting.getFieldTypeId,
         required = customFieldSetting.isRequired,
-        applicableIssueTypes = toApplicableIssueTypes(customFieldSetting.getApplicableIssueTypes.toIndexedSeq, propertyValue.issueTypes),
-        property = BacklogCustomFieldTextProperty(customFieldSetting.getFieldTypeId),
+        applicableIssueTypes = toApplicableIssueTypes(
+          customFieldSetting.getApplicableIssueTypes.toIndexedSeq,
+          propertyValue.issueTypes
+        ),
+        property =
+          BacklogCustomFieldTextProperty(customFieldSetting.getFieldTypeId),
         delete = false
       )
     customFieldSetting.getFieldType match {
       case FieldType.Text =>
-        getBacklogCustomFieldTextSetting(backlogCustomFieldSetting, customFieldSetting)
+        getBacklogCustomFieldTextSetting(
+          backlogCustomFieldSetting,
+          customFieldSetting
+        )
       case FieldType.TextArea =>
-        getBacklogCustomFieldTextAreaSetting(backlogCustomFieldSetting, customFieldSetting)
+        getBacklogCustomFieldTextAreaSetting(
+          backlogCustomFieldSetting,
+          customFieldSetting
+        )
       case FieldType.Numeric =>
-        getBacklogCustomFieldNumericSetting(backlogCustomFieldSetting, customFieldSetting)
+        getBacklogCustomFieldNumericSetting(
+          backlogCustomFieldSetting,
+          customFieldSetting
+        )
       case FieldType.Date =>
-        getBacklogCustomFieldDateSetting(backlogCustomFieldSetting, customFieldSetting)
+        getBacklogCustomFieldDateSetting(
+          backlogCustomFieldSetting,
+          customFieldSetting
+        )
       case FieldType.SingleList =>
-        getBacklogCustomFieldSingleListSetting(backlogCustomFieldSetting, customFieldSetting)
+        getBacklogCustomFieldSingleListSetting(
+          backlogCustomFieldSetting,
+          customFieldSetting
+        )
       case FieldType.MultipleList =>
-        getBacklogCustomFieldMultipleListSetting(backlogCustomFieldSetting, customFieldSetting)
+        getBacklogCustomFieldMultipleListSetting(
+          backlogCustomFieldSetting,
+          customFieldSetting
+        )
       case FieldType.CheckBox =>
-        getBacklogCustomFieldCheckBoxSetting(backlogCustomFieldSetting, customFieldSetting)
+        getBacklogCustomFieldCheckBoxSetting(
+          backlogCustomFieldSetting,
+          customFieldSetting
+        )
       case FieldType.Radio =>
-        getBacklogCustomFieldRadioSetting(backlogCustomFieldSetting, customFieldSetting)
+        getBacklogCustomFieldRadioSetting(
+          backlogCustomFieldSetting,
+          customFieldSetting
+        )
     }
   }
 
-  private[this] def toApplicableIssueTypes(applicableIssueTypeIds: Seq[Long], issueTypes: Seq[IssueType]): Seq[String] = {
+  private[this] def toApplicableIssueTypes(
+      applicableIssueTypeIds: Seq[Long],
+      issueTypes: Seq[IssueType]
+  ): Seq[String] = {
     def findIssueType(applicableIssueTypeId: Long): Option[IssueType] = {
       issueTypes.find(_.getId == applicableIssueTypeId)
     }
     applicableIssueTypeIds.flatMap(findIssueType).map(_.getName)
   }
 
-  private[this] def getBacklogCustomFieldTextSetting(backlogCustomFieldSetting: BacklogCustomFieldSetting,
-                                                     customFieldSetting: CustomFieldSetting): BacklogCustomFieldSetting =
+  private[this] def getBacklogCustomFieldTextSetting(
+      backlogCustomFieldSetting: BacklogCustomFieldSetting,
+      customFieldSetting: CustomFieldSetting
+  ): BacklogCustomFieldSetting =
     customFieldSetting match {
       case setting: TextCustomFieldSetting =>
-        backlogCustomFieldSetting.copy(property = BacklogCustomFieldTextProperty(setting.getFieldTypeId))
+        backlogCustomFieldSetting.copy(property =
+          BacklogCustomFieldTextProperty(setting.getFieldTypeId)
+        )
       case _ => throw new RuntimeException
     }
 
-  private[this] def getBacklogCustomFieldTextAreaSetting(backlogCustomFieldSetting: BacklogCustomFieldSetting,
-                                                         customFieldSetting: CustomFieldSetting): BacklogCustomFieldSetting =
+  private[this] def getBacklogCustomFieldTextAreaSetting(
+      backlogCustomFieldSetting: BacklogCustomFieldSetting,
+      customFieldSetting: CustomFieldSetting
+  ): BacklogCustomFieldSetting =
     customFieldSetting match {
       case setting: TextAreaCustomFieldSetting =>
-        backlogCustomFieldSetting.copy(property = BacklogCustomFieldTextProperty(setting.getFieldTypeId))
+        backlogCustomFieldSetting.copy(property =
+          BacklogCustomFieldTextProperty(setting.getFieldTypeId)
+        )
       case _ => throw new RuntimeException
     }
 
-  private[this] def getBacklogCustomFieldNumericSetting(backlogCustomFieldSetting: BacklogCustomFieldSetting,
-                                                        customFieldSetting: CustomFieldSetting): BacklogCustomFieldSetting =
+  private[this] def getBacklogCustomFieldNumericSetting(
+      backlogCustomFieldSetting: BacklogCustomFieldSetting,
+      customFieldSetting: CustomFieldSetting
+  ): BacklogCustomFieldSetting =
     customFieldSetting match {
       case setting: NumericCustomFieldSetting =>
         backlogCustomFieldSetting.copy(
           property = BacklogCustomFieldNumericProperty(
             setting.getFieldTypeId,
-            optInitialValue = Option(setting.getInitialValue).map(_.floatValue()),
+            optInitialValue =
+              Option(setting.getInitialValue).map(_.floatValue()),
             optUnit = Option(setting.getUnit),
             optMin = Option(setting.getMin).map(_.floatValue()),
             optMax = Option(setting.getMax).map(_.floatValue())
-          ))
+          )
+        )
       case _ => throw new RuntimeException
     }
 
-  private[this] def getBacklogCustomFieldDateSetting(backlogCustomFieldSetting: BacklogCustomFieldSetting,
-                                                     customFieldSetting: CustomFieldSetting): BacklogCustomFieldSetting =
+  private[this] def getBacklogCustomFieldDateSetting(
+      backlogCustomFieldSetting: BacklogCustomFieldSetting,
+      customFieldSetting: CustomFieldSetting
+  ): BacklogCustomFieldSetting =
     customFieldSetting match {
       case setting: DateCustomFieldSetting =>
         val initialDate = Option(setting.getInitialDate).map { initialDate =>
@@ -105,12 +154,15 @@ class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends W
             optInitialDate = initialDate,
             optMin = Option(setting.getMin).map(DateUtil.dateFormat),
             optMax = Option(setting.getMax).map(DateUtil.dateFormat)
-          ))
+          )
+        )
       case _ => throw new RuntimeException
     }
 
-  private[this] def getBacklogCustomFieldSingleListSetting(backlogCustomFieldSetting: BacklogCustomFieldSetting,
-                                                           customFieldSetting: CustomFieldSetting): BacklogCustomFieldSetting =
+  private[this] def getBacklogCustomFieldSingleListSetting(
+      backlogCustomFieldSetting: BacklogCustomFieldSetting,
+      customFieldSetting: CustomFieldSetting
+  ): BacklogCustomFieldSetting =
     customFieldSetting match {
       case setting: SingleListCustomFieldSetting =>
         backlogCustomFieldSetting.copy(
@@ -119,12 +171,15 @@ class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends W
             items = setting.getItems.asScala.toSeq.map(toBacklogItem),
             allowAddItem = setting.isAllowAddItem,
             allowInput = false
-          ))
+          )
+        )
       case _ => throw new RuntimeException
     }
 
-  private[this] def getBacklogCustomFieldMultipleListSetting(backlogCustomFieldSetting: BacklogCustomFieldSetting,
-                                                             customFieldSetting: CustomFieldSetting): BacklogCustomFieldSetting =
+  private[this] def getBacklogCustomFieldMultipleListSetting(
+      backlogCustomFieldSetting: BacklogCustomFieldSetting,
+      customFieldSetting: CustomFieldSetting
+  ): BacklogCustomFieldSetting =
     customFieldSetting match {
       case setting: MultipleListCustomFieldSetting =>
         backlogCustomFieldSetting.copy(
@@ -133,12 +188,15 @@ class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends W
             items = setting.getItems.asScala.toSeq.map(toBacklogItem),
             allowAddItem = setting.isAllowAddItem,
             allowInput = false
-          ))
+          )
+        )
       case _ => throw new RuntimeException
     }
 
-  private[this] def getBacklogCustomFieldCheckBoxSetting(backlogCustomFieldSetting: BacklogCustomFieldSetting,
-                                                         customFieldSetting: CustomFieldSetting): BacklogCustomFieldSetting =
+  private[this] def getBacklogCustomFieldCheckBoxSetting(
+      backlogCustomFieldSetting: BacklogCustomFieldSetting,
+      customFieldSetting: CustomFieldSetting
+  ): BacklogCustomFieldSetting =
     customFieldSetting match {
       case setting: CheckBoxCustomFieldSetting =>
         backlogCustomFieldSetting.copy(
@@ -147,12 +205,15 @@ class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends W
             items = setting.getItems.asScala.toSeq.map(toBacklogItem),
             allowAddItem = setting.isAllowAddItem,
             allowInput = setting.isAllowInput
-          ))
+          )
+        )
       case _ => throw new RuntimeException
     }
 
-  private[this] def getBacklogCustomFieldRadioSetting(backlogCustomFieldSetting: BacklogCustomFieldSetting,
-                                                      customFieldSetting: CustomFieldSetting): BacklogCustomFieldSetting =
+  private[this] def getBacklogCustomFieldRadioSetting(
+      backlogCustomFieldSetting: BacklogCustomFieldSetting,
+      customFieldSetting: CustomFieldSetting
+  ): BacklogCustomFieldSetting =
     customFieldSetting match {
       case setting: RadioCustomFieldSetting =>
         backlogCustomFieldSetting.copy(
@@ -161,11 +222,17 @@ class CustomFieldSettingWrites @Inject()(propertyValue: PropertyValue) extends W
             items = setting.getItems.asScala.toSeq.map(toBacklogItem),
             allowAddItem = setting.isAllowAddItem,
             allowInput = setting.isAllowInput
-          ))
+          )
+        )
       case _ => throw new RuntimeException
     }
 
-  private[this] def toBacklogItem(listItemSetting: ListItemSetting): BacklogItem =
-    BacklogItem(optId = Some(listItemSetting.getId), name = listItemSetting.getName)
+  private[this] def toBacklogItem(
+      listItemSetting: ListItemSetting
+  ): BacklogItem =
+    BacklogItem(
+      optId = Some(listItemSetting.getId),
+      name = listItemSetting.getName
+    )
 
 }

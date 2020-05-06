@@ -29,9 +29,10 @@ case object MailUserMappingType extends UserMappingType("mail")
 object UserMappingType {
   def from(str: String): UserMappingType =
     str match {
-      case "id" => IdUserMappingType
+      case "id"   => IdUserMappingType
       case "mail" => MailUserMappingType
-      case others => throw new RuntimeException(s"Invalid user mapping type. Input: $others")
+      case others =>
+        throw new RuntimeException(s"Invalid user mapping type. Input: $others")
     }
 }
 

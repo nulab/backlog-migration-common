@@ -18,44 +18,82 @@ import scala.jdk.CollectionConverters._
 class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
 
   def issueService() = {
-    Guice.createInjector(new DefaultModule(BacklogApiConfiguration("url", "key", "projectKey"))).getInstance(classOf[IssueServiceImpl])
+    Guice
+      .createInjector(
+        new DefaultModule(BacklogApiConfiguration("url", "key", "projectKey"))
+      )
+      .getInstance(classOf[IssueServiceImpl])
   }
 
   "setCreateParam" should "return the valid params" in {
     val propertyResolver = new TestPropertyResolver()
-    val toRemoteIssueId  = (localIssueId: Long) => None: Option[Long]
-    val issueOfId        = (id: Long) => issue2
-    val postAttachment   = (fileName: String) => None: Option[Long]
+    val toRemoteIssueId = (localIssueId: Long) => None: Option[Long]
+    val issueOfId = (id: Long) => issue2
+    val postAttachment = (fileName: String) => None: Option[Long]
 
-    val params = issueService().setCreateParam(projectId, propertyResolver, toRemoteIssueId, postAttachment, issueOfId)(issue1)
+    val params = issueService().setCreateParam(
+      projectId,
+      propertyResolver,
+      toRemoteIssueId,
+      postAttachment,
+      issueOfId
+    )(issue1)
     getValue(params, "projectId").map(_.toInt) should be(Some(projectId))
     getValue(params, "summary") should be(Some(summary))
     getValue(params, "issueTypeId").map(_.toInt) should be(Some(issueTypeId))
-    getValue(params, "priorityId").map(_.toInt) should be(Some(PriorityType.Normal.getIntValue))
+    getValue(params, "priorityId").map(_.toInt) should be(
+      Some(PriorityType.Normal.getIntValue)
+    )
     getValue(params, "description") should be(Some(description))
     getValue(params, "startDate") should be(Some(startDate))
     getValue(params, "dueDate") should be(Some(dueDate))
-    getValue(params, "estimatedHours").map(_.toFloat) should be(Some(estimatedHours))
+    getValue(params, "estimatedHours").map(_.toFloat) should be(
+      Some(estimatedHours)
+    )
     getValue(params, "actualHours").map(_.toFloat) should be(Some(actualHours))
-    getValues(params, "categoryId[]").map(_.toLong) should contain theSameElementsAs (Seq(categoryId1, categoryId2))
-    getValues(params, "versionId[]").map(_.toLong) should contain theSameElementsAs (Seq(versionId1, versionId2))
-    getValues(params, "milestoneId[]").map(_.toLong) should contain theSameElementsAs (Seq(versionId3, versionId4))
+    getValues(params, "categoryId[]").map(
+      _.toLong
+    ) should contain theSameElementsAs (Seq(categoryId1, categoryId2))
+    getValues(params, "versionId[]").map(
+      _.toLong
+    ) should contain theSameElementsAs (Seq(versionId1, versionId2))
+    getValues(params, "milestoneId[]").map(
+      _.toLong
+    ) should contain theSameElementsAs (Seq(versionId3, versionId4))
     getValue(params, "assigneeId").map(_.toInt) should be(Some(userId1))
     getValues(params, "notifiedUserId[]").map(_.toLong) should be(Seq(userId3))
     getValue(params, "createdUserId").map(_.toLong) should be(Some(userId2))
     getValue(params, "created") should be(Some(issueCreated))
     getValue(params, "updatedUserId").map(_.toLong) should be(Some(userId2))
     getValue(params, "updated") should be(Some(issueUpdated))
-    getValue(params, s"customField_${textCustomFieldId}") should be(Some(textCustomFieldValue))
-    getValue(params, s"customField_${textAreaCustomFieldId}") should be(Some(textAreaCustomFieldValue))
-    getValue(params, s"customField_${numericCustomFieldId}") should be(Some(numericCustomFieldValue))
-    getValue(params, s"customField_${dateCustomFieldId}") should be(Some(dateCustomFieldValue))
-    getValue(params, s"customField_${singleListCustomFieldId}") should be(item1.optId.map(_.toString))
-    getValues(params, s"customField_${multipleListCustomFieldId}") should contain theSameElementsAs (Seq(item1.optId, item2.optId).flatten
+    getValue(params, s"customField_${textCustomFieldId}") should be(
+      Some(textCustomFieldValue)
+    )
+    getValue(params, s"customField_${textAreaCustomFieldId}") should be(
+      Some(textAreaCustomFieldValue)
+    )
+    getValue(params, s"customField_${numericCustomFieldId}") should be(
+      Some(numericCustomFieldValue)
+    )
+    getValue(params, s"customField_${dateCustomFieldId}") should be(
+      Some(dateCustomFieldValue)
+    )
+    getValue(params, s"customField_${singleListCustomFieldId}") should be(
+      item1.optId.map(_.toString)
+    )
+    getValues(
+      params,
+      s"customField_${multipleListCustomFieldId}"
+    ) should contain theSameElementsAs (Seq(item1.optId, item2.optId).flatten
       .map(_.toString))
-    getValues(params, s"customField_${checkBoxCustomFieldId}") should contain theSameElementsAs (Seq(item1.optId, item2.optId).flatten
+    getValues(
+      params,
+      s"customField_${checkBoxCustomFieldId}"
+    ) should contain theSameElementsAs (Seq(item1.optId, item2.optId).flatten
       .map(_.toString))
-    getValue(params, s"customField_${radioCustomFieldId}") should be(item1.optId.map(_.toString))
+    getValue(params, s"customField_${radioCustomFieldId}") should be(
+      item1.optId.map(_.toString)
+    )
   }
 
   "addIssuesParams" should "return the valid params" in {
@@ -83,7 +121,7 @@ class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
     filter.append(s"&keyword=test")
 
     val optFilter = Some(filter.toString())
-    val params    = new GetIssuesParams(List(projectId).asJava)
+    val params = new GetIssuesParams(List(projectId).asJava)
     issueService().addIssuesParams(params, optFilter)
     getValue(params, "projectId[]").map(_.toInt) should be(Some(projectId))
     getValue(params, "categoryId[]").map(_.toInt) should be(Some(categoryId1))
@@ -93,8 +131,12 @@ class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
     getValue(params, "priorityId[]").map(_.toInt) should be(Some(priorityId))
     getValue(params, "assigneeId[]").map(_.toInt) should be(Some(userId1))
     getValue(params, "createdUserId[]").map(_.toInt) should be(Some(userId2))
-    getValue(params, "resolutionId[]").map(_.toInt) should be(Some(resolutionId))
-    getValue(params, "parentChild").map(_.toInt) should be(Some(GetIssuesParams.ParentChildType.All.getIntValue))
+    getValue(params, "resolutionId[]").map(_.toInt) should be(
+      Some(resolutionId)
+    )
+    getValue(params, "parentChild").map(_.toInt) should be(
+      Some(GetIssuesParams.ParentChildType.All.getIntValue)
+    )
     getValue(params, "attachment") should be(Some("true"))
     getValue(params, "sharedFile") should be(Some("true"))
     getValue(params, "createdSince") should be(Some("2017-01-01"))
@@ -132,8 +174,9 @@ class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
     filter.append(s"&parentIssueId[]=${issueId2}")
     filter.append(s"&keyword=test")
 
-    val optFilter                    = Some(filter.toString())
-    val params: GetIssuesCountParams = new GetIssuesCountParams(List(projectId).asJava)
+    val optFilter = Some(filter.toString())
+    val params: GetIssuesCountParams =
+      new GetIssuesCountParams(List(projectId).asJava)
     issueService().addIssuesCountParams(params, optFilter)
     getValue(params, "projectId[]").map(_.toInt) should be(Some(projectId))
     getValue(params, "categoryId[]").map(_.toInt) should be(Some(categoryId1))
@@ -143,8 +186,12 @@ class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
     getValue(params, "priorityId[]").map(_.toInt) should be(Some(priorityId))
     getValue(params, "assigneeId[]").map(_.toInt) should be(Some(userId1))
     getValue(params, "createdUserId[]").map(_.toInt) should be(Some(userId2))
-    getValue(params, "resolutionId[]").map(_.toInt) should be(Some(resolutionId))
-    getValue(params, "parentChild").map(_.toInt) should be(Some(GetIssuesParams.ParentChildType.All.getIntValue))
+    getValue(params, "resolutionId[]").map(_.toInt) should be(
+      Some(resolutionId)
+    )
+    getValue(params, "parentChild").map(_.toInt) should be(
+      Some(GetIssuesParams.ParentChildType.All.getIntValue)
+    )
     getValue(params, "attachment") should be(Some("true"))
     getValue(params, "sharedFile") should be(Some("true"))
     getValue(params, "createdSince") should be(Some("2017-01-01"))
@@ -158,20 +205,34 @@ class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
     getValue(params, "keyword") should be(Some("test"))
   }
 
-  private[this] def getValue(params: GetIssuesCountParams, name: String): Option[String] = {
+  private[this] def getValue(
+      params: GetIssuesCountParams,
+      name: String
+  ): Option[String] = {
     params.getParamList.asScala.find(p => p.getName == name).map(_.getValue)
   }
 
-  private[this] def getValue(params: GetIssuesParams, name: String): Option[String] = {
+  private[this] def getValue(
+      params: GetIssuesParams,
+      name: String
+  ): Option[String] = {
     params.getParamList.asScala.find(p => p.getName == name).map(_.getValue)
   }
 
-  private[this] def getValue(params: ImportIssueParams, name: String): Option[String] = {
+  private[this] def getValue(
+      params: ImportIssueParams,
+      name: String
+  ): Option[String] = {
     params.getParamList.asScala.find(p => p.getName == name).map(_.getValue)
   }
 
-  private[this] def getValues(params: ImportIssueParams, name: String): Seq[String] = {
-    params.getParamList.asScala.toSeq.filter(p => p.getName == name).map(_.getValue)
+  private[this] def getValues(
+      params: ImportIssueParams,
+      name: String
+  ): Seq[String] = {
+    params.getParamList.asScala.toSeq
+      .filter(p => p.getName == name)
+      .map(_.getValue)
   }
 
 }

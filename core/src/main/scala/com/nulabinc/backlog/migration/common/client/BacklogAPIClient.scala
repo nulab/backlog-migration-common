@@ -9,7 +9,11 @@ trait BacklogAPIClient extends BacklogClient {
 
   def importUpdateIssue(params: ImportUpdateIssueParams): Issue
 
-  def importDeleteAttachment(issueIdOrKey: Any, attachmentId: Any, params: ImportDeleteAttachmentParams): Attachment
+  def importDeleteAttachment(
+      issueIdOrKey: Any,
+      attachmentId: Any,
+      params: ImportDeleteAttachmentParams
+  ): Attachment
 
   def importWiki(params: ImportWikiParams): Wiki
 }

@@ -10,10 +10,17 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 /**
   * @author uchida
   */
-class IssueTypeNameWrites @Inject()() extends Writes[String, BacklogIssueType] with Logging {
+class IssueTypeNameWrites @Inject() ()
+    extends Writes[String, BacklogIssueType]
+    with Logging {
 
   override def writes(name: String): BacklogIssueType = {
-    BacklogIssueType(optId = None, name, BacklogConstantValue.ISSUE_TYPE_COLOR.getStrValue, delete = true)
+    BacklogIssueType(
+      optId = None,
+      name,
+      BacklogConstantValue.ISSUE_TYPE_COLOR.getStrValue,
+      delete = true
+    )
   }
 
 }

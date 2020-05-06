@@ -10,10 +10,16 @@ import com.nulabinc.backlog4j.Category
 /**
   * @author uchida
   */
-private[common] class CategoryWrites @Inject()() extends Writes[Category, BacklogIssueCategory] with Logging {
+private[common] class CategoryWrites @Inject() ()
+    extends Writes[Category, BacklogIssueCategory]
+    with Logging {
 
   override def writes(category: Category): BacklogIssueCategory = {
-    BacklogIssueCategory(optId = Some(category.getId), name = category.getName, delete = false)
+    BacklogIssueCategory(
+      optId = Some(category.getId),
+      name = category.getName,
+      delete = false
+    )
   }
 
 }
