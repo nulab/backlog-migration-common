@@ -10,7 +10,9 @@ import com.nulabinc.backlog4j.Project
 /**
   * @author uchida
   */
-private[common] class ProjectWrites @Inject()() extends Writes[Project, BacklogProject] with Logging {
+private[common] class ProjectWrites @Inject() ()
+    extends Writes[Project, BacklogProject]
+    with Logging {
 
   override def writes(project: Project): BacklogProject = {
     BacklogProject(

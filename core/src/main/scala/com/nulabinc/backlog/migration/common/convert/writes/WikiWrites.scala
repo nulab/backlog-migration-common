@@ -2,8 +2,15 @@ package com.nulabinc.backlog.migration.common.convert.writes
 
 import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.convert.{Convert, Writes}
-import com.nulabinc.backlog.migration.common.domain.{BacklogWiki, BacklogWikiTag}
-import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUtil}
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogWiki,
+  BacklogWikiTag
+}
+import com.nulabinc.backlog.migration.common.utils.{
+  DateUtil,
+  Logging,
+  StringUtil
+}
 import com.nulabinc.backlog4j.{Attachment, SharedFile, Wiki, WikiTag}
 
 import scala.jdk.CollectionConverters._
@@ -11,10 +18,11 @@ import scala.jdk.CollectionConverters._
 /**
   * @author uchida
   */
-private[common] class WikiWrites @Inject()(implicit val userWrites: UserWrites,
-                                           implicit val sharedFileWrites: SharedFileWrites,
-                                           implicit val attachmentWrites: AttachmentWrites)
-    extends Writes[Wiki, BacklogWiki]
+private[common] class WikiWrites @Inject() (
+    implicit val userWrites: UserWrites,
+    implicit val sharedFileWrites: SharedFileWrites,
+    implicit val attachmentWrites: AttachmentWrites
+) extends Writes[Wiki, BacklogWiki]
     with Logging {
 
   override def writes(wiki: Wiki): BacklogWiki = {

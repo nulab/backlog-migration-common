@@ -11,11 +11,12 @@ trait Identifier[+A] {
 
   val isDefined: Boolean = !isUndefined
 
-  override def equals(obj: scala.Any): Boolean = obj match {
-    case that: Identifier[_] =>
-      value == that.value
-    case _ => false
-  }
+  override def equals(obj: scala.Any): Boolean =
+    obj match {
+      case that: Identifier[_] =>
+        value == that.value
+      case _ => false
+    }
 
   override def hashCode = 31 * value.##
 

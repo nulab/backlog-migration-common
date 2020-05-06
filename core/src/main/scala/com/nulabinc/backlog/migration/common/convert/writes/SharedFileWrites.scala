@@ -10,7 +10,9 @@ import com.nulabinc.backlog4j.SharedFile
 /**
   * @author uchida
   */
-private[common] class SharedFileWrites @Inject()() extends Writes[SharedFile, BacklogSharedFile] with Logging {
+private[common] class SharedFileWrites @Inject() ()
+    extends Writes[SharedFile, BacklogSharedFile]
+    with Logging {
 
   override def writes(sharedFile: SharedFile): BacklogSharedFile = {
     BacklogSharedFile(dir = sharedFile.getDir, name = sharedFile.getName)

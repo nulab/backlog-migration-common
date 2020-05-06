@@ -4,7 +4,11 @@ import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.convert.{Convert, Writes}
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUtil}
+import com.nulabinc.backlog.migration.common.utils.{
+  DateUtil,
+  Logging,
+  StringUtil
+}
 import com.nulabinc.backlog4j.Issue
 
 import scala.jdk.CollectionConverters._
@@ -12,10 +16,11 @@ import scala.jdk.CollectionConverters._
 /**
   * @author uchida
   */
-private[common] class IssueWrites @Inject()(implicit val userWrites: UserWrites,
-                                            implicit val sharedFileWrites: SharedFileWrites,
-                                            implicit val customFieldWrites: CustomFieldWrites)
-    extends Writes[Issue, BacklogIssue]
+private[common] class IssueWrites @Inject() (
+    implicit val userWrites: UserWrites,
+    implicit val sharedFileWrites: SharedFileWrites,
+    implicit val customFieldWrites: CustomFieldWrites
+) extends Writes[Issue, BacklogIssue]
     with Logging {
 
   override def writes(issue: Issue): BacklogIssue = {
@@ -23,7 +28,10 @@ private[common] class IssueWrites @Inject()(implicit val userWrites: UserWrites,
       eventType = "issue",
       id = issue.getId,
       optIssueKey = Some(issue.getIssueKey),
-      summary = BacklogIssueSummary(value = StringUtil.toSafeString(issue.getSummary), original = StringUtil.toSafeString(issue.getSummary)),
+      summary = BacklogIssueSummary(
+        value = StringUtil.toSafeString(issue.getSummary),
+        original = StringUtil.toSafeString(issue.getSummary)
+      ),
       optParentIssueId = parentIssueId(issue),
       description = StringUtil.toSafeString(issue.getDescription),
       optStartDate = Option(issue.getStartDate).map(DateUtil.dateFormat),
@@ -38,8 +46,10 @@ private[common] class IssueWrites @Inject()(implicit val userWrites: UserWrites,
       priorityName = Option(issue.getPriority).map(_.getName).getOrElse(""),
       optAssignee = Option(issue.getAssignee).map(Convert.toBacklog(_)),
       attachments = Seq.empty[BacklogAttachment],
-      sharedFiles = issue.getSharedFiles.asScala.toSeq.map(Convert.toBacklog(_)),
-      customFields = issue.getCustomFields.asScala.toSeq.flatMap(Convert.toBacklog(_)),
+      sharedFiles =
+        issue.getSharedFiles.asScala.toSeq.map(Convert.toBacklog(_)),
+      customFields =
+        issue.getCustomFields.asScala.toSeq.flatMap(Convert.toBacklog(_)),
       notifiedUsers = Seq.empty[BacklogUser],
       operation = toBacklogOperation(issue)
     )

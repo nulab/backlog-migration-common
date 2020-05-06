@@ -6,7 +6,8 @@ import com.nulabinc.backlog.migration.common.modules.DefaultModule
 /**
   * @author uchida
   */
-private[importer] class BacklogModule(apiConfig: BacklogApiConfiguration) extends DefaultModule(apiConfig) {
+private[importer] class BacklogModule(apiConfig: BacklogApiConfiguration)
+    extends DefaultModule(apiConfig) {
 
   override def configure() = {
     super.configure()

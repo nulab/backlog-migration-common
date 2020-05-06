@@ -13,7 +13,11 @@ import scala.jdk.CollectionConverters._
 /**
   * @author uchida
   */
-class GroupServiceImpl @Inject()(implicit val groupWrites: GroupWrites, backlog: BacklogAPIClient) extends GroupService with Logging {
+class GroupServiceImpl @Inject() (implicit
+    val groupWrites: GroupWrites,
+    backlog: BacklogAPIClient
+) extends GroupService
+    with Logging {
 
   override def allGroups(): Seq[BacklogGroup] =
     try {
@@ -24,9 +28,14 @@ class GroupServiceImpl @Inject()(implicit val groupWrites: GroupWrites, backlog:
         Seq.empty[BacklogGroup]
     }
 
-  override def create(group: BacklogGroup, propertyResolver: PropertyResolver) = {
-    val memberIds = group.members.flatMap(_.optUserId).flatMap(propertyResolver.optResolvedUserId)
-    val params    = new CreateGroupParams(group.name)
+  override def create(
+      group: BacklogGroup,
+      propertyResolver: PropertyResolver
+  ) = {
+    val memberIds = group.members
+      .flatMap(_.optUserId)
+      .flatMap(propertyResolver.optResolvedUserId)
+    val params = new CreateGroupParams(group.name)
     params.members(memberIds.asJava)
     backlog.createGroup(params)
   }

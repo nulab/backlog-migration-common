@@ -11,7 +11,10 @@ import scala.jdk.CollectionConverters._
 /**
   * @author uchida
   */
-class UserServiceImpl @Inject()(implicit val userWrites: UserWrites, backlog: BacklogAPIClient) extends UserService {
+class UserServiceImpl @Inject() (implicit
+    val userWrites: UserWrites,
+    backlog: BacklogAPIClient
+) extends UserService {
 
   override def allUsers(): Seq[BacklogUser] =
     backlog.getUsers.asScala.toSeq.map(Convert.toBacklog(_))

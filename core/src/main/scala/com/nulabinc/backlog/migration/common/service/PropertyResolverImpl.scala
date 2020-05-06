@@ -1,30 +1,36 @@
 package com.nulabinc.backlog.migration.common.service
 
-import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogStatusName, BacklogVersion}
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogCustomFieldSetting,
+  BacklogStatusName,
+  BacklogVersion
+}
 import com.nulabinc.backlog.migration.common.utils.Logging
 
 /**
   * @author uchida
   */
-class PropertyResolverImpl(customFieldSettingService: CustomFieldSettingService,
-                           issueTypeService: IssueTypeService,
-                           categoryService: IssueCategoryService,
-                           versionService: VersionService,
-                           resolutionService: ResolutionService,
-                           userService: UserService,
-                           statusService: StatusService,
-                           priorityService: PriorityService)
-    extends PropertyResolver
+class PropertyResolverImpl(
+    customFieldSettingService: CustomFieldSettingService,
+    issueTypeService: IssueTypeService,
+    categoryService: IssueCategoryService,
+    versionService: VersionService,
+    resolutionService: ResolutionService,
+    userService: UserService,
+    statusService: StatusService,
+    priorityService: PriorityService
+) extends PropertyResolver
     with Logging {
 
-  private[this] val customFieldSettings = customFieldSettingService.allCustomFieldSettings()
-  private[this] val issueTypes          = issueTypeService.allIssueTypes()
-  private[this] val categories          = categoryService.allIssueCategories()
-  private[this] val versions            = versionService.allVersions()
-  private[this] val resolutions         = resolutionService.allResolutions()
-  private[this] val users               = userService.allUsers()
-  private[this] val statuses            = statusService.allStatuses()
-  private[this] val priorities          = priorityService.allPriorities()
+  private[this] val customFieldSettings =
+    customFieldSettingService.allCustomFieldSettings()
+  private[this] val issueTypes = issueTypeService.allIssueTypes()
+  private[this] val categories = categoryService.allIssueCategories()
+  private[this] val versions = versionService.allVersions()
+  private[this] val resolutions = resolutionService.allResolutions()
+  private[this] val users = userService.allUsers()
+  private[this] val statuses = statusService.allStatuses()
+  private[this] val priorities = priorityService.allPriorities()
 
   private[this] def findVersion(name: String): Option[BacklogVersion] = {
     versions.find(_.name.trim == name.trim)
@@ -33,15 +39,21 @@ class PropertyResolverImpl(customFieldSettingService: CustomFieldSettingService,
   override def optResolvedVersionId(name: String): Option[Long] = {
     val optVersion = findVersion(name)
     if (optVersion.isEmpty) {
-      logger.debug(s"[Version not found.]:${name}:${versions.map(_.name).mkString(",")}")
+      logger.debug(
+        s"[Version not found.]:${name}:${versions.map(_.name).mkString(",")}"
+      )
     }
     optVersion.flatMap(_.optId)
   }
 
-  override def optResolvedCustomFieldSetting(name: String): Option[BacklogCustomFieldSetting] = {
+  override def optResolvedCustomFieldSetting(
+      name: String
+  ): Option[BacklogCustomFieldSetting] = {
     val optCustomFieldSetting = customFieldSettings.findByName(name)
     if (optCustomFieldSetting.isEmpty) {
-      logger.debug(s"[Custom Field not found.]:${name}:${customFieldSettings.settings.map(_.name).mkString(",")}")
+      logger.debug(
+        s"[Custom Field not found.]:${name}:${customFieldSettings.settings.map(_.name).mkString(",")}"
+      )
     }
     optCustomFieldSetting
   }
@@ -49,7 +61,9 @@ class PropertyResolverImpl(customFieldSettingService: CustomFieldSettingService,
   override def optResolvedIssueTypeId(name: String): Option[Long] = {
     val optIssueType = issueTypes.find(_.name.trim == name.trim)
     if (optIssueType.isEmpty) {
-      logger.debug(s"[Issue Type not found.]:${name}:${issueTypes.map(_.name).mkString(",")}")
+      logger.debug(
+        s"[Issue Type not found.]:${name}:${issueTypes.map(_.name).mkString(",")}"
+      )
     }
     optIssueType.flatMap(_.optId)
   }
@@ -57,7 +71,9 @@ class PropertyResolverImpl(customFieldSettingService: CustomFieldSettingService,
   override def optResolvedCategoryId(name: String): Option[Long] = {
     val optIssueCategory = categories.find(_.name.trim == name.trim)
     if (optIssueCategory.isEmpty) {
-      logger.debug(s"[Issue Category not found.]:${name}:${categories.map(_.name).mkString(",")}")
+      logger.debug(
+        s"[Issue Category not found.]:${name}:${categories.map(_.name).mkString(",")}"
+      )
     }
     optIssueCategory.flatMap(_.optId)
   }
@@ -76,7 +92,9 @@ class PropertyResolverImpl(customFieldSettingService: CustomFieldSettingService,
   override def optResolvedUserId(userId: String): Option[Long] = {
     val optUser = users.find(user => user.optUserId.getOrElse("") == userId)
     if (optUser.isEmpty) {
-      logger.debug(s"[User not found.]:${userId}:${users.flatMap(_.optUserId).mkString(",")}")
+      logger.debug(
+        s"[User not found.]:${userId}:${users.flatMap(_.optUserId).mkString(",")}"
+      )
     }
     optUser.map(_.id)
   }
@@ -86,7 +104,9 @@ class PropertyResolverImpl(customFieldSettingService: CustomFieldSettingService,
       .findByName(name)
       .map(_.id)
       .getOrElse {
-        logger.debug(s"[Status not found.]:${name}:${statuses.availableStatusNames.map(_.trimmed).mkString(",")}")
+        logger.debug(
+          s"[Status not found.]:${name}:${statuses.availableStatusNames.map(_.trimmed).mkString(",")}"
+        )
         throw new RuntimeException("Status not found.")
       }
 
@@ -100,9 +120,12 @@ class PropertyResolverImpl(customFieldSettingService: CustomFieldSettingService,
   }
 
   override def optResolvedPriorityId(name: String): Option[Long] = {
-    val optPriority = priorities.find(priority => priority.getName.trim == name.trim)
+    val optPriority =
+      priorities.find(priority => priority.getName.trim == name.trim)
     if (optPriority.isEmpty) {
-      logger.debug(s"[Priority not found.]:${name}:${priorities.map(_.getName).mkString(",")}")
+      logger.debug(
+        s"[Priority not found.]:${name}:${priorities.map(_.getName).mkString(",")}"
+      )
     }
     optPriority.map(_.getId)
   }

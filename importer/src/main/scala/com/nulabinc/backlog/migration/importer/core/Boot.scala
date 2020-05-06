@@ -12,12 +12,18 @@ import com.osinka.i18n.Messages
   */
 object Boot extends Logging {
 
-  def execute(apiConfig: BacklogApiConfiguration, fitIssueKey: Boolean, retryCount: Int) : Unit =
+  def execute(
+      apiConfig: BacklogApiConfiguration,
+      fitIssueKey: Boolean,
+      retryCount: Int
+  ): Unit =
     try {
       val injector = Guice.createInjector(new BacklogModule(apiConfig))
-      ConsoleOut.println(s"""
+      ConsoleOut.println(
+        s"""
                             |${Messages("import.start")}
-                            |--------------------------------------------------""".stripMargin)
+                            |--------------------------------------------------""".stripMargin
+      )
 
       val projectImporter = injector.getInstance(classOf[ProjectImporter])
       projectImporter.execute(fitIssueKey, retryCount)

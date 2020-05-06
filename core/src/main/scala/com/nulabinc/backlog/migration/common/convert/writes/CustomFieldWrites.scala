@@ -14,23 +14,29 @@ import scala.jdk.CollectionConverters._
 /**
   * @author uchida
   */
-private[common] class CustomFieldWrites @Inject()() extends Writes[CustomField, Option[BacklogCustomField]] with Logging {
+private[common] class CustomFieldWrites @Inject() ()
+    extends Writes[CustomField, Option[BacklogCustomField]]
+    with Logging {
 
   override def writes(customField: CustomField): Option[BacklogCustomField] = {
     customField match {
-      case _: TextCustomField         => Some(toTextCustomField(customField))
-      case _: TextAreaCustomField     => Some(toTextAreaCustomField(customField))
-      case _: NumericCustomField      => Some(toNumericCustomField(customField))
-      case _: DateCustomField         => Some(toDateCustomField(customField))
-      case _: SingleListCustomField   => Some(toSingleListCustomField(customField))
-      case _: MultipleListCustomField => Some(toMultipleListCustomField(customField))
-      case _: CheckBoxCustomField     => Some(toCheckBoxCustomField(customField))
-      case _: RadioCustomField        => Some(toRadioCustomField(customField))
-      case _                          => None
+      case _: TextCustomField     => Some(toTextCustomField(customField))
+      case _: TextAreaCustomField => Some(toTextAreaCustomField(customField))
+      case _: NumericCustomField  => Some(toNumericCustomField(customField))
+      case _: DateCustomField     => Some(toDateCustomField(customField))
+      case _: SingleListCustomField =>
+        Some(toSingleListCustomField(customField))
+      case _: MultipleListCustomField =>
+        Some(toMultipleListCustomField(customField))
+      case _: CheckBoxCustomField => Some(toCheckBoxCustomField(customField))
+      case _: RadioCustomField    => Some(toRadioCustomField(customField))
+      case _                      => None
     }
   }
 
-  private[this] def toTextCustomField(customField: CustomField): BacklogCustomField =
+  private[this] def toTextCustomField(
+      customField: CustomField
+  ): BacklogCustomField =
     customField match {
       case textCustomField: TextCustomField =>
         BacklogCustomField(
@@ -42,7 +48,9 @@ private[common] class CustomFieldWrites @Inject()() extends Writes[CustomField, 
       case _ => throw new RuntimeException()
     }
 
-  private[this] def toTextAreaCustomField(customField: CustomField): BacklogCustomField =
+  private[this] def toTextAreaCustomField(
+      customField: CustomField
+  ): BacklogCustomField =
     customField match {
       case textAreaCustomField: TextAreaCustomField =>
         BacklogCustomField(
@@ -54,7 +62,9 @@ private[common] class CustomFieldWrites @Inject()() extends Writes[CustomField, 
       case _ => throw new RuntimeException()
     }
 
-  private[this] def toNumericCustomField(customField: CustomField): BacklogCustomField =
+  private[this] def toNumericCustomField(
+      customField: CustomField
+  ): BacklogCustomField =
     customField match {
       case numericCustomField: NumericCustomField =>
         BacklogCustomField(
@@ -66,7 +76,9 @@ private[common] class CustomFieldWrites @Inject()() extends Writes[CustomField, 
       case _ => throw new RuntimeException()
     }
 
-  private[this] def toDateCustomField(customField: CustomField): BacklogCustomField =
+  private[this] def toDateCustomField(
+      customField: CustomField
+  ): BacklogCustomField =
     customField match {
       case dateCustomField: DateCustomField =>
         BacklogCustomField(
@@ -78,7 +90,9 @@ private[common] class CustomFieldWrites @Inject()() extends Writes[CustomField, 
       case _ => throw new RuntimeException()
     }
 
-  private[this] def toSingleListCustomField(customField: CustomField): BacklogCustomField =
+  private[this] def toSingleListCustomField(
+      customField: CustomField
+  ): BacklogCustomField =
     customField match {
       case singleListCustomField: SingleListCustomField =>
         BacklogCustomField(
@@ -90,7 +104,9 @@ private[common] class CustomFieldWrites @Inject()() extends Writes[CustomField, 
       case _ => throw new RuntimeException()
     }
 
-  private[this] def toMultipleListCustomField(customField: CustomField): BacklogCustomField =
+  private[this] def toMultipleListCustomField(
+      customField: CustomField
+  ): BacklogCustomField =
     customField match {
       case multipleListCustomField: MultipleListCustomField =>
         BacklogCustomField(
@@ -102,7 +118,9 @@ private[common] class CustomFieldWrites @Inject()() extends Writes[CustomField, 
       case _ => throw new RuntimeException()
     }
 
-  private[this] def toCheckBoxCustomField(customField: CustomField): BacklogCustomField =
+  private[this] def toCheckBoxCustomField(
+      customField: CustomField
+  ): BacklogCustomField =
     customField match {
       case checkBoxCustomField: CheckBoxCustomField =>
         BacklogCustomField(
@@ -114,7 +132,9 @@ private[common] class CustomFieldWrites @Inject()() extends Writes[CustomField, 
       case _ => throw new RuntimeException()
     }
 
-  private[this] def toRadioCustomField(customField: CustomField): BacklogCustomField =
+  private[this] def toRadioCustomField(
+      customField: CustomField
+  ): BacklogCustomField =
     customField match {
       case radioCustomField: RadioCustomField =>
         BacklogCustomField(

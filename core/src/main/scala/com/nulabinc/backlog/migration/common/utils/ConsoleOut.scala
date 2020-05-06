@@ -27,12 +27,18 @@ object ConsoleOut extends Logging {
     println(value, space, BLUE)
 
   @deprecated("ConsoleDSL[F].println")
-  def println(value: String, space: Int = 0, color: Ansi.Color = BLACK): PrintStream = {
+  def println(
+      value: String,
+      space: Int = 0,
+      color: Ansi.Color = BLACK
+  ): PrintStream = {
     logger.info(value)
     if (color == BLACK) {
       outStream.println((" " * space) + ansi().a(value).reset().toString)
     } else {
-      outStream.println((" " * space) + ansi().fg(color).a(value).reset().toString)
+      outStream.println(
+        (" " * space) + ansi().fg(color).a(value).reset().toString
+      )
     }
 
     outStream.flush()
@@ -59,7 +65,9 @@ object ConsoleOut extends Logging {
     logger.info(value)
 
     synchronized {
-      outStream.print(ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL))
+      outStream.print(
+        ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
+      )
       outStream.flush()
       outStream.println((" " * space) + value)
     }

@@ -12,9 +12,15 @@ import com.nulabinc.backlog4j.{BacklogAPIException, Project}
 /**
   * @author uchida
   */
-class ProjectServiceImpl @Inject()(implicit val projectWrites: ProjectWrites, backlog: BacklogAPIClient) extends ProjectService with Logging {
+class ProjectServiceImpl @Inject() (implicit
+    val projectWrites: ProjectWrites,
+    backlog: BacklogAPIClient
+) extends ProjectService
+    with Logging {
 
-  override def create(project: BacklogProject): Either[Throwable, BacklogProject] =
+  override def create(
+      project: BacklogProject
+  ): Either[Throwable, BacklogProject] =
     optProject(project.key) match {
       case Some(project) => Right(project)
       case _             => doCreate(project)
@@ -25,13 +31,18 @@ class ProjectServiceImpl @Inject()(implicit val projectWrites: ProjectWrites, ba
       Some(Convert.toBacklog(backlog.getProject(projectKey)))
     } catch {
       case e: BacklogAPIException =>
-        if (!(e.getMessage.contains("No project") || e.getMessage.contains("No such project"))) {
+        if (
+          !(e.getMessage
+            .contains("No project") || e.getMessage.contains("No such project"))
+        ) {
           logger.error(e.getMessage, e)
         }
         None
     }
 
-  private[this] def doCreate(project: BacklogProject): Either[Throwable, BacklogProject] = {
+  private[this] def doCreate(
+      project: BacklogProject
+  ): Either[Throwable, BacklogProject] = {
     val params = new CreateProjectParams(
       project.name,
       project.key,

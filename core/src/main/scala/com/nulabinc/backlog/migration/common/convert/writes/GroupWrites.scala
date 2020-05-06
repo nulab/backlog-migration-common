@@ -12,10 +12,16 @@ import scala.jdk.CollectionConverters._
 /**
   * @author uchida
   */
-private[common] class GroupWrites @Inject()(implicit val userWrites: UserWrites) extends Writes[Group, BacklogGroup] with Logging {
+private[common] class GroupWrites @Inject() (implicit
+    val userWrites: UserWrites
+) extends Writes[Group, BacklogGroup]
+    with Logging {
 
   override def writes(group: Group): BacklogGroup = {
-    BacklogGroup(group.getName, group.getMembers.asScala.toSeq.map(Convert.toBacklog(_)))
+    BacklogGroup(
+      group.getName,
+      group.getMembers.asScala.toSeq.map(Convert.toBacklog(_))
+    )
   }
 
 }

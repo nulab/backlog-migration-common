@@ -9,8 +9,10 @@ import com.nulabinc.backlog.migration.common.domain.BacklogSpace
 /**
   * @author uchida
   */
-class SpaceServiceImpl @Inject()(implicit val spaceWrites: SpaceWrites, implicit val backlog: BacklogAPIClient)
-    extends SpaceService {
+class SpaceServiceImpl @Inject() (
+    implicit val spaceWrites: SpaceWrites,
+    implicit val backlog: BacklogAPIClient
+) extends SpaceService {
 
   override def space(): BacklogSpace =
     Convert.toBacklog(backlog.getSpace)

@@ -7,11 +7,18 @@ import slick.jdbc.JdbcType
 import slick.jdbc.SQLiteProfile.api._
 import slick.lifted.{ProvenShape, Rep, Tag}
 
-case class BacklogStatusRow(id: AnyId, name: BacklogStatusName, displayOrder: Int, color: String) extends Entity
+case class BacklogStatusRow(
+    id: AnyId,
+    name: BacklogStatusName,
+    displayOrder: Int,
+    color: String
+) extends Entity
 
-class BacklogStatusTable(tag: Tag) extends BaseTable[BacklogStatusRow](tag, "backlog_statuses") {
+class BacklogStatusTable(tag: Tag)
+    extends BaseTable[BacklogStatusRow](tag, "backlog_statuses") {
 
-  implicit val backlogStatusNameMapper: JdbcType[BacklogStatusName] with BaseTypedType[BacklogStatusName] =
+  implicit val backlogStatusNameMapper
+      : JdbcType[BacklogStatusName] with BaseTypedType[BacklogStatusName] =
     MappedColumnType.base[BacklogStatusName, String](
       src => src.trimmed,
       dst => BacklogStatusName(dst)
@@ -22,5 +29,10 @@ class BacklogStatusTable(tag: Tag) extends BaseTable[BacklogStatusRow](tag, "bac
   def color: Rep[String] = column[String]("color")
 
   override def * : ProvenShape[BacklogStatusRow] =
-    (id, name, displayOrder, color) <> (BacklogStatusRow.tupled, BacklogStatusRow.unapply)
+    (
+      id,
+      name,
+      displayOrder,
+      color
+    ) <> (BacklogStatusRow.tupled, BacklogStatusRow.unapply)
 }

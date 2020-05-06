@@ -9,4 +9,3 @@ trait StoreDSL[F[_]] {
   def stream[A](a: DBIOStream[A]): F[Observable[A]]
   def createTable(a: DBIOSchema): F[Unit]
 }
-

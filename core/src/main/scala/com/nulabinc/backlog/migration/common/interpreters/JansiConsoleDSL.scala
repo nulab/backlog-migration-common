@@ -13,22 +13,34 @@ import org.fusesource.jansi.Ansi.ansi
 case class JansiConsoleDSL() extends ConsoleDSL[Task] with Logging {
   private val outStream: PrintStream = System.out
 
-  override def println(value: String, space: Int, color: Ansi.Color): Task[Unit] = Task.eval {
-    logger.info(value)
-    if (color == BLACK) {
-      outStream.println((" " * space) + ansi().a(value).reset().toString)
-    } else {
-      outStream.println((" " * space) + ansi().fg(color).a(value).reset().toString)
+  override def println(
+      value: String,
+      space: Int,
+      color: Ansi.Color
+  ): Task[Unit] =
+    Task.eval {
+      logger.info(value)
+      if (color == BLACK) {
+        outStream.println((" " * space) + ansi().a(value).reset().toString)
+      } else {
+        outStream.println(
+          (" " * space) + ansi().fg(color).a(value).reset().toString
+        )
+      }
+
+      outStream.flush()
     }
 
-    outStream.flush()
-  }
-
-  override def boldln(value: String, space: Int, color: Ansi.Color): Task[Unit] = Task.eval {
-    logger.info(value)
-    outStream.println((" " * space) + bold(value, color))
-    outStream.flush()
-  }
+  override def boldln(
+      value: String,
+      space: Int,
+      color: Ansi.Color
+  ): Task[Unit] =
+    Task.eval {
+      logger.info(value)
+      outStream.println((" " * space) + bold(value, color))
+      outStream.flush()
+    }
 
   override def errorln(value: String, space: Int): Task[Unit] =
     println(value, space, RED)
@@ -36,8 +48,9 @@ case class JansiConsoleDSL() extends ConsoleDSL[Task] with Logging {
   override def warnln(value: String, space: Int = 0): Task[Unit] =
     println(value, space, YELLOW)
 
-  override def read(message: String): Task[String] = Task.eval {
-    scala.io.StdIn.readLine(message)
-  }
+  override def read(message: String): Task[String] =
+    Task.eval {
+      scala.io.StdIn.readLine(message)
+    }
 
 }

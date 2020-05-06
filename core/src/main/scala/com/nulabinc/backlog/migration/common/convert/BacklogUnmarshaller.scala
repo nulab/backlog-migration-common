@@ -45,7 +45,11 @@ object BacklogUnmarshaller {
           JsonParser(json).convertTo[BacklogProjectWrapper]
         backlogProjectsWrapper.project
       })
-      .getOrElse(throw new NoSuchElementException(s"No such project file. (${backlogPaths.projectJson})"))
+      .getOrElse(
+        throw new NoSuchElementException(
+          s"No such project file. (${backlogPaths.projectJson})"
+        )
+      )
 
   def issue(path: Path): Option[BacklogEvent] = {
     IOUtil.input(path).map(JsonParser(_).convertTo[BacklogEvent])
@@ -89,10 +93,14 @@ object BacklogUnmarshaller {
       })
       .getOrElse(Seq.empty[BacklogGroup])
 
-  def backlogCustomFieldSettings(backlogPaths: BacklogPaths): Seq[BacklogCustomFieldSetting] =
+  def backlogCustomFieldSettings(
+      backlogPaths: BacklogPaths
+  ): Seq[BacklogCustomFieldSetting] =
     IOUtil
       .input(backlogPaths.customFieldSettingsJson)
-      .map(json => JsonParser(json).convertTo[BacklogCustomFieldSettings].settings)
+      .map(json =>
+        JsonParser(json).convertTo[BacklogCustomFieldSettings].settings
+      )
       .getOrElse(Seq.empty[BacklogCustomFieldSetting])
 
 }
