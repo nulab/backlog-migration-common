@@ -24,4 +24,5 @@ lazy val common = (project in file("."))
   .settings(
     name := "backlog-migration-common",
   )
+  .dependsOn(core, importer)
   .aggregate(core, importer)
