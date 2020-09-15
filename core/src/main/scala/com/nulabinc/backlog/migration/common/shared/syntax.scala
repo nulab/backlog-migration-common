@@ -47,8 +47,8 @@ object syntax {
 
     def toEither[E](error: E): F[Either[E, A]] =
       optFValue match {
-        case Some(v: F[A]) => v.map(Right(_))
-        case None          => Applicative[F].pure(Left(error))
+        case Some(v) => v.map(Right(_))
+        case None    => Applicative[F].pure(Left(error))
       }
   }
 }
