@@ -16,9 +16,9 @@ object MappingDirectory {
   private val WORKING_DIRECTORY = new File(".").getAbsoluteFile.getParent
   private val ROOT              = WORKING_DIRECTORY + "/mapping"
 
-  private final val USER_MAPPING_FILE          = ROOT + "/users.json"
+  private final val USER_MAPPING_FILE          = ROOT + "/users.csv"
   private final val STATUS_MAPPING_FILE        = ROOT + "/statuses.csv"
-  private final val PRIORITY_MAPPING_FILE      = ROOT + "/priorities.json"
+  private final val PRIORITY_MAPPING_FILE      = ROOT + "/priorities.csv"
   private final val USER_MAPPING_LIST_FILE     = ROOT + "/users_list.csv"
   private final val STATUS_MAPPING_LIST_FILE   = ROOT + "/statuses_list.csv"
   private final val PRIORITY_MAPPING_LIST_FILE = ROOT + "/priorities_list.csv"
