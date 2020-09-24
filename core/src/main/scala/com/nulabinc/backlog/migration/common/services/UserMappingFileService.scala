@@ -11,12 +11,7 @@ import com.nulabinc.backlog.migration.common.deserializers.Deserializer
 import com.nulabinc.backlog.migration.common.domain.BacklogUser
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
-import com.nulabinc.backlog.migration.common.errors.{
-  MappingFileError,
-  MappingFileNotFound,
-  MappingValidationError,
-  ValidationError
-}
+import com.nulabinc.backlog.migration.common.errors.{MappingFileError, MappingFileNotFound, MappingValidationError, ValidationError}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.serializers.Serializer
 import com.nulabinc.backlog.migration.common.validators.MappingValidatorNec
@@ -33,9 +28,7 @@ private object MergedUserMapping {
 }
 
 object UserMappingFileService {
-  import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{
-    Mappings => MappingMessages
-  }
+  import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{Mappings => MappingMessages}
   import com.nulabinc.backlog.migration.common.shared.syntax._
 
   def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](
@@ -55,10 +48,9 @@ object UserMappingFileService {
       _ <-
         if (mappingFileExists) {
           for {
-            records <-
-              StorageDSL[F].read(mappingFilePath, MappingFileService.readLine)
+            records <- StorageDSL[F].read(mappingFilePath, MappingFileService.readLine)
             mappings = MappingDeserializer.user(records)
-            result = merge(mappings, srcItems, dstApiConfiguration.isNAISpace)
+            result   = merge(mappings, srcItems, dstApiConfiguration.isNAISpace)
             _ <-
               if (result.addedList.nonEmpty)
                 for {
@@ -67,8 +59,7 @@ object UserMappingFileService {
                     MappingSerializer.user(result.mergeList)
                   )
                   _ <- ConsoleDSL[F].println(
-                    MappingMessages
-                      .userMappingMerged(mappingFilePath, result.addedList)
+                    MappingMessages.userMappingMerged(mappingFilePath, result.addedList)
                   )
                 } yield ()
               else
@@ -109,13 +100,9 @@ object UserMappingFileService {
       deserializer: Deserializer[CSVRecord, UserMapping[A]]
   ): F[Either[MappingFileError, Seq[ValidatedUserMapping[A]]]] = {
     val result = for {
-      _ <-
-        StorageDSL[F]
-          .exists(path)
-          .orError(MappingFileNotFound("users", path))
-          .handleError
+      _           <- StorageDSL[F].exists(path).orError(MappingFileNotFound("users", path)).handleError
       unvalidated <- getMappings(path).handleError
-      validated <- validateMappings(unvalidated, dstItems).lift.handleError
+      validated   <- validateMappings(unvalidated, dstItems).lift.handleError
     } yield validated
 
     result.value
@@ -149,14 +136,12 @@ object UserMappingFileService {
       mappings: Seq[UserMapping[A]],
       dstItems: Seq[BacklogUser]
   ): Either[MappingFileError, Seq[ValidatedUserMapping[A]]] = {
-    val results = mappings
-      .map(MappingValidatorNec.validateUserMapping(_, dstItems))
-      .foldLeft(ValidationResults.empty[A]) { (acc, item) =>
-        item match {
-          case Valid(value)   => acc.copy(values = acc.values :+ value)
-          case Invalid(error) => acc.copy(errors = acc.errors ++ error.toList)
-        }
+    val results = mappings.map(MappingValidatorNec.validateUserMapping(_, dstItems)).foldLeft(ValidationResults.empty[A]) { (acc, item) =>
+      item match {
+        case Valid(value)   => acc.copy(values = acc.values :+ value)
+        case Invalid(error) => acc.copy(errors = acc.errors ++ error.toList)
       }
+    }
 
     results.toResult
   }

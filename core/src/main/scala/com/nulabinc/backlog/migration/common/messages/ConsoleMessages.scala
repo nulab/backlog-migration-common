@@ -3,12 +3,7 @@ package com.nulabinc.backlog.migration.common.messages
 import java.nio.file.Path
 import java.util.Locale
 
-import com.nulabinc.backlog.migration.common.domain.mappings.{
-  Mapping,
-  PriorityMapping,
-  StatusMapping,
-  UserMapping
-}
+import com.nulabinc.backlog.migration.common.domain.mappings.{Mapping, PriorityMapping, StatusMapping, UserMapping}
 import com.nulabinc.backlog.migration.common.errors._
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.osinka.i18n.{Lang, Messages}
@@ -17,7 +12,7 @@ object ConsoleMessages {
   private implicit val userLang: Lang =
     if (Locale.getDefault.equals(Locale.JAPAN)) Lang("ja") else Lang("en")
 
-  val empty: String = Messages("common.empty")
+  val empty: String      = Messages("common.empty")
   val srcProduct: String = Messages("common.src")
   val dstProduct: String = Messages("common.dst")
 
@@ -27,15 +22,15 @@ object ConsoleMessages {
        |${Messages("cli.cancel")}""".stripMargin
 
   object Mappings {
-    lazy val statusItem = Messages("common.statuses")
+    lazy val statusItem   = Messages("common.statuses")
     lazy val priorityItem = Messages("common.priorities")
-    lazy val userItem = Messages("common.users")
+    lazy val userItem     = Messages("common.users")
 
     def needsSetup: String =
       Messages("cli.mapping.error.setup")
 
-    def statusMappingMerged[A](filePath: Path, items: Seq[StatusMapping[A]])(
-        implicit formatter: Formatter[StatusMapping[A]]
+    def statusMappingMerged[A](filePath: Path, items: Seq[StatusMapping[A]])(implicit
+        formatter: Formatter[StatusMapping[A]]
     ): String =
       mappingMerged(statusItem, filePath, items.map(formatter.format))
 
@@ -60,8 +55,8 @@ object ConsoleMessages {
     def priorityMappingCreated(filePath: Path): String =
       mappingFileCreated(priorityItem, filePath)
 
-    def userMappingMerged[A](filePath: Path, items: Seq[UserMapping[A]])(
-        implicit formatter: Formatter[UserMapping[A]]
+    def userMappingMerged[A](filePath: Path, items: Seq[UserMapping[A]])(implicit
+        formatter: Formatter[UserMapping[A]]
     ): String =
       mappingMerged(priorityItem, filePath, items.map(formatter.format))
 

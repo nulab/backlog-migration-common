@@ -4,17 +4,10 @@ import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.client.params._
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
-import com.nulabinc.backlog.migration.common.convert.writes.{
-  CommentWrites,
-  IssueWrites
-}
+import com.nulabinc.backlog.migration.common.convert.writes.{CommentWrites, IssueWrites}
 import com.nulabinc.backlog.migration.common.domain.IssueTags.SourceIssue
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.utils.{
-  ConsoleOut,
-  Logging,
-  StringUtil
-}
+import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging, StringUtil}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
 import com.nulabinc.backlog4j._
@@ -57,9 +50,7 @@ class CommentServiceImpl @Inject() (
         loop(optLastId, comments concat commentsPart, offset + 100)
       } else comments
 
-    loop(None, Seq.empty[IssueComment], 0)
-      .sortWith((c1, c2) => c1.getCreated.before(c2.getCreated))
-      .map(Convert.toBacklog(_))
+    loop(None, Seq.empty[IssueComment], 0).sortWith((c1, c2) => c1.getCreated.before(c2.getCreated)).map(Convert.toBacklog(_))
   }
 
   override def update(
@@ -69,20 +60,17 @@ class CommentServiceImpl @Inject() (
       val noUpdate = updateIssue(setUpdateParam(backlogComment))
       if (noUpdate)
         logger.debug(
-          s"    [Success Finish No Update Comment]:issueId[${backlogComment.optIssueId
-            .getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------"
+          s"    [Success Finish No Update Comment]:issueId[${backlogComment.optIssueId.getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------"
         )
       else
         logger.debug(
-          s"    [Success Finish Create Comment]:issueId[${backlogComment.optIssueId
-            .getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------"
+          s"    [Success Finish Create Comment]:issueId[${backlogComment.optIssueId.getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------"
         )
       Right(backlogComment)
     } catch {
       case e: Throwable =>
         logger.debug(
-          s"    [Fail Finish Create Comment]:issueId[${backlogComment.optIssueId
-            .getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------"
+          s"    [Fail Finish Create Comment]:issueId[${backlogComment.optIssueId.getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------"
         )
         Left(e)
     }
@@ -95,12 +83,11 @@ class CommentServiceImpl @Inject() (
       postAttachment: (String) => Option[Long]
   )(backlogComment: BacklogComment): ImportUpdateIssueParams = {
     logger.debug(
-      s"    [Start Create Comment][Comment Date]:issueId[${issueId}] created[${backlogComment.optCreated
-        .getOrElse("")}]"
+      s"    [Start Create Comment][Comment Date]:issueId[${issueId}] created[${backlogComment.optCreated.getOrElse("")}]"
     )
 
     val optCurrentIssue = issueService.optIssueOfId(issueId)
-    val params = new ImportUpdateIssueParams(issueId)
+    val params          = new ImportUpdateIssueParams(issueId)
 
     //comment
     for { content <- backlogComment.optContent } yield {
@@ -108,10 +95,7 @@ class CommentServiceImpl @Inject() (
     }
 
     //notificationUserIds
-    val notifiedUserIds = backlogComment.notifications
-      .flatMap(_.optUser)
-      .flatMap(_.optUserId)
-      .flatMap(propertyResolver.optResolvedUserId)
+    val notifiedUserIds = backlogComment.notifications.flatMap(_.optUser).flatMap(_.optUserId).flatMap(propertyResolver.optResolvedUserId)
     params.notifiedUserIds(notifiedUserIds.asJava)
 
     //created updated
@@ -123,8 +107,8 @@ class CommentServiceImpl @Inject() (
     //created updated user id
     for {
       createdUser <- backlogComment.optCreatedUser
-      userId <- createdUser.optUserId
-      id <- propertyResolver.optResolvedUserId(userId)
+      userId      <- createdUser.optUserId
+      id          <- propertyResolver.optResolvedUserId(userId)
     } yield params.updatedUserId(id)
 
     //changelog
@@ -146,9 +130,7 @@ class CommentServiceImpl @Inject() (
 
   private[this] def updateIssue(params: ImportUpdateIssueParams): Boolean = {
     val paramList = params.getParamList.asScala
-    paramList.foreach(p =>
-      logger.debug(s"        [Comment Parameter]:${p.getName}:${p.getValue}")
-    )
+    paramList.foreach(p => logger.debug(s"        [Comment Parameter]:${p.getName}:${p.getValue}"))
     if (
       paramList.exists(p => p.getName == "created") &&
       paramList.exists(p => p.getName == "updated") &&
@@ -279,11 +261,7 @@ class CommentServiceImpl @Inject() (
     changeLog.optNewValue match {
       case Some("") => params.categoryIds(null)
       case Some(value) =>
-        val ids = value
-          .split(",")
-          .toSeq
-          .map(_.trim)
-          .flatMap(propertyResolver.optResolvedCategoryId)
+        val ids = value.split(",").toSeq.map(_.trim).flatMap(propertyResolver.optResolvedCategoryId)
         if (ids.nonEmpty) params.categoryIds(ids.asJava)
         else params.categoryIds(null)
       case None => params.categoryIds(null)
@@ -352,7 +330,7 @@ class CommentServiceImpl @Inject() (
       optCurrentIssue: Option[Issue]
   ) =
     for {
-      value <- changeLog.optNewValue
+      value        <- changeLog.optNewValue
       currentIssue <- optCurrentIssue
     } yield {
       for { id <- propertyResolver.optResolvedIssueTypeId(value) } yield {
@@ -368,11 +346,8 @@ class CommentServiceImpl @Inject() (
       propertyResolver: PropertyResolver
   ) =
     for {
-      value <- changeLog.optNewValue
-      priorityType <-
-        propertyResolver
-          .optResolvedPriorityId(value)
-          .map(value => PriorityType.valueOf(value.toInt))
+      value        <- changeLog.optNewValue
+      priorityType <- propertyResolver.optResolvedPriorityId(value).map(value => PriorityType.valueOf(value.toInt))
     } yield params.priority(priorityType)
 
   private[this] def setResolution(
@@ -381,9 +356,7 @@ class CommentServiceImpl @Inject() (
       propertyResolver: PropertyResolver
   ) =
     for { value <- changeLog.optNewValue } yield {
-      val optResolutionType = propertyResolver
-        .optResolvedResolutionId(value)
-        .map(value => ResolutionType.valueOf(value.toInt))
+      val optResolutionType = propertyResolver.optResolvedResolutionId(value).map(value => ResolutionType.valueOf(value.toInt))
       params.resolution(optResolutionType.getOrElse(ResolutionType.NotSet))
     }
 
@@ -433,7 +406,7 @@ class CommentServiceImpl @Inject() (
   ) =
     for {
       fileName <- changeLog.optAttachmentInfo.map(_.name)
-      id <- postAttachment(fileName)
+      id       <- postAttachment(fileName)
     } yield params.attachmentIds(Seq(Long.box(id)).asJava)
 
   private[this] def setCustomField(
@@ -444,8 +417,7 @@ class CommentServiceImpl @Inject() (
       optCreated: Option[String]
   ) =
     for {
-      customFieldSetting <-
-        propertyResolver.optResolvedCustomFieldSetting(changeLog.field)
+      customFieldSetting <- propertyResolver.optResolvedCustomFieldSetting(changeLog.field)
     } yield {
       FieldType.valueOf(customFieldSetting.typeId) match {
         case FieldType.Text =>
@@ -481,7 +453,7 @@ class CommentServiceImpl @Inject() (
   ) = {
     for {
       value <- changeLog.optNewValue
-      id <- customFieldSetting.optId
+      id    <- customFieldSetting.optId
     } yield params.textCustomField(id, value)
   }
 
@@ -492,7 +464,7 @@ class CommentServiceImpl @Inject() (
   ) = {
     for {
       value <- changeLog.optNewValue
-      id <- customFieldSetting.optId
+      id    <- customFieldSetting.optId
     } yield params.textAreaCustomField(id, value)
   }
 
@@ -545,7 +517,7 @@ class CommentServiceImpl @Inject() (
         def isItem(value: String): Boolean = {
           findItem(value).isDefined
         }
-        val listItems = newValues.filter(isItem)
+        val listItems   = newValues.filter(isItem)
         val stringItems = newValues.filterNot(isItem)
 
         val itemIds = listItems.flatMap(findItem).flatMap(_.optId)
@@ -564,10 +536,9 @@ class CommentServiceImpl @Inject() (
       customFieldSetting.property,
       customFieldSetting.optId
     ) match {
-      case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id))
-          if (value.nonEmpty) =>
+      case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id)) if (value.nonEmpty) =>
         for {
-          item <- property.items.find(_.name == value)
+          item   <- property.items.find(_.name == value)
           itemId <- item.optId
         } yield params.radioCustomField(id, itemId)
       case _ =>
@@ -580,8 +551,7 @@ class CommentServiceImpl @Inject() (
   ) =
     for { id <- customFieldSetting.optId } yield {
       (changeLog.optNewValue, customFieldSetting.property) match {
-        case (Some(value), property: BacklogCustomFieldMultipleProperty)
-            if value.nonEmpty =>
+        case (Some(value), property: BacklogCustomFieldMultipleProperty) if value.nonEmpty =>
           property.items
             .find(_.name == value)
             .flatMap(_.optId)
@@ -619,15 +589,15 @@ class CommentServiceImpl @Inject() (
             property: BacklogCustomFieldMultipleProperty,
             Some(id)
           ) =>
-        val newValues = value.split(",").toSeq.map(_.trim)
-        val listItems = newValues.filter(isItemExists(property))
+        val newValues   = value.split(",").toSeq.map(_.trim)
+        val listItems   = newValues.filter(isItemExists(property))
         val stringItems = newValues.filterNot(isItemExists(property))
-        val itemIds = listItems.flatMap(findItem(property)).flatMap(_.optId)
+        val itemIds     = listItems.flatMap(findItem(property)).flatMap(_.optId)
 
         // BLGMIGRATION-868
         newValues.diff(listItems).filter(_.nonEmpty).foreach { missingValue =>
           val srcIssueIdStr = optSrcIssueId.map(_.value).getOrElse("")
-          val createdStr = optCreated.getOrElse("")
+          val createdStr    = optCreated.getOrElse("")
           ConsoleOut.error(
             s"Cannot find custom field value. Maybe it was renamed. Name: $missingValue Source issue id: $srcIssueIdStr Created: $createdStr"
           )

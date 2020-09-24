@@ -8,18 +8,10 @@ import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.WikiWrites
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogAttachment,
-  BacklogProjectKey,
-  BacklogWiki
-}
+import com.nulabinc.backlog.migration.common.domain.{BacklogAttachment, BacklogProjectKey, BacklogWiki}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j._
-import com.nulabinc.backlog4j.api.option.{
-  AddWikiAttachmentParams,
-  GetWikisParams,
-  UpdateWikiParams
-}
+import com.nulabinc.backlog4j.api.option.{AddWikiAttachmentParams, GetWikisParams, UpdateWikiParams}
 
 import scala.jdk.CollectionConverters._
 
@@ -43,7 +35,7 @@ class WikiServiceImpl @Inject() (implicit
   override def update(wiki: BacklogWiki): Option[BacklogWiki] =
     for {
       wikiHome <- optWikiHome()
-      content <- wiki.optContent
+      content  <- wiki.optContent
     } yield {
       val params = new UpdateWikiParams(wikiHome.getId)
       params.name(wiki.name)
@@ -66,8 +58,8 @@ class WikiServiceImpl @Inject() (implicit
     //created user id
     for {
       createdUser <- wiki.optCreatedUser
-      userId <- createdUser.optUserId
-      id <- propertyResolver.optResolvedUserId(userId)
+      userId      <- createdUser.optUserId
+      id          <- propertyResolver.optResolvedUserId(userId)
     } yield params.createdUserId(id)
 
     //updated
@@ -76,8 +68,8 @@ class WikiServiceImpl @Inject() (implicit
     //updated user id
     for {
       updatedUser <- wiki.optUpdatedUser
-      userId <- updatedUser.optUserId
-      id <- propertyResolver.optResolvedUserId(userId)
+      userId      <- updatedUser.optUserId
+      id          <- propertyResolver.optResolvedUserId(userId)
     } yield params.updatedUserId(id)
 
     Convert.toBacklog(backlog.importWiki(params))
@@ -113,10 +105,7 @@ class WikiServiceImpl @Inject() (implicit
 
   private[this] def optWikiHome(): Option[Wiki] = {
     val params: GetWikisParams = new GetWikisParams(projectKey.value)
-    backlog
-      .getWikis(params)
-      .asScala
-      .find(_.getName == BacklogConstantValue.WIKI_HOME_NAME)
+    backlog.getWikis(params).asScala.find(_.getName == BacklogConstantValue.WIKI_HOME_NAME)
   }
 
 }

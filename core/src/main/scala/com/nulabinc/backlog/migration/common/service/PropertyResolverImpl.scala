@@ -1,10 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogCustomFieldSetting,
-  BacklogStatusName,
-  BacklogVersion
-}
+import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogStatusName, BacklogVersion}
 import com.nulabinc.backlog.migration.common.utils.Logging
 
 /**
@@ -24,13 +20,13 @@ class PropertyResolverImpl(
 
   private[this] val customFieldSettings =
     customFieldSettingService.allCustomFieldSettings()
-  private[this] val issueTypes = issueTypeService.allIssueTypes()
-  private[this] val categories = categoryService.allIssueCategories()
-  private[this] val versions = versionService.allVersions()
+  private[this] val issueTypes  = issueTypeService.allIssueTypes()
+  private[this] val categories  = categoryService.allIssueCategories()
+  private[this] val versions    = versionService.allVersions()
   private[this] val resolutions = resolutionService.allResolutions()
-  private[this] val users = userService.allUsers()
-  private[this] val statuses = statusService.allStatuses()
-  private[this] val priorities = priorityService.allPriorities()
+  private[this] val users       = userService.allUsers()
+  private[this] val statuses    = statusService.allStatuses()
+  private[this] val priorities  = priorityService.allPriorities()
 
   private[this] def findVersion(name: String): Option[BacklogVersion] = {
     versions.find(_.name.trim == name.trim)
@@ -100,15 +96,12 @@ class PropertyResolverImpl(
   }
 
   override def tryResolvedStatusId(name: BacklogStatusName): Int =
-    statuses
-      .findByName(name)
-      .map(_.id)
-      .getOrElse {
-        logger.debug(
-          s"[Status not found.]:${name}:${statuses.availableStatusNames.map(_.trimmed).mkString(",")}"
-        )
-        throw new RuntimeException("Status not found.")
-      }
+    statuses.findByName(name).map(_.id).getOrElse {
+      logger.debug(
+        s"[Status not found.]:${name}:${statuses.availableStatusNames.map(_.trimmed).mkString(",")}"
+      )
+      throw new RuntimeException("Status not found.")
+    }
 
   override def optResolvedResolutionId(name: String): Option[Long] = {
     val optResolution = resolutions.find(_.getName.trim == name.trim)

@@ -10,12 +10,7 @@ import com.nulabinc.backlog.migration.common.deserializers.Deserializer
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
-import com.nulabinc.backlog.migration.common.errors.{
-  MappingFileError,
-  MappingFileNotFound,
-  MappingValidationError,
-  ValidationError
-}
+import com.nulabinc.backlog.migration.common.errors.{MappingFileError, MappingFileNotFound, MappingValidationError, ValidationError}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.serializers.Serializer
 import com.nulabinc.backlog.migration.common.validators.MappingValidatorNec
@@ -32,9 +27,7 @@ private object MergedStatusMapping {
 }
 
 object StatusMappingFileService {
-  import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{
-    Mappings => MappingMessages
-  }
+  import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{Mappings => MappingMessages}
   import com.nulabinc.backlog.migration.common.shared.syntax._
 
   /**
@@ -58,10 +51,9 @@ object StatusMappingFileService {
       _ <-
         if (exists) {
           for {
-            records <-
-              StorageDSL[F].read(mappingFilePath, MappingFileService.readLine)
+            records <- StorageDSL[F].read(mappingFilePath, MappingFileService.readLine)
             mappings = MappingDeserializer.status(records)
-            result = merge(mappings, srcItems)
+            result   = merge(mappings, srcItems)
             _ <-
               if (result.addedList.nonEmpty)
                 for {
@@ -70,8 +62,7 @@ object StatusMappingFileService {
                     MappingSerializer.status(result.mergeList)
                   )
                   _ <- ConsoleDSL[F].println(
-                    MappingMessages
-                      .statusMappingMerged(mappingFilePath, result.addedList)
+                    MappingMessages.statusMappingMerged(mappingFilePath, result.addedList)
                   )
                 } yield ()
               else
@@ -112,13 +103,9 @@ object StatusMappingFileService {
       deserializer: Deserializer[CSVRecord, StatusMapping[A]]
   ): F[Either[MappingFileError, Seq[ValidatedStatusMapping[A]]]] = {
     val result = for {
-      _ <-
-        StorageDSL[F]
-          .exists(path)
-          .orError(MappingFileNotFound("status", path))
-          .handleError
+      _           <- StorageDSL[F].exists(path).orError(MappingFileNotFound("status", path)).handleError
       unvalidated <- getMappings(path).handleError
-      validated <- validateMappings(unvalidated, dstItems).lift.handleError
+      validated   <- validateMappings(unvalidated, dstItems).lift.handleError
     } yield validated
 
     result.value
@@ -152,14 +139,12 @@ object StatusMappingFileService {
       mappings: Seq[StatusMapping[A]],
       dstItems: BacklogStatuses
   ): Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] = {
-    val results = mappings
-      .map(MappingValidatorNec.validateStatusMapping(_, dstItems))
-      .foldLeft(ValidationResults.empty[A]) { (acc, item) =>
-        item match {
-          case Valid(value)   => acc.copy(values = acc.values :+ value)
-          case Invalid(error) => acc.copy(errors = acc.errors ++ error.toList)
-        }
+    val results = mappings.map(MappingValidatorNec.validateStatusMapping(_, dstItems)).foldLeft(ValidationResults.empty[A]) { (acc, item) =>
+      item match {
+        case Valid(value)   => acc.copy(values = acc.values :+ value)
+        case Invalid(error) => acc.copy(errors = acc.errors ++ error.toList)
       }
+    }
 
     results.toResult
   }

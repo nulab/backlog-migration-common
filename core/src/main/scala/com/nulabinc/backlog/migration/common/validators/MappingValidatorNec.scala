@@ -3,11 +3,7 @@ package com.nulabinc.backlog.migration.common.validators
 import cats.data.ValidatedNec
 import cats.implicits._
 import com.nulabinc.backlog.migration.common.domain.mappings._
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogStatusName,
-  BacklogStatuses,
-  BacklogUser
-}
+import com.nulabinc.backlog.migration.common.domain.{BacklogStatusName, BacklogStatuses, BacklogUser}
 import com.nulabinc.backlog.migration.common.errors.{
   DestinationItemNotFound,
   InvalidItemValue,
@@ -26,8 +22,8 @@ sealed trait MappingValidatorNec {
   ): ValidationResult[ValidatedPriorityMapping[A]] =
     validateBacklogPriority(unvalidated, dstItems).map { d =>
       new ValidatedPriorityMapping[A] {
-        override val src: A = unvalidated.src
-        override val srcDisplayValue: String = unvalidated.srcDisplayValue
+        override val src: A                          = unvalidated.src
+        override val srcDisplayValue: String         = unvalidated.srcDisplayValue
         override val dst: BacklogPriorityMappingItem = d
       }
     }
@@ -38,8 +34,8 @@ sealed trait MappingValidatorNec {
   ): ValidationResult[ValidatedStatusMapping[A]] =
     validateBacklogStatus(unvalidated, dstItems).map { d =>
       new ValidatedStatusMapping[A] {
-        override val src: A = unvalidated.src
-        override val srcDisplayValue: String = unvalidated.srcDisplayValue
+        override val src: A                        = unvalidated.src
+        override val srcDisplayValue: String       = unvalidated.srcDisplayValue
         override val dst: BacklogStatusMappingItem = d
       }
     }
@@ -50,9 +46,9 @@ sealed trait MappingValidatorNec {
   ): ValidationResult[ValidatedUserMapping[A]] =
     validateBacklogUser(unvalidated, dstItems).map { result =>
       new ValidatedUserMapping[A] {
-        override val src: A = unvalidated.src
-        override val srcDisplayValue: String = unvalidated.srcDisplayValue
-        override val dst: BacklogUserMappingItem = result._2
+        override val src: A                       = unvalidated.src
+        override val srcDisplayValue: String      = unvalidated.srcDisplayValue
+        override val dst: BacklogUserMappingItem  = result._2
         override val mappingType: UserMappingType = result._1
       }
     }
@@ -98,23 +94,20 @@ sealed trait MappingValidatorNec {
       mapping: UserMapping[A],
       dstItems: Seq[BacklogUser]
   ): ValidationResult[(UserMappingType, BacklogUserMappingItem)] =
-    mapping.optDst
-      .map(_.validNec)
-      .getOrElse(MappingValueIsNotSpecified(mapping).invalidNec)
-      .andThen { dst =>
-        validateNonEmptyString(mapping, dst.value).andThen { value =>
-          validateUserMappingType(mapping.mappingType).andThen {
-            case mappingType @ IdUserMappingType =>
-              if (dstItems.map(_.optUserId).exists(_.contains(value)))
-                (mappingType, BacklogUserMappingItem(value)).validNec
-              else DestinationItemNotFound(value).invalidNec
-            case mappingType @ MailUserMappingType =>
-              if (dstItems.map(_.optMailAddress).exists(_.contains(value)))
-                (mappingType, BacklogUserMappingItem(value)).validNec
-              else DestinationItemNotFound(value).invalidNec
-          }
+    mapping.optDst.map(_.validNec).getOrElse(MappingValueIsNotSpecified(mapping).invalidNec).andThen { dst =>
+      validateNonEmptyString(mapping, dst.value).andThen { value =>
+        validateUserMappingType(mapping.mappingType).andThen {
+          case mappingType @ IdUserMappingType =>
+            if (dstItems.map(_.optUserId).exists(_.contains(value)))
+              (mappingType, BacklogUserMappingItem(value)).validNec
+            else DestinationItemNotFound(value).invalidNec
+          case mappingType @ MailUserMappingType =>
+            if (dstItems.map(_.optMailAddress).exists(_.contains(value)))
+              (mappingType, BacklogUserMappingItem(value)).validNec
+            else DestinationItemNotFound(value).invalidNec
         }
       }
+    }
 
   private def validateUserMappingType(
       str: String

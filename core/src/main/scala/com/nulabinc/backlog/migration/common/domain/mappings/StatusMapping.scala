@@ -9,8 +9,8 @@ trait StatusMapping[A] extends Mapping[A] {
 object StatusMapping {
   def create[A](srcItem: A): StatusMapping[A] =
     new StatusMapping[A] {
-      override val src: A = srcItem
-      override val srcDisplayValue: String = ""
+      override val src: A                                   = srcItem
+      override val srcDisplayValue: String                  = ""
       override val optDst: Option[BacklogStatusMappingItem] = None
     }
 }

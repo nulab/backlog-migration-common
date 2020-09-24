@@ -4,16 +4,9 @@ import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.domain.exports.{
-  DeletedExportedBacklogStatus,
-  ExistingExportedBacklogStatus
-}
+import com.nulabinc.backlog.migration.common.domain.exports.{DeletedExportedBacklogStatus, ExistingExportedBacklogStatus}
 import com.nulabinc.backlog.migration.common.service.{PropertyResolver, _}
-import com.nulabinc.backlog.migration.common.utils.{
-  ConsoleOut,
-  Logging,
-  ProgressBar
-}
+import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging, ProgressBar}
 import com.osinka.i18n.Messages
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.ansi
@@ -111,14 +104,11 @@ private[importer] class ProjectImporter @Inject() (
     removeCustomField(propertyResolver)
     removeStatus(propertyResolver)
 
-    BacklogUnmarshaller
-      .backlogCustomFieldSettings(backlogPaths)
-      .filter(!_.delete)
-      .foreach { customFieldSetting =>
-        customFieldSettingService.update(
-          customFieldSettingService.setUpdateParams(propertyResolver)
-        )(customFieldSetting)
-      }
+    BacklogUnmarshaller.backlogCustomFieldSettings(backlogPaths).filter(!_.delete).foreach { customFieldSetting =>
+      customFieldSettingService.update(
+        customFieldSettingService.setUpdateParams(propertyResolver)
+      )(customFieldSetting)
+    }
   }
 
   private[this] def importGroup(propertyResolver: PropertyResolver): Unit = {
@@ -203,23 +193,20 @@ private[importer] class ProjectImporter @Inject() (
       BacklogUnmarshaller.statuses(backlogPaths) // Status ids are old.
 
     // Import Statuses excluding default statuses
-    val mustImportCustomStatuses = willExistDestinationStatuses
-      .filter {
-        case s: ExistingExportedBacklogStatus =>
-          projectStatuses.isCustomStatus(s.status) && projectStatuses
-            .notExistByName(s.name)
-        case s: DeletedExportedBacklogStatus =>
-          projectStatuses.notExistByName(s.name)
-      }
-      .flatMap {
-        case backlogStatus: ExistingExportedBacklogStatus =>
-          backlogStatus.status match {
-            case _: BacklogDefaultStatus => None
-            case s: BacklogCustomStatus  => Some(s)
-          }
-        case s: DeletedExportedBacklogStatus =>
-          Some(BacklogCustomStatus.create(s.name))
-      }
+    val mustImportCustomStatuses = willExistDestinationStatuses.filter {
+      case s: ExistingExportedBacklogStatus =>
+        projectStatuses.isCustomStatus(s.status) && projectStatuses.notExistByName(s.name)
+      case s: DeletedExportedBacklogStatus =>
+        projectStatuses.notExistByName(s.name)
+    }.flatMap {
+      case backlogStatus: ExistingExportedBacklogStatus =>
+        backlogStatus.status match {
+          case _: BacklogDefaultStatus => None
+          case s: BacklogCustomStatus  => Some(s)
+        }
+      case s: DeletedExportedBacklogStatus =>
+        Some(BacklogCustomStatus.create(s.name))
+    }
     val console = (ProgressBar.progress _)(
       Messages("common.statuses"),
       Messages("message.importing"),
@@ -230,16 +217,11 @@ private[importer] class ProjectImporter @Inject() (
       case (exportedStatus, index) =>
         val added = statusService.add(exportedStatus)
         console(index + 1, mustImportCustomStatuses.size)
-        added.copy(displayOrder =
-          exportedStatus.displayOrder
-        ) // Added display order is always 3999. Must update from old one.
+        added.copy(displayOrder = exportedStatus.displayOrder) // Added display order is always 3999. Must update from old one.
     }
 
     // Update display orders
-    val updatedAllDestinationStatusIds = projectStatuses
-      .append(importedCustomStatuses)
-      .sortBy(_.displayOrder)
-      .map(_.id)
+    val updatedAllDestinationStatusIds = projectStatuses.append(importedCustomStatuses).sortBy(_.displayOrder).map(_.id)
 
     statusService.updateOrder(updatedAllDestinationStatusIds)
   }
@@ -257,7 +239,7 @@ private[importer] class ProjectImporter @Inject() (
       case (projectUser, index) =>
         for {
           userId <- projectUser.optUserId
-          id <- propertyResolver.optResolvedUserId(userId)
+          id     <- propertyResolver.optResolvedUserId(userId)
         } yield projectUserService.add(id)
         console(index + 1, projectUsers.size)
     }
@@ -283,66 +265,59 @@ private[importer] class ProjectImporter @Inject() (
   }
 
   private[this] def removeVersion(propertyResolver: PropertyResolver): Unit = {
-    BacklogUnmarshaller.versions(backlogPaths).filter(_.delete).foreach {
-      version =>
-        for {
-          versionId <- propertyResolver.optResolvedVersionId(version.name)
-        } yield {
-          try {
-            versionService.remove(versionId)
-          } catch {
-            case ex: Throwable =>
-              logger.warn(
-                s"Remove version [${version.name}] failed. ${ex.getMessage}"
-              )
-          }
+    BacklogUnmarshaller.versions(backlogPaths).filter(_.delete).foreach { version =>
+      for {
+        versionId <- propertyResolver.optResolvedVersionId(version.name)
+      } yield {
+        try {
+          versionService.remove(versionId)
+        } catch {
+          case ex: Throwable =>
+            logger.warn(
+              s"Remove version [${version.name}] failed. ${ex.getMessage}"
+            )
         }
+      }
     }
   }
 
   private[this] def removeCategory(propertyResolver: PropertyResolver): Unit = {
-    BacklogUnmarshaller.issueCategories(backlogPaths).filter(_.delete).foreach {
-      category =>
-        for {
-          issueCategoryId <-
-            propertyResolver.optResolvedCategoryId(category.name)
-        } yield {
-          try {
-            issueCategoryService.remove(issueCategoryId)
-          } catch {
-            case ex: Throwable =>
-              logger.warn(
-                s"Remove category [${category.name}] failed. ${ex.getMessage}"
-              )
-          }
+    BacklogUnmarshaller.issueCategories(backlogPaths).filter(_.delete).foreach { category =>
+      for {
+        issueCategoryId <- propertyResolver.optResolvedCategoryId(category.name)
+      } yield {
+        try {
+          issueCategoryService.remove(issueCategoryId)
+        } catch {
+          case ex: Throwable =>
+            logger.warn(
+              s"Remove category [${category.name}] failed. ${ex.getMessage}"
+            )
         }
+      }
     }
   }
 
   private[this] def removeCustomField(
       propertyResolver: PropertyResolver
   ): Unit =
-    BacklogUnmarshaller
-      .backlogCustomFieldSettings(backlogPaths)
-      .filter(_.delete)
-      .foreach { backlogCustomFieldSetting =>
-        for {
-          targetCustomFieldSetting <-
-            propertyResolver.optResolvedCustomFieldSetting(
-              backlogCustomFieldSetting.name
+    BacklogUnmarshaller.backlogCustomFieldSettings(backlogPaths).filter(_.delete).foreach { backlogCustomFieldSetting =>
+      for {
+        targetCustomFieldSetting <- propertyResolver.optResolvedCustomFieldSetting(
+          backlogCustomFieldSetting.name
+        )
+        customFieldSettingId <- targetCustomFieldSetting.optId
+      } yield {
+        try {
+          customFieldSettingService.remove(customFieldSettingId)
+        } catch {
+          case ex: Throwable =>
+            logger.warn(
+              s"Remove custom field [${backlogCustomFieldSetting.name}] failed. ${ex.getMessage}"
             )
-          customFieldSettingId <- targetCustomFieldSetting.optId
-        } yield {
-          try {
-            customFieldSettingService.remove(customFieldSettingId)
-          } catch {
-            case ex: Throwable =>
-              logger.warn(
-                s"Remove custom field [${backlogCustomFieldSetting.name}] failed. ${ex.getMessage}"
-              )
-          }
         }
       }
+    }
 
   private[this] def removeStatus(propertyResolver: PropertyResolver): Unit =
     BacklogUnmarshaller

@@ -19,22 +19,19 @@ case class LocalStorageDSL() extends StorageDSL[Task] {
     Task.deferAction { implicit scheduler =>
       Task.eval {
         val is = Files.newInputStream(path)
-        Try(f(is))
-          .map { result =>
+        Try(f(is)).map { result =>
+          is.close()
+          result
+        }.recover {
+          case NonFatal(ex) =>
             is.close()
-            result
-          }
-          .recover {
-            case NonFatal(ex) =>
-              is.close()
-              throw ex
-          }
-          .get
+            throw ex
+        }.get
       }
     }
 
   override def writeFile(path: Path, content: String): Task[Unit] = {
-    val stream = new ByteArrayInputStream(content.getBytes(charset))
+    val stream      = new ByteArrayInputStream(content.getBytes(charset))
     val writeStream = Observable.fromInputStreamUnsafe(stream)
 
     writeNewFile(path, writeStream)
@@ -78,20 +75,15 @@ case class LocalStorageDSL() extends StorageDSL[Task] {
       option: StandardOpenOption
   ): Task[Unit] =
     Task.deferAction { implicit scheduler =>
-      Task
-        .fromFuture {
-          val os = Files.newOutputStream(path, option)
-          writeStream
-            .foreach { bytes =>
-              os.write(bytes)
-            }
-            .map(_ => os.close())
-            .recover {
-              case NonFatal(ex) =>
-                ex.printStackTrace()
-                os.close()
-            }
+      Task.fromFuture {
+        val os = Files.newOutputStream(path, option)
+        writeStream.foreach { bytes =>
+          os.write(bytes)
+        }.map(_ => os.close()).recover {
+          case NonFatal(ex) =>
+            ex.printStackTrace()
+            os.close()
         }
-        .map(_ => ())
+      }.map(_ => ())
     }
 }

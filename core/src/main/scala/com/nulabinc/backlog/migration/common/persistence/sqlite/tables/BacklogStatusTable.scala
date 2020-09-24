@@ -14,19 +14,17 @@ case class BacklogStatusRow(
     color: String
 ) extends Entity
 
-class BacklogStatusTable(tag: Tag)
-    extends BaseTable[BacklogStatusRow](tag, "backlog_statuses") {
+class BacklogStatusTable(tag: Tag) extends BaseTable[BacklogStatusRow](tag, "backlog_statuses") {
 
-  implicit val backlogStatusNameMapper
-      : JdbcType[BacklogStatusName] with BaseTypedType[BacklogStatusName] =
+  implicit val backlogStatusNameMapper: JdbcType[BacklogStatusName] with BaseTypedType[BacklogStatusName] =
     MappedColumnType.base[BacklogStatusName, String](
       src => src.trimmed,
       dst => BacklogStatusName(dst)
     )
 
   def name: Rep[BacklogStatusName] = column[BacklogStatusName]("name")
-  def displayOrder: Rep[Int] = column[Int]("display_order")
-  def color: Rep[String] = column[String]("color")
+  def displayOrder: Rep[Int]       = column[Int]("display_order")
+  def color: Rep[String]           = column[String]("color")
 
   override def * : ProvenShape[BacklogStatusRow] =
     (

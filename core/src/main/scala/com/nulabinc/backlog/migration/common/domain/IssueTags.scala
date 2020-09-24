@@ -6,6 +6,6 @@ trait Source
 trait Destination
 
 object IssueTags {
-  type SourceIssue = BacklogIssue @@ Source
+  type SourceIssue      = BacklogIssue @@ Source
   type DestinationIssue = BacklogIssue @@ Destination
 }

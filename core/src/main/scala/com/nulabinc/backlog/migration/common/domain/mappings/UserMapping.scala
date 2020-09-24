@@ -23,7 +23,7 @@ object UserMapping {
 }
 
 sealed abstract class UserMappingType(val value: String)
-case object IdUserMappingType extends UserMappingType("id")
+case object IdUserMappingType   extends UserMappingType("id")
 case object MailUserMappingType extends UserMappingType("mail")
 
 object UserMappingType {

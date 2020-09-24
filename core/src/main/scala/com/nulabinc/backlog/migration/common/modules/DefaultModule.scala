@@ -1,18 +1,9 @@
 package com.nulabinc.backlog.migration.common.modules
 
 import com.google.inject.AbstractModule
-import com.nulabinc.backlog.migration.common.client.{
-  BacklogAPIClient,
-  BacklogAPIClientImpl
-}
-import com.nulabinc.backlog.migration.common.conf.{
-  BacklogApiConfiguration,
-  BacklogPaths
-}
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogProjectKey,
-  PropertyValue
-}
+import com.nulabinc.backlog.migration.common.client.{BacklogAPIClient, BacklogAPIClientImpl}
+import com.nulabinc.backlog.migration.common.conf.{BacklogApiConfiguration, BacklogPaths}
+import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, PropertyValue}
 import com.nulabinc.backlog.migration.common.service._
 import com.nulabinc.backlog4j.conf.BacklogPackageConfigure
 import com.nulabinc.backlog4j.IssueType
@@ -29,16 +20,14 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
   override def configure(): Unit = {
     //base
     bind(classOf[BacklogAPIClient]).toInstance(backlog)
-    bind(classOf[BacklogProjectKey])
-      .toInstance(BacklogProjectKey(apiConfig.projectKey))
+    bind(classOf[BacklogProjectKey]).toInstance(BacklogProjectKey(apiConfig.projectKey))
     bind(classOf[BacklogPaths]).toInstance(
       new BacklogPaths(apiConfig.projectKey, apiConfig.backlogOutputPath)
     )
     bind(classOf[PropertyValue]).toInstance(createPropertyValue())
 
     bind(classOf[CommentService]).to(classOf[CommentServiceImpl])
-    bind(classOf[CustomFieldSettingService])
-      .to(classOf[CustomFieldSettingServiceImpl])
+    bind(classOf[CustomFieldSettingService]).to(classOf[CustomFieldSettingServiceImpl])
     bind(classOf[GroupService]).to(classOf[GroupServiceImpl])
     bind(classOf[IssueCategoryService]).to(classOf[IssueCategoryServiceImpl])
     bind(classOf[IssueService]).to(classOf[IssueServiceImpl])
@@ -58,7 +47,7 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
 
   private[this] def createBacklogAPIClient(): BacklogAPIClient = {
     val backlogPackageConfigure = new BacklogPackageConfigure(apiConfig.url)
-    val configure = backlogPackageConfigure.apiKey(apiConfig.key)
+    val configure               = backlogPackageConfigure.apiKey(apiConfig.key)
 
     new BacklogAPIClientImpl(configure)
   }

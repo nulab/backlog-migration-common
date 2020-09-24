@@ -12,7 +12,7 @@ object IssueKeyUtil {
   }
 
   def findIssueIndex(issueKey: String): Int = {
-    val pattern: Regex = """^[0-9A-Z_]+-(\d+)$""".r
+    val pattern: Regex      = """^[0-9A-Z_]+-(\d+)$""".r
     val pattern(issueIndex) = issueKey
     issueIndex.toInt
   }

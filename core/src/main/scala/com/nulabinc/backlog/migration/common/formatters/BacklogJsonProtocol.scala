@@ -14,16 +14,16 @@ import scala.math.BigDecimal
 
 object BacklogJsonProtocol extends DefaultJsonProtocol {
 
-  implicit val BacklogItemFormat = jsonFormat2(BacklogItem)
-  implicit val BacklogUserFormat = jsonFormat6(BacklogUser)
-  implicit val BacklogNotificationFormat = jsonFormat2(BacklogNotification)
-  implicit val BacklogOperationFormat = jsonFormat4(BacklogOperation)
-  implicit val BacklogAttachmentFormat = jsonFormat2(BacklogAttachment)
-  implicit val BacklogProjectFormat = jsonFormat6(BacklogProject)
+  implicit val BacklogItemFormat           = jsonFormat2(BacklogItem)
+  implicit val BacklogUserFormat           = jsonFormat6(BacklogUser)
+  implicit val BacklogNotificationFormat   = jsonFormat2(BacklogNotification)
+  implicit val BacklogOperationFormat      = jsonFormat4(BacklogOperation)
+  implicit val BacklogAttachmentFormat     = jsonFormat2(BacklogAttachment)
+  implicit val BacklogProjectFormat        = jsonFormat6(BacklogProject)
   implicit val BacklogProjectWrapperFormat = jsonFormat1(BacklogProjectWrapper)
-  implicit val BacklogSharedFileFormat = jsonFormat2(BacklogSharedFile)
-  implicit val BacklogGroupFormat = jsonFormat2(BacklogGroup)
-  implicit val BacklogGroupsWrapperFormat = jsonFormat1(BacklogGroupsWrapper)
+  implicit val BacklogSharedFileFormat     = jsonFormat2(BacklogSharedFile)
+  implicit val BacklogGroupFormat          = jsonFormat2(BacklogGroup)
+  implicit val BacklogGroupsWrapperFormat  = jsonFormat1(BacklogGroupsWrapper)
   implicit val BacklogProjectUsersWrapperFormat = jsonFormat1(
     BacklogProjectUsersWrapper
   )
@@ -37,15 +37,14 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogIssueCategoriesWrapperFormat = jsonFormat1(
     BacklogIssueCategoriesWrapper
   )
-  implicit val BacklogCustomFieldFormat = jsonFormat4(BacklogCustomField)
+  implicit val BacklogCustomFieldFormat   = jsonFormat4(BacklogCustomField)
   implicit val BacklogAttributeInfoFormat = jsonFormat2(BacklogAttributeInfo)
-  implicit val BacklogChangeLogFormat = jsonFormat7(BacklogChangeLog)
-  implicit val BacklogCommentFormat = jsonFormat7(BacklogComment.apply)
-  implicit val BacklogIssueSummaryFormat = jsonFormat2(BacklogIssueSummary)
+  implicit val BacklogChangeLogFormat     = jsonFormat7(BacklogChangeLog)
+  implicit val BacklogCommentFormat       = jsonFormat7(BacklogComment.apply)
+  implicit val BacklogIssueSummaryFormat  = jsonFormat2(BacklogIssueSummary)
 
   // Status
-  implicit object BacklogStatusNameFormat
-      extends JsonFormat[BacklogStatusName] {
+  implicit object BacklogStatusNameFormat extends JsonFormat[BacklogStatusName] {
     override def read(json: JsValue): BacklogStatusName =
       json match {
         case JsString(value) => BacklogStatusName(value)
@@ -91,8 +90,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   // Issue
   implicit val BacklogIssueFormat = jsonFormat22(BacklogIssue)
 
-  implicit object BacklogEventObjectFormat
-      extends RootJsonFormat[BacklogEvent] {
+  implicit object BacklogEventObjectFormat extends RootJsonFormat[BacklogEvent] {
     def write(eventObject: BacklogEvent) =
       eventObject match {
         case issue: BacklogIssue     => issue.toJson
@@ -125,8 +123,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
     BacklogCustomFieldMultipleProperty
   )
 
-  implicit object BacklogCustomFieldPropertyFormat
-      extends RootJsonFormat[BacklogCustomFieldProperty] {
+  implicit object BacklogCustomFieldPropertyFormat extends RootJsonFormat[BacklogCustomFieldProperty] {
     def write(customFieldProperty: BacklogCustomFieldProperty) =
       customFieldProperty match {
         case property: BacklogCustomFieldTextProperty     => property.toJson
@@ -136,14 +133,14 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
       }
 
     def read(value: JsValue): BacklogCustomFieldProperty = {
-      val Text = BigDecimal(FieldType.Text.getIntValue)
-      val TextArea = BigDecimal(FieldType.TextArea.getIntValue)
-      val Numeric = BigDecimal(FieldType.Numeric.getIntValue)
-      val Date = BigDecimal(FieldType.Date.getIntValue)
-      val SingleList = BigDecimal(FieldType.SingleList.getIntValue)
+      val Text         = BigDecimal(FieldType.Text.getIntValue)
+      val TextArea     = BigDecimal(FieldType.TextArea.getIntValue)
+      val Numeric      = BigDecimal(FieldType.Numeric.getIntValue)
+      val Date         = BigDecimal(FieldType.Date.getIntValue)
+      val SingleList   = BigDecimal(FieldType.SingleList.getIntValue)
       val MultipleList = BigDecimal(FieldType.MultipleList.getIntValue)
-      val CheckBox = BigDecimal(FieldType.CheckBox.getIntValue)
-      val Radio = BigDecimal(FieldType.Radio.getIntValue)
+      val CheckBox     = BigDecimal(FieldType.CheckBox.getIntValue)
+      val Radio        = BigDecimal(FieldType.Radio.getIntValue)
       value.asJsObject.fields("typeId") match {
         case JsNumber(Text) => value.convertTo[BacklogCustomFieldTextProperty]
         case JsNumber(TextArea) =>
@@ -164,8 +161,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
     }
   }
 
-  implicit val BacklogCustomFieldSettingFormat
-      : RootJsonFormat[BacklogCustomFieldSetting] =
+  implicit val BacklogCustomFieldSettingFormat: RootJsonFormat[BacklogCustomFieldSetting] =
     jsonFormat(
       BacklogCustomFieldSetting.apply,
       "id",
@@ -178,8 +174,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
       "property"
     )
 
-  implicit val BacklogCustomFieldSettingsFormat
-      : RootJsonFormat[BacklogCustomFieldSettings] =
+  implicit val BacklogCustomFieldSettingsFormat: RootJsonFormat[BacklogCustomFieldSettings] =
     jsonFormat(BacklogCustomFieldSettings.apply, "backlogCustomFieldSettings")
 
   implicit val BacklogWikiFormat: RootJsonFormat[BacklogWiki] =
@@ -201,7 +196,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogVersionsWrapperFormat = jsonFormat1(
     BacklogVersionsWrapper
   )
-  implicit val BacklogSpaceFormat = jsonFormat3(BacklogSpace)
+  implicit val BacklogSpaceFormat       = jsonFormat3(BacklogSpace)
   implicit val BacklogEnvironmentFormat = jsonFormat2(BacklogEnvironment)
 
   implicit val existingBacklogStatusFormat =
@@ -210,8 +205,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
     jsonFormat(DeletedExportedBacklogStatus.apply _, "status")
 
   // Export and Import
-  implicit object ExportedBacklogStatusFormat
-      extends RootJsonFormat[ExportedBacklogStatus] {
+  implicit object ExportedBacklogStatusFormat extends RootJsonFormat[ExportedBacklogStatus] {
     override def read(json: JsValue): ExportedBacklogStatus =
       json.asJsObject.getFields("type", "value") match {
         case Seq(JsString(valueType), status) =>
@@ -229,12 +223,12 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
       obj match {
         case s: ExistingExportedBacklogStatus =>
           JsObject(
-            "type" -> JsString("existing"),
+            "type"  -> JsString("existing"),
             "value" -> s.toJson
           )
         case s: DeletedExportedBacklogStatus =>
           JsObject(
-            "type" -> JsString("deleted"),
+            "type"  -> JsString("deleted"),
             "value" -> s.toJson
           )
       }

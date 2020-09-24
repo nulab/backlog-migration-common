@@ -3,19 +3,9 @@ package com.nulabinc.backlog.migration.importer.service
 import better.files.{File => Path}
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogAttachment,
-  BacklogComment,
-  BacklogIssue,
-  BacklogProject
-}
+import com.nulabinc.backlog.migration.common.domain.{BacklogAttachment, BacklogComment, BacklogIssue, BacklogProject}
 import com.nulabinc.backlog.migration.common.service._
-import com.nulabinc.backlog.migration.common.utils.{
-  ConsoleOut,
-  IssueKeyUtil,
-  Logging,
-  _
-}
+import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, IssueKeyUtil, Logging, _}
 import com.nulabinc.backlog.migration.importer.core.RetryException
 import com.nulabinc.backlog4j.BacklogAPIException
 import com.osinka.i18n.Messages
@@ -34,7 +24,7 @@ private[importer] class IssuesImporter @Inject() (
 
   import com.nulabinc.backlog.migration.importer.core.RetryUtil._
 
-  private[this] val console = new IssueProgressBar()
+  private[this] val console       = new IssueProgressBar()
   private[this] val retryInterval = 5000
 
   def execute(
@@ -51,9 +41,7 @@ private[importer] class IssuesImporter @Inject() (
 
     implicit val context =
       IssueContext(project, propertyResolver, fitIssueKey, retryCount)
-    val paths = IOUtil
-      .directoryPaths(backlogPaths.issueDirectoryPath)
-      .sortWith(_.name < _.name)
+    val paths = IOUtil.directoryPaths(backlogPaths.issueDirectoryPath).sortWith(_.name < _.name)
     paths.zipWithIndex.foreach {
       case (path, index) =>
         loadDateDirectory(path, index)
@@ -116,14 +104,13 @@ private[importer] class IssuesImporter @Inject() (
       )
     } else {
       issueService.create(
-        issueService
-          .setCreateParam(
-            ctx.project.id,
-            ctx.propertyResolver,
-            ctx.toRemoteIssueId,
-            postAttachment(path, index, size),
-            issueService.issueOfId
-          )
+        issueService.setCreateParam(
+          ctx.project.id,
+          ctx.propertyResolver,
+          ctx.toRemoteIssueId,
+          postAttachment(path, index, size),
+          issueService.issueOfId
+        )
       )(issue) match {
         case Right(remoteIssue) =>
           sharedFileService.linkIssueSharedFile(remoteIssue.id, issue)
@@ -141,7 +128,7 @@ private[importer] class IssuesImporter @Inject() (
       index: Int,
       size: Int
   )(implicit ctx: IssueContext): Unit = {
-    val optIssueIndex = issue.optIssueKey.map(IssueKeyUtil.findIssueIndex)
+    val optIssueIndex  = issue.optIssueKey.map(IssueKeyUtil.findIssueIndex)
     val prevIssueIndex = ctx.optPrevIssueIndex.getOrElse(0)
 
     for {
@@ -156,8 +143,8 @@ private[importer] class IssuesImporter @Inject() (
     ctx.optPrevIssueIndex = optIssueIndex
   }
 
-  private[this] def createDummyIssue(dummyIndex: Int, index: Int, size: Int)(
-      implicit ctx: IssueContext
+  private[this] def createDummyIssue(dummyIndex: Int, index: Int, size: Int)(implicit
+      ctx: IssueContext
   ) = {
     val dummyIssue =
       issueService.createDummy(ctx.project.id, ctx.propertyResolver)
@@ -189,10 +176,7 @@ private[importer] class IssuesImporter @Inject() (
       try {
         retry(ctx.retryCount, retryInterval, classOf[BacklogAPIException]) {
           commentService.update(setUpdatedParam)(comment) match {
-            case Left(e)
-                if Option(e.getMessage)
-                  .getOrElse("")
-                  .contains("Please change the status or post a comment.") =>
+            case Left(e) if Option(e.getMessage).getOrElse("").contains("Please change the status or post a comment.") =>
               logger.warn(e.getMessage, e)
             case Left(e) =>
               throw e
@@ -216,38 +200,32 @@ private[importer] class IssuesImporter @Inject() (
     }
 
     def deleteAttachment(remoteIssueId: Long) =
-      comment.changeLogs
-        .filter { _.mustDeleteAttachment }
-        .map { changeLog =>
-          val issueAttachments =
-            attachmentService.allAttachmentsOfIssue(remoteIssueId) match {
-              case Right(attachments) => attachments
-              case Left(_)            => Seq.empty[BacklogAttachment]
-            }
-          for {
-            attachmentInfo <- changeLog.optAttachmentInfo
-            attachment <-
-              issueAttachments
-                .sortBy(_.optId)
-                .find(_.name == attachmentInfo.name)
-            attachmentId <- attachment.optId
-            createdUser <- comment.optCreatedUser
-            createdUserId <- createdUser.optUserId
-            solvedCreatedUserId <-
-              ctx.propertyResolver.optResolvedUserId(createdUserId)
-            created <- comment.optCreated
-          } yield {
-            issueService.deleteAttachment(
-              remoteIssueId,
-              attachmentId,
-              solvedCreatedUserId,
-              created
-            )
+      comment.changeLogs.filter { _.mustDeleteAttachment }.map { changeLog =>
+        val issueAttachments =
+          attachmentService.allAttachmentsOfIssue(remoteIssueId) match {
+            case Right(attachments) => attachments
+            case Left(_)            => Seq.empty[BacklogAttachment]
           }
+        for {
+          attachmentInfo      <- changeLog.optAttachmentInfo
+          attachment          <- issueAttachments.sortBy(_.optId).find(_.name == attachmentInfo.name)
+          attachmentId        <- attachment.optId
+          createdUser         <- comment.optCreatedUser
+          createdUserId       <- createdUser.optUserId
+          solvedCreatedUserId <- ctx.propertyResolver.optResolvedUserId(createdUserId)
+          created             <- comment.optCreated
+        } yield {
+          issueService.deleteAttachment(
+            remoteIssueId,
+            attachmentId,
+            solvedCreatedUserId,
+            created
+          )
         }
+      }
 
     for {
-      issueId <- comment.optIssueId
+      issueId       <- comment.optIssueId
       remoteIssueId <- ctx.toRemoteIssueId(issueId)
     } yield {
       if (!ctx.excludeIssueIds.contains(issueId)) {

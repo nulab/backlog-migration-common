@@ -3,27 +3,11 @@ package com.nulabinc.backlog.migration.importer.service
 import javax.inject.Inject
 
 import better.files.{File => Path}
-import com.nulabinc.backlog.migration.common.conf.{
-  BacklogConstantValue,
-  BacklogPaths
-}
+import com.nulabinc.backlog.migration.common.conf.{BacklogConstantValue, BacklogPaths}
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogAttachment,
-  BacklogWiki
-}
-import com.nulabinc.backlog.migration.common.service.{
-  AttachmentService,
-  PropertyResolver,
-  SharedFileService,
-  WikiService
-}
-import com.nulabinc.backlog.migration.common.utils.{
-  ConsoleOut,
-  IOUtil,
-  Logging,
-  ProgressBar
-}
+import com.nulabinc.backlog.migration.common.domain.{BacklogAttachment, BacklogWiki}
+import com.nulabinc.backlog.migration.common.service.{AttachmentService, PropertyResolver, SharedFileService, WikiService}
+import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, IOUtil, Logging, ProgressBar}
 import com.osinka.i18n.Messages
 
 /**
@@ -37,7 +21,7 @@ private[importer] class WikisImporter @Inject() (
 ) extends Logging {
 
   def execute(projectId: Long, propertyResolver: PropertyResolver) = {
-    val paths = IOUtil.directoryPaths(backlogPaths.wikiDirectoryPath)
+    val paths    = IOUtil.directoryPaths(backlogPaths.wikiDirectoryPath)
     val allWikis = wikiService.allWikis()
 
     def exists(wikiName: String): Boolean = {
@@ -62,7 +46,7 @@ private[importer] class WikisImporter @Inject() (
     wikiDirs.zipWithIndex.foreach {
       case (wikiDir, index) =>
         for {
-          wiki <- unmarshal(wikiDir)
+          wiki    <- unmarshal(wikiDir)
           created <- create(projectId, propertyResolver, wiki)
         } yield postCreate(created.id, wikiDir, wiki)
         console(index + 1, wikiDirs.size)

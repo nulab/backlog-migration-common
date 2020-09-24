@@ -2,12 +2,7 @@ package com.nulabinc.backlog.migration.importer.service
 
 import java.util.Date
 
-import com.nulabinc.backlog.migration.common.utils.{
-  ConsoleOut,
-  DateUtil,
-  Logging,
-  ProgressBar
-}
+import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, DateUtil, Logging, ProgressBar}
 import com.osinka.i18n.Messages
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.Color._
@@ -19,16 +14,16 @@ import org.fusesource.jansi.Ansi.ansi
 private[importer] class IssueProgressBar() extends Logging {
 
   var totalSize = 0
-  var count = 0
-  var failed = 0
-  var date = ""
+  var count     = 0
+  var failed    = 0
+  var date      = ""
 
-  private[this] var newLine = false
+  private[this] var newLine       = false
   private[this] var isMessageMode = false
-  private[this] val timer = (timerFunc _)()
+  private[this] val timer         = (timerFunc _)()
 
   private[this] def timerFunc() = {
-    var tempTime: Long = System.currentTimeMillis()
+    var tempTime: Long         = System.currentTimeMillis()
     var totalElapsedTime: Long = 0
     () =>
       {
@@ -36,7 +31,7 @@ private[importer] class IssueProgressBar() extends Logging {
         totalElapsedTime = totalElapsedTime + elapsedTime
         val average: Float = totalElapsedTime.toFloat / count.toFloat
         tempTime = System.currentTimeMillis()
-        val remaining = totalSize - count
+        val remaining           = totalSize - count
         val remainingTime: Long = (remaining * average).toLong
 
         DateUtil.timeFormat(new Date(remainingTime))
@@ -59,11 +54,7 @@ private[importer] class IssueProgressBar() extends Logging {
   ) = {
     clear()
     val message =
-      s"""${(" " * 11) + ansi()
-        .fg(color)
-        .a(value.replaceAll("\n", ""))
-        .reset()
-        .toString}
+      s"""${(" " * 11) + ansi().fg(color).a(value.replaceAll("\n", "")).reset().toString}
          |${current(indexOfDate, totalOfDate)}
          |--------------------------------------------------
          |${remaining()}""".stripMargin
@@ -121,8 +112,8 @@ private[importer] class IssueProgressBar() extends Logging {
 
   private[this] def remaining(): String = {
     val progressBar = ProgressBar.progressBar(count + 1, totalSize)
-    val message = Messages("import.progress", count + 1, totalSize)
-    val time = Messages("import.remaining_time", timer())
+    val message     = Messages("import.progress", count + 1, totalSize)
+    val time        = Messages("import.remaining_time", timer())
     s"${progressBar} ${message}${time}"
   }
 

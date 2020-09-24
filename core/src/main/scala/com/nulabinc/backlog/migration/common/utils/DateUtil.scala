@@ -8,17 +8,17 @@ import java.util.{Date, TimeZone}
   */
 object DateUtil {
 
-  private[this] val ISO_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXXX"
-  private[this] val DATE_FORMAT = "yyyy-MM-dd"
+  private[this] val ISO_FORMAT        = "yyyy-MM-dd'T'HH:mm:ssXXX"
+  private[this] val DATE_FORMAT       = "yyyy-MM-dd"
   private[this] val SLASH_DATE_FORMAT = "yyyy/MM/dd"
-  private[this] val YYYYMMDD_FORMAT = "yyyyMMdd"
-  private[this] val TIME_FORMAT = "HH:mm:ss"
+  private[this] val YYYYMMDD_FORMAT   = "yyyyMMdd"
+  private[this] val TIME_FORMAT       = "HH:mm:ss"
 
-  private[this] val ISO = new SimpleDateFormat(ISO_FORMAT)
-  private[this] val DATE = new SimpleDateFormat(DATE_FORMAT)
-  private[this] val SLASH = new SimpleDateFormat(SLASH_DATE_FORMAT)
+  private[this] val ISO      = new SimpleDateFormat(ISO_FORMAT)
+  private[this] val DATE     = new SimpleDateFormat(DATE_FORMAT)
+  private[this] val SLASH    = new SimpleDateFormat(SLASH_DATE_FORMAT)
   private[this] val YYYYMMDD = new SimpleDateFormat(YYYYMMDD_FORMAT)
-  private[this] val TIME = new SimpleDateFormat(TIME_FORMAT)
+  private[this] val TIME     = new SimpleDateFormat(TIME_FORMAT)
   TIME.setTimeZone(TimeZone.getTimeZone("UTC"))
 
   def slashFormat(date: Date): String = {
