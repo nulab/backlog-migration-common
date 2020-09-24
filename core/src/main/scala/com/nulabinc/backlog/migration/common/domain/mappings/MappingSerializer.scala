@@ -2,7 +2,11 @@ package com.nulabinc.backlog.migration.common.domain.mappings
 
 import java.nio.charset.{Charset, StandardCharsets}
 
-import com.nulabinc.backlog.migration.common.domain.{BacklogStatusName, BacklogStatuses, BacklogUser}
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogStatusName,
+  BacklogStatuses,
+  BacklogUser
+}
 import com.nulabinc.backlog.migration.common.serializers.Serializer
 import com.nulabinc.backlog4j.Priority
 import monix.reactive.Observable
@@ -57,7 +61,11 @@ object MappingSerializer {
   private def toObservable[A](
       items: Seq[A]
   )(implicit serializer: Serializer[A, Seq[String]]): Observable[Array[Byte]] =
-    Observable.fromIteratorUnsafe(items.iterator).map(serializer.serialize).map(toRow).map(toByteArray)
+    Observable
+      .fromIteratorUnsafe(items.iterator)
+      .map(serializer.serialize)
+      .map(toRow)
+      .map(toByteArray)
 
   private def toRow(values: Seq[String]): String =
     s""""${values.mkString("\",\"")}\"\n""".stripMargin

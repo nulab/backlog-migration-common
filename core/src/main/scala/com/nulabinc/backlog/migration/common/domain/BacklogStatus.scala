@@ -77,8 +77,7 @@ object BacklogCustomStatus {
     BacklogCustomStatus(
       id = Int.MinValue,
       name = name,
-      displayOrder =
-        3999, // undefined custom status order must be before [Closed]
+      displayOrder = 3999, // undefined custom status order must be before [Closed]
       color = CustomStatusColor.Color1.getStrValue
     )
 

@@ -9,8 +9,7 @@ import monix.execution.Scheduler
 import monix.reactive.Observable
 import slick.jdbc.SQLiteProfile.api._
 
-case class SQLiteStoreDSL(dbPath: Path)(implicit sc: Scheduler)
-    extends StoreDSL[Task] {
+case class SQLiteStoreDSL(dbPath: Path)(implicit sc: Scheduler) extends StoreDSL[Task] {
 
   private val db = Database.forURL(
     s"jdbc:sqlite:${dbPath.toAbsolutePath}",

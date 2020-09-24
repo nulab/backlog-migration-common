@@ -9,8 +9,7 @@ import scala.jdk.CollectionConverters._
 /**
   * @author uchida
   */
-class ResolutionServiceImpl @Inject() (backlog: BacklogAPIClient)
-    extends ResolutionService {
+class ResolutionServiceImpl @Inject() (backlog: BacklogAPIClient) extends ResolutionService {
 
   override def allResolutions(): Seq[Resolution] =
     backlog.getResolutions.asScala.toSeq

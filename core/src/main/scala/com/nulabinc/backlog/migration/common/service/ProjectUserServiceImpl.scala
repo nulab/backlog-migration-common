@@ -4,10 +4,7 @@ import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.UserWrites
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogProjectKey,
-  BacklogUser
-}
+import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, BacklogUser}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.BacklogAPIException
 

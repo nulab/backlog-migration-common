@@ -4,7 +4,10 @@ import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.domain.exports.{DeletedExportedBacklogStatus, ExistingExportedBacklogStatus}
+import com.nulabinc.backlog.migration.common.domain.exports.{
+  DeletedExportedBacklogStatus,
+  ExistingExportedBacklogStatus
+}
 import com.nulabinc.backlog.migration.common.service.{PropertyResolver, _}
 import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging, ProgressBar}
 import com.osinka.i18n.Messages
@@ -104,10 +107,11 @@ private[importer] class ProjectImporter @Inject() (
     removeCustomField(propertyResolver)
     removeStatus(propertyResolver)
 
-    BacklogUnmarshaller.backlogCustomFieldSettings(backlogPaths).filter(!_.delete).foreach { customFieldSetting =>
-      customFieldSettingService.update(
-        customFieldSettingService.setUpdateParams(propertyResolver)
-      )(customFieldSetting)
+    BacklogUnmarshaller.backlogCustomFieldSettings(backlogPaths).filter(!_.delete).foreach {
+      customFieldSetting =>
+        customFieldSettingService.update(
+          customFieldSettingService.setUpdateParams(propertyResolver)
+        )(customFieldSetting)
     }
   }
 
@@ -217,11 +221,14 @@ private[importer] class ProjectImporter @Inject() (
       case (exportedStatus, index) =>
         val added = statusService.add(exportedStatus)
         console(index + 1, mustImportCustomStatuses.size)
-        added.copy(displayOrder = exportedStatus.displayOrder) // Added display order is always 3999. Must update from old one.
+        added.copy(displayOrder =
+          exportedStatus.displayOrder
+        ) // Added display order is always 3999. Must update from old one.
     }
 
     // Update display orders
-    val updatedAllDestinationStatusIds = projectStatuses.append(importedCustomStatuses).sortBy(_.displayOrder).map(_.id)
+    val updatedAllDestinationStatusIds =
+      projectStatuses.append(importedCustomStatuses).sortBy(_.displayOrder).map(_.id)
 
     statusService.updateOrder(updatedAllDestinationStatusIds)
   }
@@ -301,22 +308,23 @@ private[importer] class ProjectImporter @Inject() (
   private[this] def removeCustomField(
       propertyResolver: PropertyResolver
   ): Unit =
-    BacklogUnmarshaller.backlogCustomFieldSettings(backlogPaths).filter(_.delete).foreach { backlogCustomFieldSetting =>
-      for {
-        targetCustomFieldSetting <- propertyResolver.optResolvedCustomFieldSetting(
-          backlogCustomFieldSetting.name
-        )
-        customFieldSettingId <- targetCustomFieldSetting.optId
-      } yield {
-        try {
-          customFieldSettingService.remove(customFieldSettingId)
-        } catch {
-          case ex: Throwable =>
-            logger.warn(
-              s"Remove custom field [${backlogCustomFieldSetting.name}] failed. ${ex.getMessage}"
-            )
+    BacklogUnmarshaller.backlogCustomFieldSettings(backlogPaths).filter(_.delete).foreach {
+      backlogCustomFieldSetting =>
+        for {
+          targetCustomFieldSetting <- propertyResolver.optResolvedCustomFieldSetting(
+            backlogCustomFieldSetting.name
+          )
+          customFieldSettingId <- targetCustomFieldSetting.optId
+        } yield {
+          try {
+            customFieldSettingService.remove(customFieldSettingId)
+          } catch {
+            case ex: Throwable =>
+              logger.warn(
+                s"Remove custom field [${backlogCustomFieldSetting.name}] failed. ${ex.getMessage}"
+              )
+          }
         }
-      }
     }
 
   private[this] def removeStatus(propertyResolver: PropertyResolver): Unit =

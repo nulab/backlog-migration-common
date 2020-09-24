@@ -50,7 +50,9 @@ class CommentServiceImpl @Inject() (
         loop(optLastId, comments concat commentsPart, offset + 100)
       } else comments
 
-    loop(None, Seq.empty[IssueComment], 0).sortWith((c1, c2) => c1.getCreated.before(c2.getCreated)).map(Convert.toBacklog(_))
+    loop(None, Seq.empty[IssueComment], 0)
+      .sortWith((c1, c2) => c1.getCreated.before(c2.getCreated))
+      .map(Convert.toBacklog(_))
   }
 
   override def update(
@@ -60,17 +62,20 @@ class CommentServiceImpl @Inject() (
       val noUpdate = updateIssue(setUpdateParam(backlogComment))
       if (noUpdate)
         logger.debug(
-          s"    [Success Finish No Update Comment]:issueId[${backlogComment.optIssueId.getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------"
+          s"    [Success Finish No Update Comment]:issueId[${backlogComment.optIssueId
+            .getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------"
         )
       else
         logger.debug(
-          s"    [Success Finish Create Comment]:issueId[${backlogComment.optIssueId.getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------"
+          s"    [Success Finish Create Comment]:issueId[${backlogComment.optIssueId
+            .getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------"
         )
       Right(backlogComment)
     } catch {
       case e: Throwable =>
         logger.debug(
-          s"    [Fail Finish Create Comment]:issueId[${backlogComment.optIssueId.getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------"
+          s"    [Fail Finish Create Comment]:issueId[${backlogComment.optIssueId
+            .getOrElse("")}] created[${backlogComment.optCreated.getOrElse("")}]----------------------------"
         )
         Left(e)
     }
@@ -83,7 +88,8 @@ class CommentServiceImpl @Inject() (
       postAttachment: (String) => Option[Long]
   )(backlogComment: BacklogComment): ImportUpdateIssueParams = {
     logger.debug(
-      s"    [Start Create Comment][Comment Date]:issueId[${issueId}] created[${backlogComment.optCreated.getOrElse("")}]"
+      s"    [Start Create Comment][Comment Date]:issueId[${issueId}] created[${backlogComment.optCreated
+        .getOrElse("")}]"
     )
 
     val optCurrentIssue = issueService.optIssueOfId(issueId)
@@ -95,7 +101,10 @@ class CommentServiceImpl @Inject() (
     }
 
     //notificationUserIds
-    val notifiedUserIds = backlogComment.notifications.flatMap(_.optUser).flatMap(_.optUserId).flatMap(propertyResolver.optResolvedUserId)
+    val notifiedUserIds = backlogComment.notifications
+      .flatMap(_.optUser)
+      .flatMap(_.optUserId)
+      .flatMap(propertyResolver.optResolvedUserId)
     params.notifiedUserIds(notifiedUserIds.asJava)
 
     //created updated
@@ -346,8 +355,11 @@ class CommentServiceImpl @Inject() (
       propertyResolver: PropertyResolver
   ) =
     for {
-      value        <- changeLog.optNewValue
-      priorityType <- propertyResolver.optResolvedPriorityId(value).map(value => PriorityType.valueOf(value.toInt))
+      value <- changeLog.optNewValue
+      priorityType <-
+        propertyResolver
+          .optResolvedPriorityId(value)
+          .map(value => PriorityType.valueOf(value.toInt))
     } yield params.priority(priorityType)
 
   private[this] def setResolution(
@@ -356,7 +368,9 @@ class CommentServiceImpl @Inject() (
       propertyResolver: PropertyResolver
   ) =
     for { value <- changeLog.optNewValue } yield {
-      val optResolutionType = propertyResolver.optResolvedResolutionId(value).map(value => ResolutionType.valueOf(value.toInt))
+      val optResolutionType = propertyResolver
+        .optResolvedResolutionId(value)
+        .map(value => ResolutionType.valueOf(value.toInt))
       params.resolution(optResolutionType.getOrElse(ResolutionType.NotSet))
     }
 
@@ -536,7 +550,8 @@ class CommentServiceImpl @Inject() (
       customFieldSetting.property,
       customFieldSetting.optId
     ) match {
-      case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id)) if (value.nonEmpty) =>
+      case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id))
+          if (value.nonEmpty) =>
         for {
           item   <- property.items.find(_.name == value)
           itemId <- item.optId

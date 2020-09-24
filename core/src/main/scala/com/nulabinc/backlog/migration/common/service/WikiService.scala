@@ -2,10 +2,7 @@ package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
 
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogAttachment,
-  BacklogWiki
-}
+import com.nulabinc.backlog.migration.common.domain.{BacklogAttachment, BacklogWiki}
 
 /**
   * @author uchida

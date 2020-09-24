@@ -9,8 +9,7 @@ import scala.jdk.CollectionConverters._
 /**
   * @author uchida
   */
-class PriorityServiceImpl @Inject() (backlog: BacklogAPIClient)
-    extends PriorityService {
+class PriorityServiceImpl @Inject() (backlog: BacklogAPIClient) extends PriorityService {
 
   override def allPriorities(): Seq[Priority] =
     backlog.getPriorities.asScala.toSeq

@@ -123,7 +123,8 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
     BacklogCustomFieldMultipleProperty
   )
 
-  implicit object BacklogCustomFieldPropertyFormat extends RootJsonFormat[BacklogCustomFieldProperty] {
+  implicit object BacklogCustomFieldPropertyFormat
+      extends RootJsonFormat[BacklogCustomFieldProperty] {
     def write(customFieldProperty: BacklogCustomFieldProperty) =
       customFieldProperty match {
         case property: BacklogCustomFieldTextProperty     => property.toJson

@@ -1,6 +1,10 @@
 package com.nulabinc.backlog.migration.common.service
 
-import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, BacklogStatusName, BacklogVersion}
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogCustomFieldSetting,
+  BacklogStatusName,
+  BacklogVersion
+}
 import com.nulabinc.backlog.migration.common.utils.Logging
 
 /**

@@ -16,7 +16,8 @@ case class BacklogStatusRow(
 
 class BacklogStatusTable(tag: Tag) extends BaseTable[BacklogStatusRow](tag, "backlog_statuses") {
 
-  implicit val backlogStatusNameMapper: JdbcType[BacklogStatusName] with BaseTypedType[BacklogStatusName] =
+  implicit val backlogStatusNameMapper
+      : JdbcType[BacklogStatusName] with BaseTypedType[BacklogStatusName] =
     MappedColumnType.base[BacklogStatusName, String](
       src => src.trimmed,
       dst => BacklogStatusName(dst)

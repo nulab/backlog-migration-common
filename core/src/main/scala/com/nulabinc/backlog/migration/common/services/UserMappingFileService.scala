@@ -11,7 +11,12 @@ import com.nulabinc.backlog.migration.common.deserializers.Deserializer
 import com.nulabinc.backlog.migration.common.domain.BacklogUser
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
-import com.nulabinc.backlog.migration.common.errors.{MappingFileError, MappingFileNotFound, MappingValidationError, ValidationError}
+import com.nulabinc.backlog.migration.common.errors.{
+  MappingFileError,
+  MappingFileNotFound,
+  MappingValidationError,
+  ValidationError
+}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.serializers.Serializer
 import com.nulabinc.backlog.migration.common.validators.MappingValidatorNec
@@ -28,7 +33,9 @@ private object MergedUserMapping {
 }
 
 object UserMappingFileService {
-  import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{Mappings => MappingMessages}
+  import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{
+    Mappings => MappingMessages
+  }
   import com.nulabinc.backlog.migration.common.shared.syntax._
 
   def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](
@@ -136,12 +143,14 @@ object UserMappingFileService {
       mappings: Seq[UserMapping[A]],
       dstItems: Seq[BacklogUser]
   ): Either[MappingFileError, Seq[ValidatedUserMapping[A]]] = {
-    val results = mappings.map(MappingValidatorNec.validateUserMapping(_, dstItems)).foldLeft(ValidationResults.empty[A]) { (acc, item) =>
-      item match {
-        case Valid(value)   => acc.copy(values = acc.values :+ value)
-        case Invalid(error) => acc.copy(errors = acc.errors ++ error.toList)
+    val results = mappings
+      .map(MappingValidatorNec.validateUserMapping(_, dstItems))
+      .foldLeft(ValidationResults.empty[A]) { (acc, item) =>
+        item match {
+          case Valid(value)   => acc.copy(values = acc.values :+ value)
+          case Invalid(error) => acc.copy(errors = acc.errors ++ error.toList)
+        }
       }
-    }
 
     results.toResult
   }

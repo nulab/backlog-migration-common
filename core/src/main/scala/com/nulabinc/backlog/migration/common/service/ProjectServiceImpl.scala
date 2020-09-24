@@ -31,10 +31,7 @@ class ProjectServiceImpl @Inject() (implicit
       Some(Convert.toBacklog(backlog.getProject(projectKey)))
     } catch {
       case e: BacklogAPIException =>
-        if (
-          !(e.getMessage
-            .contains("No project") || e.getMessage.contains("No such project"))
-        ) {
+        if (!(e.getMessage.contains("No project") || e.getMessage.contains("No such project"))) {
           logger.error(e.getMessage, e)
         }
         None

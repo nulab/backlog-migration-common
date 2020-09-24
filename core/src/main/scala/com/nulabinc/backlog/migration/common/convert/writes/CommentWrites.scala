@@ -4,11 +4,7 @@ import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.convert.{Convert, Writes}
 import com.nulabinc.backlog.migration.common.domain.BacklogComment
-import com.nulabinc.backlog.migration.common.utils.{
-  DateUtil,
-  Logging,
-  StringUtil
-}
+import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUtil}
 import com.nulabinc.backlog4j.IssueComment
 
 import scala.jdk.CollectionConverters._
@@ -29,8 +25,7 @@ private[common] class CommentWrites @Inject() (
       optIssueId = None,
       optContent = Option(comment.getContent).map(StringUtil.toSafeString),
       changeLogs = comment.getChangeLog.asScala.toSeq.map(Convert.toBacklog(_)),
-      notifications =
-        comment.getNotifications.asScala.toSeq.map(Convert.toBacklog(_)),
+      notifications = comment.getNotifications.asScala.toSeq.map(Convert.toBacklog(_)),
       optCreatedUser = Option(comment.getCreatedUser).map(Convert.toBacklog(_)),
       optCreated = Option(comment.getCreated).map(DateUtil.isoFormat)
     )

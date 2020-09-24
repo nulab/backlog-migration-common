@@ -32,8 +32,7 @@ class CustomFieldSettingWrites @Inject() (propertyValue: PropertyValue)
           customFieldSetting.getApplicableIssueTypes.toIndexedSeq,
           propertyValue.issueTypes
         ),
-        property =
-          BacklogCustomFieldTextProperty(customFieldSetting.getFieldTypeId),
+        property = BacklogCustomFieldTextProperty(customFieldSetting.getFieldTypeId),
         delete = false
       )
     customFieldSetting.getFieldType match {
@@ -123,8 +122,7 @@ class CustomFieldSettingWrites @Inject() (propertyValue: PropertyValue)
         backlogCustomFieldSetting.copy(
           property = BacklogCustomFieldNumericProperty(
             setting.getFieldTypeId,
-            optInitialValue =
-              Option(setting.getInitialValue).map(_.floatValue()),
+            optInitialValue = Option(setting.getInitialValue).map(_.floatValue()),
             optUnit = Option(setting.getUnit),
             optMin = Option(setting.getMin).map(_.floatValue()),
             optMax = Option(setting.getMax).map(_.floatValue())

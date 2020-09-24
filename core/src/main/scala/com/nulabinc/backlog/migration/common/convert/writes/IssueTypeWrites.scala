@@ -10,9 +10,7 @@ import com.nulabinc.backlog4j.IssueType
 /**
   * @author uchida
   */
-class IssueTypeWrites @Inject() ()
-    extends Writes[IssueType, BacklogIssueType]
-    with Logging {
+class IssueTypeWrites @Inject() () extends Writes[IssueType, BacklogIssueType] with Logging {
 
   override def writes(issueType: IssueType): BacklogIssueType = {
     BacklogIssueType(

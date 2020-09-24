@@ -2,8 +2,7 @@ package com.nulabinc.backlog.migration.importer.core
 
 import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging}
 
-case class RetryException(throwables: List[Throwable])
-    extends Exception(throwables.toString())
+case class RetryException(throwables: List[Throwable]) extends Exception(throwables.toString())
 
 /*
   Thank you: http://d.hatena.ne.jp/j5ik2o/20120627/1340748199#20120627fn1

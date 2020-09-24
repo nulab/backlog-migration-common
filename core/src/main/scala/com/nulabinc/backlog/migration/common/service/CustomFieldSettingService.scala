@@ -4,10 +4,7 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogCustomFieldSetting,
   BacklogCustomFieldSettings
 }
-import com.nulabinc.backlog4j.api.option.{
-  AddCustomFieldParams,
-  UpdateCustomFieldParams
-}
+import com.nulabinc.backlog4j.api.option.{AddCustomFieldParams, UpdateCustomFieldParams}
 
 /**
   * @author uchida

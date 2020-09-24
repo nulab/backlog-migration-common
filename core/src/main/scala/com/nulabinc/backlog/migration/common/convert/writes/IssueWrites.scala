@@ -4,11 +4,7 @@ import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.convert.{Convert, Writes}
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.utils.{
-  DateUtil,
-  Logging,
-  StringUtil
-}
+import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUtil}
 import com.nulabinc.backlog4j.Issue
 
 import scala.jdk.CollectionConverters._
@@ -46,10 +42,8 @@ private[common] class IssueWrites @Inject() (
       priorityName = Option(issue.getPriority).map(_.getName).getOrElse(""),
       optAssignee = Option(issue.getAssignee).map(Convert.toBacklog(_)),
       attachments = Seq.empty[BacklogAttachment],
-      sharedFiles =
-        issue.getSharedFiles.asScala.toSeq.map(Convert.toBacklog(_)),
-      customFields =
-        issue.getCustomFields.asScala.toSeq.flatMap(Convert.toBacklog(_)),
+      sharedFiles = issue.getSharedFiles.asScala.toSeq.map(Convert.toBacklog(_)),
+      customFields = issue.getCustomFields.asScala.toSeq.flatMap(Convert.toBacklog(_)),
       notifiedUsers = Seq.empty[BacklogUser],
       operation = toBacklogOperation(issue)
     )

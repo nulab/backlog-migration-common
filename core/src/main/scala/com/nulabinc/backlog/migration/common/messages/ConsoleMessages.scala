@@ -3,7 +3,12 @@ package com.nulabinc.backlog.migration.common.messages
 import java.nio.file.Path
 import java.util.Locale
 
-import com.nulabinc.backlog.migration.common.domain.mappings.{Mapping, PriorityMapping, StatusMapping, UserMapping}
+import com.nulabinc.backlog.migration.common.domain.mappings.{
+  Mapping,
+  PriorityMapping,
+  StatusMapping,
+  UserMapping
+}
 import com.nulabinc.backlog.migration.common.errors._
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.osinka.i18n.{Lang, Messages}

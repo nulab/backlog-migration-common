@@ -32,10 +32,8 @@ class GroupServiceImpl @Inject() (implicit
       group: BacklogGroup,
       propertyResolver: PropertyResolver
   ) = {
-    val memberIds = group.members
-      .flatMap(_.optUserId)
-      .flatMap(propertyResolver.optResolvedUserId)
-    val params = new CreateGroupParams(group.name)
+    val memberIds = group.members.flatMap(_.optUserId).flatMap(propertyResolver.optResolvedUserId)
+    val params    = new CreateGroupParams(group.name)
     params.members(memberIds.asJava)
     backlog.createGroup(params)
   }

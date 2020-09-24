@@ -4,10 +4,7 @@ import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.CategoryWrites
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogIssueCategory,
-  BacklogProjectKey
-}
+import com.nulabinc.backlog.migration.common.domain.{BacklogIssueCategory, BacklogProjectKey}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option.AddCategoryParams
 
@@ -24,11 +21,7 @@ class IssueCategoryServiceImpl @Inject() (implicit
     with Logging {
 
   override def allIssueCategories(): Seq[BacklogIssueCategory] =
-    backlog
-      .getCategories(projectKey.value)
-      .asScala
-      .toSeq
-      .map(Convert.toBacklog(_))
+    backlog.getCategories(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
 
   override def add(
       backlogIssueCategory: BacklogIssueCategory

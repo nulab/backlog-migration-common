@@ -1,9 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogCustomStatus,
-  BacklogStatuses
-}
+import com.nulabinc.backlog.migration.common.domain.{BacklogCustomStatus, BacklogStatuses}
 
 /**
   * @author uchida

@@ -3,7 +3,11 @@ package com.nulabinc.backlog.migration.common.validators
 import cats.data.ValidatedNec
 import cats.implicits._
 import com.nulabinc.backlog.migration.common.domain.mappings._
-import com.nulabinc.backlog.migration.common.domain.{BacklogStatusName, BacklogStatuses, BacklogUser}
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogStatusName,
+  BacklogStatuses,
+  BacklogUser
+}
 import com.nulabinc.backlog.migration.common.errors.{
   DestinationItemNotFound,
   InvalidItemValue,
@@ -94,20 +98,23 @@ sealed trait MappingValidatorNec {
       mapping: UserMapping[A],
       dstItems: Seq[BacklogUser]
   ): ValidationResult[(UserMappingType, BacklogUserMappingItem)] =
-    mapping.optDst.map(_.validNec).getOrElse(MappingValueIsNotSpecified(mapping).invalidNec).andThen { dst =>
-      validateNonEmptyString(mapping, dst.value).andThen { value =>
-        validateUserMappingType(mapping.mappingType).andThen {
-          case mappingType @ IdUserMappingType =>
-            if (dstItems.map(_.optUserId).exists(_.contains(value)))
-              (mappingType, BacklogUserMappingItem(value)).validNec
-            else DestinationItemNotFound(value).invalidNec
-          case mappingType @ MailUserMappingType =>
-            if (dstItems.map(_.optMailAddress).exists(_.contains(value)))
-              (mappingType, BacklogUserMappingItem(value)).validNec
-            else DestinationItemNotFound(value).invalidNec
+    mapping.optDst
+      .map(_.validNec)
+      .getOrElse(MappingValueIsNotSpecified(mapping).invalidNec)
+      .andThen { dst =>
+        validateNonEmptyString(mapping, dst.value).andThen { value =>
+          validateUserMappingType(mapping.mappingType).andThen {
+            case mappingType @ IdUserMappingType =>
+              if (dstItems.map(_.optUserId).exists(_.contains(value)))
+                (mappingType, BacklogUserMappingItem(value)).validNec
+              else DestinationItemNotFound(value).invalidNec
+            case mappingType @ MailUserMappingType =>
+              if (dstItems.map(_.optMailAddress).exists(_.contains(value)))
+                (mappingType, BacklogUserMappingItem(value)).validNec
+              else DestinationItemNotFound(value).invalidNec
+          }
         }
       }
-    }
 
   private def validateUserMappingType(
       str: String

@@ -3,7 +3,12 @@ package com.nulabinc.backlog.migration.importer.service
 import better.files.{File => Path}
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
-import com.nulabinc.backlog.migration.common.domain.{BacklogAttachment, BacklogComment, BacklogIssue, BacklogProject}
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogAttachment,
+  BacklogComment,
+  BacklogIssue,
+  BacklogProject
+}
 import com.nulabinc.backlog.migration.common.service._
 import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, IssueKeyUtil, Logging, _}
 import com.nulabinc.backlog.migration.importer.core.RetryException
@@ -176,7 +181,10 @@ private[importer] class IssuesImporter @Inject() (
       try {
         retry(ctx.retryCount, retryInterval, classOf[BacklogAPIException]) {
           commentService.update(setUpdatedParam)(comment) match {
-            case Left(e) if Option(e.getMessage).getOrElse("").contains("Please change the status or post a comment.") =>
+            case Left(e)
+                if Option(e.getMessage)
+                  .getOrElse("")
+                  .contains("Please change the status or post a comment.") =>
               logger.warn(e.getMessage, e)
             case Left(e) =>
               throw e

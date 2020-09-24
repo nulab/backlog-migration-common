@@ -10,9 +10,7 @@ import com.nulabinc.backlog4j.Version
 /**
   * @author uchida
   */
-class VersionWrites @Inject() ()
-    extends Writes[Version, BacklogVersion]
-    with Logging {
+class VersionWrites @Inject() () extends Writes[Version, BacklogVersion] with Logging {
 
   override def writes(version: Version): BacklogVersion = {
     BacklogVersion(
@@ -20,8 +18,7 @@ class VersionWrites @Inject() ()
       name = version.getName,
       description = Option(version.getDescription).getOrElse(""),
       optStartDate = Option(version.getStartDate).map(DateUtil.dateFormat),
-      optReleaseDueDate =
-        Option(version.getReleaseDueDate).map(DateUtil.dateFormat),
+      optReleaseDueDate = Option(version.getReleaseDueDate).map(DateUtil.dateFormat),
       delete = false
     )
   }

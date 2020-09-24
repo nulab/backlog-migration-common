@@ -9,9 +9,7 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 /**
   * @author uchida
   */
-class VersionNameWrites @Inject() ()
-    extends Writes[String, BacklogVersion]
-    with Logging {
+class VersionNameWrites @Inject() () extends Writes[String, BacklogVersion] with Logging {
 
   override def writes(name: String): BacklogVersion = {
     BacklogVersion(

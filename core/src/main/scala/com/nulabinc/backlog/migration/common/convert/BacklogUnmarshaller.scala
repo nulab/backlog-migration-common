@@ -98,9 +98,7 @@ object BacklogUnmarshaller {
   ): Seq[BacklogCustomFieldSetting] =
     IOUtil
       .input(backlogPaths.customFieldSettingsJson)
-      .map(json =>
-        JsonParser(json).convertTo[BacklogCustomFieldSettings].settings
-      )
+      .map(json => JsonParser(json).convertTo[BacklogCustomFieldSettings].settings)
       .getOrElse(Seq.empty[BacklogCustomFieldSetting])
 
 }

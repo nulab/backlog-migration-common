@@ -3,7 +3,10 @@ package com.nulabinc.backlog.migration.common.service
 import java.io.InputStream
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
-import com.nulabinc.backlog.migration.common.client.params.{ImportDeleteAttachmentParams, ImportIssueParams}
+import com.nulabinc.backlog.migration.common.client.params.{
+  ImportDeleteAttachmentParams,
+  ImportIssueParams
+}
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.IssueWrites
 import com.nulabinc.backlog.migration.common.domain._
@@ -192,7 +195,9 @@ class IssueServiceImpl @Inject() (implicit
       params: ImportIssueParams
   ): Either[Throwable, BacklogIssue] =
     try {
-      params.getParamList.asScala.foreach(p => logger.debug(s"        [Issue Parameter]:${p.getName}:${p.getValue}"))
+      params.getParamList.asScala.foreach(p =>
+        logger.debug(s"        [Issue Parameter]:${p.getName}:${p.getValue}")
+      )
       Right(Convert.toBacklog(backlog.importIssue(params)))
     } catch {
       case e: Throwable =>
@@ -210,13 +215,18 @@ class IssueServiceImpl @Inject() (implicit
     //issue type
     val issueTypeId = backlogIssue.optIssueTypeName match {
       case Some(issueTypeName) =>
-        propertyResolver.optResolvedIssueTypeId(issueTypeName).getOrElse(propertyResolver.tryDefaultIssueTypeId())
+        propertyResolver
+          .optResolvedIssueTypeId(issueTypeName)
+          .getOrElse(propertyResolver.tryDefaultIssueTypeId())
       case None => propertyResolver.tryDefaultIssueTypeId()
     }
 
     //priority
     val priorityType =
-      propertyResolver.optResolvedPriorityId(backlogIssue.priorityName).map(value => PriorityType.valueOf(value.toInt)).getOrElse(PriorityType.Normal)
+      propertyResolver
+        .optResolvedPriorityId(backlogIssue.priorityName)
+        .map(value => PriorityType.valueOf(value.toInt))
+        .getOrElse(PriorityType.Normal)
 
     //parameter
     val params: ImportIssueParams = new ImportIssueParams(
@@ -235,7 +245,9 @@ class IssueServiceImpl @Inject() (implicit
       case Some(parentIssue) if parentIssue.optParentIssueId.nonEmpty =>
         val sb = new StringBuilder()
         sb.append(backlogIssue.description).append("\n")
-        sb.append(Messages("common.parent_issue")).append(":").append(parentIssue.optIssueKey.getOrElse(""))
+        sb.append(Messages("common.parent_issue"))
+          .append(":")
+          .append(parentIssue.optIssueKey.getOrElse(""))
         params.description(sb.toString())
       case Some(parentIssue) if parentIssue.optParentIssueId.isEmpty =>
         params.parentIssueId(parentIssue.id) //parent id
@@ -318,7 +330,8 @@ class IssueServiceImpl @Inject() (implicit
     }
 
     //notified user id
-    val notifiedUserIds = backlogIssue.notifiedUsers.flatMap(_.optUserId).flatMap(propertyResolver.optResolvedUserId)
+    val notifiedUserIds =
+      backlogIssue.notifiedUsers.flatMap(_.optUserId).flatMap(propertyResolver.optResolvedUserId)
     params.notifiedUserIds(notifiedUserIds.asJava)
     params
   }

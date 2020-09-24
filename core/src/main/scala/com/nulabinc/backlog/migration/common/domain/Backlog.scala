@@ -1,10 +1,7 @@
 package com.nulabinc.backlog.migration.common.domain
 
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
-import com.nulabinc.backlog.migration.common.domain.support.{
-  Identifier,
-  Undefined
-}
+import com.nulabinc.backlog.migration.common.domain.support.{Identifier, Undefined}
 
 /**
   * @author uchida
@@ -20,8 +17,7 @@ object BacklogProjectKey {
   def apply(value: String): BacklogProjectKey = new BacklogProjectKey(value)
 }
 
-class BacklogTextFormattingRule(textFormattingRule: String)
-    extends Identifier[String] {
+class BacklogTextFormattingRule(textFormattingRule: String) extends Identifier[String] {
 
   def value = textFormattingRule
 
@@ -298,8 +294,7 @@ object BacklogCustomFieldSettings {
 
 trait BacklogCustomFieldProperty
 
-case class BacklogCustomFieldTextProperty(typeId: Int)
-    extends BacklogCustomFieldProperty
+case class BacklogCustomFieldTextProperty(typeId: Int) extends BacklogCustomFieldProperty
 
 case class BacklogCustomFieldNumericProperty(
     typeId: Int,

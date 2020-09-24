@@ -32,11 +32,7 @@ class CustomFieldSettingServiceImpl @Inject() (implicit
   override def allCustomFieldSettings(): BacklogCustomFieldSettings =
     try {
       BacklogCustomFieldSettings(
-        backlog
-          .getCustomFields(projectKey.value)
-          .asScala
-          .toSeq
-          .map(Convert.toBacklog(_))
+        backlog.getCustomFields(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
       )
     } catch {
       case api: BacklogAPIException
@@ -104,8 +100,7 @@ class CustomFieldSettingServiceImpl @Inject() (implicit
       }
     } catch {
       case api: BacklogAPIException
-          if (api.getMessage
-            .contains("current plan is not customField available.")) =>
+          if (api.getMessage.contains("current plan is not customField available.")) =>
         logger.warn(api.getMessage, api)
         None
       case e: Throwable =>
@@ -315,8 +310,7 @@ class CustomFieldSettingServiceImpl @Inject() (implicit
       }
     } catch {
       case api: BacklogAPIException
-          if (api.getMessage
-            .contains("current plan is not customField available.")) =>
+          if (api.getMessage.contains("current plan is not customField available.")) =>
         logger.warn(api.getMessage, api)
         None
       case e: Throwable =>

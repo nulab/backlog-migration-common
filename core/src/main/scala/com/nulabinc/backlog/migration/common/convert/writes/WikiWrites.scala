@@ -2,15 +2,8 @@ package com.nulabinc.backlog.migration.common.convert.writes
 
 import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.convert.{Convert, Writes}
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogWiki,
-  BacklogWikiTag
-}
-import com.nulabinc.backlog.migration.common.utils.{
-  DateUtil,
-  Logging,
-  StringUtil
-}
+import com.nulabinc.backlog.migration.common.domain.{BacklogWiki, BacklogWikiTag}
+import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUtil}
 import com.nulabinc.backlog4j.{Attachment, SharedFile, Wiki, WikiTag}
 
 import scala.jdk.CollectionConverters._

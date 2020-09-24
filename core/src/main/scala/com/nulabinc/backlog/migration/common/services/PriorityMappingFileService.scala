@@ -9,7 +9,12 @@ import cats.data.Validated.{Invalid, Valid}
 import com.nulabinc.backlog.migration.common.deserializers.Deserializer
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
-import com.nulabinc.backlog.migration.common.errors.{MappingFileError, MappingFileNotFound, MappingValidationError, ValidationError}
+import com.nulabinc.backlog.migration.common.errors.{
+  MappingFileError,
+  MappingFileNotFound,
+  MappingValidationError,
+  ValidationError
+}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.serializers.Serializer
 import com.nulabinc.backlog.migration.common.validators.MappingValidatorNec
@@ -17,7 +22,9 @@ import com.nulabinc.backlog4j.Priority
 import org.apache.commons.csv.CSVRecord
 
 object PriorityMappingFileService {
-  import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{Mappings => MappingMessages}
+  import com.nulabinc.backlog.migration.common.messages.ConsoleMessages.{
+    Mappings => MappingMessages
+  }
   import com.nulabinc.backlog.migration.common.shared.syntax._
 
   def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](
@@ -124,12 +131,14 @@ object PriorityMappingFileService {
       mappings: Seq[PriorityMapping[A]],
       dstItems: Seq[Priority]
   ): Either[MappingFileError, Seq[ValidatedPriorityMapping[A]]] = {
-    val results = mappings.map(MappingValidatorNec.validatePriorityMapping(_, dstItems)).foldLeft(ValidationResults.empty[A]) { (acc, item) =>
-      item match {
-        case Valid(value)   => acc.copy(values = acc.values :+ value)
-        case Invalid(error) => acc.copy(errors = acc.errors ++ error.toList)
+    val results = mappings
+      .map(MappingValidatorNec.validatePriorityMapping(_, dstItems))
+      .foldLeft(ValidationResults.empty[A]) { (acc, item) =>
+        item match {
+          case Valid(value)   => acc.copy(values = acc.values :+ value)
+          case Invalid(error) => acc.copy(errors = acc.errors ++ error.toList)
+        }
       }
-    }
 
     results.toResult
   }

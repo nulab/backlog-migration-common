@@ -9,9 +9,7 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 /**
   * @author uchida
   */
-class CategoryNameWrites @Inject() ()
-    extends Writes[String, BacklogIssueCategory]
-    with Logging {
+class CategoryNameWrites @Inject() () extends Writes[String, BacklogIssueCategory] with Logging {
 
   override def writes(name: String): BacklogIssueCategory = {
     BacklogIssueCategory(optId = None, name = name, delete = true)

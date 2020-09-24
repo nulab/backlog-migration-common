@@ -1,7 +1,12 @@
 package com.nulabinc.backlog.migration.common.service
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
-import com.nulabinc.backlog.migration.common.domain.{BacklogCustomStatus, BacklogProjectKey, BacklogStatus, BacklogStatuses}
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogCustomStatus,
+  BacklogProjectKey,
+  BacklogStatus,
+  BacklogStatuses
+}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.BacklogAPIException
 import com.nulabinc.backlog4j.Project.CustomStatusColor
