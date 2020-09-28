@@ -186,7 +186,7 @@ object UserMappingFileService {
       errors: List[ValidationError] = List()
   ) {
     def toResult: Either[MappingFileError, Seq[ValidatedUserMapping[A]]] =
-      if (errors.nonEmpty) Left(MappingValidationError(values, errors))
+      if (errors.nonEmpty) Left(MappingValidationError(MappingType.User, values, errors))
       else Right(values)
   }
 

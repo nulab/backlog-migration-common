@@ -172,7 +172,7 @@ object PriorityMappingFileService {
       errors: List[ValidationError] = List()
   ) {
     def toResult: Either[MappingFileError, Seq[ValidatedPriorityMapping[A]]] =
-      if (errors.nonEmpty) Left(MappingValidationError(values, errors))
+      if (errors.nonEmpty) Left(MappingValidationError(MappingType.Priority, values, errors))
       else Right(values)
   }
 

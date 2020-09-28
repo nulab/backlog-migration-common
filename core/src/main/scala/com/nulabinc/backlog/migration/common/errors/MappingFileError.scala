@@ -2,12 +2,13 @@ package com.nulabinc.backlog.migration.common.errors
 
 import java.nio.file.Path
 
-import com.nulabinc.backlog.migration.common.domain.mappings.Mapping
+import com.nulabinc.backlog.migration.common.domain.mappings.{Mapping, MappingType}
 
 sealed trait MappingFileError
 
 case class MappingFileNotFound(name: String, path: Path) extends MappingFileError
 case class MappingValidationError[A](
+    mappingType: MappingType,
     mappings: Seq[Mapping[A]],
     errors: List[ValidationError]
 ) extends MappingFileError

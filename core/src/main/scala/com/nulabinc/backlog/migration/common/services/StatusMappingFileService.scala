@@ -188,7 +188,7 @@ object StatusMappingFileService {
       errors: List[ValidationError] = List()
   ) {
     def toResult: Either[MappingFileError, Seq[ValidatedStatusMapping[A]]] =
-      if (errors.nonEmpty) Left(MappingValidationError(values, errors))
+      if (errors.nonEmpty) Left(MappingValidationError(MappingType.Status, values, errors))
       else Right(values)
   }
 

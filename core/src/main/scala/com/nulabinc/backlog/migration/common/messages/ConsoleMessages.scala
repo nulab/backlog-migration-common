@@ -5,6 +5,7 @@ import java.util.Locale
 
 import com.nulabinc.backlog.migration.common.domain.mappings.{
   Mapping,
+  MappingType,
   PriorityMapping,
   StatusMapping,
   UserMapping
@@ -27,9 +28,9 @@ object ConsoleMessages {
        |${Messages("cli.cancel")}""".stripMargin
 
   object Mappings {
-    lazy val statusItem   = Messages("common.statuses")
-    lazy val priorityItem = Messages("common.priorities")
-    lazy val userItem     = Messages("common.users")
+    lazy val statusItem: String   = Messages("common.statuses")
+    lazy val priorityItem: String = Messages("common.priorities")
+    lazy val userItem: String     = Messages("common.users")
 
     def needsSetup: String =
       Messages("cli.mapping.error.setup")
@@ -79,11 +80,10 @@ object ConsoleMessages {
         """.stripMargin
 
     def validationError[A](error: MappingValidationError[A]): String = {
-      val itemName = error.mappings match {
-        case _: Seq[PriorityMapping[_]] => priorityItem
-        case _: Seq[StatusMapping[_]]   => statusItem
-        case _: Seq[UserMapping[_]]     => userItem
-        case _                          => "unknown"
+      val itemName = error.mappingType match {
+        case MappingType.Priority => priorityItem
+        case MappingType.Status   => statusItem
+        case MappingType.User     => userItem
       }
       val errorStr = error.errors.map {
         case MappingValueIsEmpty(mapping) =>
