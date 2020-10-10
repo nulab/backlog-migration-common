@@ -10,9 +10,11 @@ lazy val commonSettings = Seq(
     "-Ymacro-annotations"
   ),
   libraryDependencies ++= {
-    val catsVersion  = "2.1.0"
-    val monixVersion = "3.1.0"
-    val slickVersion = "3.3.2"
+    val catsVersion     = "2.1.0"
+    val monixVersion    = "3.1.0"
+    val slickVersion    = "3.3.2"
+    val akkaVersion     = "2.6.10"
+    val akkaHttpVersion = "10.2.1"
     Seq(
       "org.typelevel"        %% "cats-core"       % catsVersion,
       "org.typelevel"        %% "cats-kernel"     % catsVersion,
@@ -22,6 +24,10 @@ lazy val commonSettings = Seq(
       "io.monix"             %% "monix-reactive"  % monixVersion,
       "com.typesafe.slick"   %% "slick"           % slickVersion,
       "com.typesafe.slick"   %% "slick-hikaricp"  % slickVersion,
+      "com.typesafe.akka"    %% "akka-actor"      % akkaVersion,
+      "com.typesafe.akka"    %% "akka-stream"     % akkaVersion,
+      "com.typesafe.akka"    %% "akka-slf4j"      % akkaVersion,
+      "com.typesafe.akka"    %% "akka-http"       % akkaHttpVersion,
       "org.xerial"            % "sqlite-jdbc"     % "3.30.1",
       "com.nulab-inc"         % "backlog4j"       % "2.3.3",
       "com.github.mpilquist" %% "simulacrum"      % "0.19.0",
