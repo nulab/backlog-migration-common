@@ -22,6 +22,13 @@ object ConsoleMessages {
   val srcProduct: String = Messages("common.src")
   val dstProduct: String = Messages("common.dst")
 
+  def notLatestVersion(latest: String, current: String): String =
+    s"""
+       |--------------------------------------------------
+       |${Messages("cli.warn.not.latest", latest, current)}
+       |--------------------------------------------------
+       """.stripMargin
+
   def confirmCanceled: String =
     s"""
        |--------------------------------------------------
