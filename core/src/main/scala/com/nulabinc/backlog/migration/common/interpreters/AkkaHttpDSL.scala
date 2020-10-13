@@ -1,9 +1,14 @@
 package com.nulabinc.backlog.migration.common.interpreters
 
+import java.net.InetAddress
+import java.net.InetSocketAddress
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.ClientTransport
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.model.headers.HttpCredentials
 import akka.http.scaladsl.settings.ConnectionPoolSettings
 import akka.http.scaladsl.settings.ClientConnectionSettings
 import com.nulabinc.backlog.migration.common.dsl.HttpDSL
@@ -16,12 +21,17 @@ import spray.json._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.util.control.NonFatal
 import scala.reflect.ClassTag
+import scala.util.control.NonFatal
+import scala.util.Try
+import scala.util.Failure
 
-class AkkaHttpDSL(optTransport: Option[ClientTransport] = None)(implicit actorSystem: ActorSystem, exc: ExecutionContext) extends HttpDSL[Task] {
+class AkkaHttpDSL()(implicit
+    actorSystem: ActorSystem,
+    exc: ExecutionContext
+) extends HttpDSL[Task] {
   private val logger = LoggerFactory.getLogger(getClass)
-  private val settings = optTransport.map { transport =>
+  private val settings = createOptClientTransport().map { transport =>
     ConnectionPoolSettings(actorSystem).withConnectionSettings(
       ClientConnectionSettings(actorSystem).withTransport(transport)
     )
@@ -71,7 +81,10 @@ class AkkaHttpDSL(optTransport: Option[ClientTransport] = None)(implicit actorSy
       }
     } yield result
   }
-  private def parseJson[A](response: String, format: JsonFormat[A])(implicit classTag: ClassTag[A]): A = {
+
+  private def parseJson[A](response: String, format: JsonFormat[A])(implicit
+      classTag: ClassTag[A]
+  ): A = {
     try {
       response.parseJson.convertTo[A](format)
     } catch {
@@ -98,11 +111,64 @@ class AkkaHttpDSL(optTransport: Option[ClientTransport] = None)(implicit actorSy
               val locUri = loc.uri
               val newUri = locUri
               val newReq = req.withUri(newUri).withHeaders(reqHeaders)
-              if (count < maxRedirectCount) followRedirect(newReq, count + 1) else Task.deferFuture(http.singleRequest(newReq))
+              if (count < maxRedirectCount) followRedirect(newReq, count + 1)
+              else Task.deferFuture(http.singleRequest(newReq))
             }
             .getOrElse(throw new RuntimeException(s"location not found on 302 for ${req.uri}"))
         case _ => Task(resp)
       }
     }
   }
+
+  private def createOptClientTransport(): Option[ClientTransport] =
+    createProxyTransport(
+      optProxyHost = getSystemProperty("https.proxyHost"),
+      optProxyPort = getSystemProperty("https.proxyPort"),
+      optProxyCredentials = createCredentials(
+        optProxyUser = getSystemProperty("https.proxyUser"),
+        optProxyPass = getSystemProperty("https.proxyPassword")
+      )
+    )
+
+  private def createCredentials(
+      optProxyUser: Option[String],
+      optProxyPass: Option[String]
+  ): Option[BasicHttpCredentials] = {
+    bothSome(optProxyUser, optProxyPass).map {
+      case (proxyUser, proxyPass) =>
+        headers.BasicHttpCredentials(proxyUser, proxyPass)
+    }
+  }
+
+  private def createProxyTransport(
+      optProxyHost: Option[String],
+      optProxyPort: Option[String],
+      optProxyCredentials: Option[HttpCredentials]
+  ): Option[ClientTransport] = {
+    bothSome(optProxyHost, optProxyPort).flatMap {
+      case (proxyHost, proxyPort) =>
+        val inetSocketAddress = InetSocketAddress.createUnresolved(proxyHost, proxyPort.toInt)
+        Try(
+          optProxyCredentials
+            .map(ClientTransport.httpsProxy(inetSocketAddress, _))
+            .getOrElse(ClientTransport.httpsProxy(inetSocketAddress))
+        ).recoverWith {
+          case NonFatal(ex) =>
+            logger.error(s"Failed to create ClientTransport. Message: ${ex.getMessage()}")
+            Failure(ex)
+        }.toOption
+    }
+  }
+
+  private def getSystemProperty(key: String): Option[String] =
+    Option(System.getProperty(key))
+
+  private def bothSome[A](opt1: Option[A], opt2: Option[A]): Option[(A, A)] =
+    (opt1, opt2) match {
+      case (Some(value1), Some(value2)) =>
+        Some((value1, value2))
+      case _ =>
+        None
+    }
+
 }
