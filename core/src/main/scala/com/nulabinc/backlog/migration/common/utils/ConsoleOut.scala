@@ -23,6 +23,7 @@ object ConsoleOut extends Logging {
   def warning(value: String, space: Int = 0): Unit =
     println(value, space, YELLOW)
 
+  @deprecated("ConsoleDSL[F].infoln")
   def info(value: String, space: Int = 0): Unit =
     println(value, space, BLUE)
 

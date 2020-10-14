@@ -13,6 +13,9 @@ import org.fusesource.jansi.Ansi.ansi
 case class JansiConsoleDSL() extends ConsoleDSL[Task] with Logging {
   private val outStream: PrintStream = System.out
 
+  override def infoln(value: String, space: Int = 0): Task[Unit] =
+    println(value, space, BLUE)
+
   override def println(
       value: String,
       space: Int,
