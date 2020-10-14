@@ -16,13 +16,15 @@ import spray.json.DefaultJsonProtocol._
 trait ReleaseCheckService {
   def parse[F[_]: Monad: HttpDSL](query: HttpQuery): F[Either[HttpError, String]]
 
-  def check[F[_]: Monad: HttpDSL: ConsoleDSL](path: String, currentVersion: String, latestVersion: String): F[Unit] = {
+  def check[F[_]: Monad: HttpDSL: ConsoleDSL](path: String, currentVersion: String): F[Unit] = {
     val query = HttpQuery(path)
     for {
       httpResult <- parse(query)
       _ <- httpResult match {
         case Right(latestVersion) if latestVersion != currentVersion =>
-          ConsoleDSL[F].warnln(ConsoleMessages.notLatestVersion(current = currentVersion, latest = latestVersion))
+          ConsoleDSL[F].warnln(
+            ConsoleMessages.notLatestVersion(current = currentVersion, latest = latestVersion)
+          )
         case _ =>
           Applicative[F].pure(())
       }
