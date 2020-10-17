@@ -15,14 +15,9 @@ case class RequestError(error: String)  extends HttpError
 case class InvalidResponse(msg: String) extends HttpError
 case object ServerDown                  extends HttpError
 
-case class HttpQuery(
-    path: String,
-    baseUrl: String
-)
+case class HttpQuery(path: String, baseUrl: String)
 
 object HttpQuery {
-  def apply(
-      baseUrl: String
-  ): HttpQuery =
+  def apply(baseUrl: String): HttpQuery =
     new HttpQuery(baseUrl = baseUrl, path = "")
 }

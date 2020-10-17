@@ -1,30 +1,22 @@
 package com.nulabinc.backlog.migration.common.interpreters
 
-import java.net.InetAddress
 import java.net.InetSocketAddress
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.ClientTransport
+import akka.http.scaladsl.{ClientTransport, Http}
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.headers.HttpCredentials
-import akka.http.scaladsl.settings.ConnectionPoolSettings
-import akka.http.scaladsl.settings.ClientConnectionSettings
-import com.nulabinc.backlog.migration.common.dsl.HttpDSL
-import com.nulabinc.backlog.migration.common.dsl.HttpQuery
-import com.nulabinc.backlog.migration.common.dsl.RequestError
-import com.nulabinc.backlog.migration.common.dsl.ServerDown
+import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpCredentials}
+import akka.http.scaladsl.settings.{ClientConnectionSettings, ConnectionPoolSettings}
+import com.nulabinc.backlog.migration.common.dsl.{HttpDSL, HttpQuery, RequestError, ServerDown}
 import monix.eval.Task
-import org.slf4j.{Logger, LoggerFactory}
+import org.slf4j.LoggerFactory
 import spray.json._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
+import scala.util.{Failure, Try}
 import scala.util.control.NonFatal
-import scala.util.Try
-import scala.util.Failure
 
 class AkkaHttpDSL()(implicit
     actorSystem: ActorSystem,
