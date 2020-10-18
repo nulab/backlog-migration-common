@@ -1,16 +1,10 @@
 package com.nulabinc.backlog.migration.common.services
 
-import cats.Monad
 import cats.Monad.ops._
-import cats.Applicative
-import monix.eval.Task
-import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
-import com.nulabinc.backlog.migration.common.dsl.HttpDSL
-import com.nulabinc.backlog.migration.common.dsl.HttpQuery
-import com.nulabinc.backlog.migration.common.dsl.HttpError
+import cats.{Applicative, Monad}
+import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, HttpDSL, HttpError, HttpQuery}
 import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 import com.nulabinc.backlog.migration.common.utils.Logging
-import spray.json._
 import spray.json.DefaultJsonProtocol._
 
 trait ReleaseCheckService {
