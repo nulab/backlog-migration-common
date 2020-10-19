@@ -43,7 +43,12 @@ class AkkaHttpDSL()(implicit
   override def get[A](query: HttpQuery)(implicit format: JsonFormat[A]): Task[Response[A]] =
     for {
       serverResponse <- doRequest(createRequest(HttpMethods.GET, query))
-      response = serverResponse.map(_.parseJson.convertTo[A](format))
+      response = serverResponse.map {
+        case JsonResponse(str) =>
+          str.parseJson.convertTo[A](format)
+        case StringResponse(str) =>
+          str.asInstanceOf[A]
+      }
     } yield response
 
   private def createRequest(method: HttpMethod, query: HttpQuery): HttpRequest =
@@ -52,26 +57,39 @@ class AkkaHttpDSL()(implicit
       uri = Uri(query.baseUrl + query.path)
     ).withHeaders(reqHeaders)
 
-  private def doRequest(request: HttpRequest): Task[Response[String]] = {
+  private sealed trait ResponseData {
+    val str: String
+  }
+  private case class StringResponse(str: String) extends ResponseData
+  private case class JsonResponse(str: String)   extends ResponseData
+
+  private def doRequest(request: HttpRequest): Task[Response[ResponseData]] = {
     logger.info(s"Execute request $request")
     for {
       response <- Task.deferFuture(http.singleRequest(request, settings = settings))
-      data     <- Task.deferFuture(response.entity.toStrict(timeout).map(_.data.utf8String))
-      result = {
-        val status = response.status.intValue()
-        logger.info(s"Received response with status: $status")
-        if (response.status.isFailure()) {
-          if (status >= 400 && status < 500)
-            Left(RequestError(data))
-          else {
-            Left(ServerDown)
-          }
-        } else {
-          logger.info(s"Response data is $data")
-          Right(data)
+      data <- Task.deferFuture {
+        response.entity.toStrict(timeout).map { strict =>
+          val str = strict.data.utf8String
+          if (strict.contentType == ContentTypes.`application/json`)
+            JsonResponse(str)
+          else
+            StringResponse(str)
         }
       }
-    } yield result
+    } yield {
+      val status = response.status.intValue()
+      logger.info(s"Received response with status: $status")
+      if (response.status.isFailure()) {
+        if (status >= 400 && status < 500)
+          Left(RequestError(data.str))
+        else {
+          Left(ServerDown)
+        }
+      } else {
+        logger.info(s"Response data is $data")
+        Right(data)
+      }
+    }
   }
 
   private def parseJson[A](response: String, format: JsonFormat[A])(implicit
