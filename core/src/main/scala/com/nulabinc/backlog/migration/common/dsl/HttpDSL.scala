@@ -5,9 +5,9 @@ import simulacrum.typeclass
 
 @typeclass
 trait HttpDSL[F[_]] {
-  type Response[A] = Either[HttpError, A]
+  type Response = Either[HttpError, Array[Byte]]
 
-  def get[A](query: HttpQuery)(implicit format: JsonFormat[A]): F[Response[A]]
+  def get(query: HttpQuery): F[Response]
 }
 
 sealed trait HttpError

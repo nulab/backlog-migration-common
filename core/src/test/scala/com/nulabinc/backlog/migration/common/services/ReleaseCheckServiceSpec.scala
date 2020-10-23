@@ -8,7 +8,6 @@ import com.nulabinc.backlog.migration.common.dsl.{HttpError, HttpQuery}
 import com.nulabinc.backlog.migration.common.services.BacklogReleaseCheckService
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
-import spray.json.JsonFormat
 
 class BacklogReleaseCheckServiceSpec extends AsyncFlatSpec {
   implicit val httpDSL = TestBacklogHttpDSL()
@@ -34,7 +33,7 @@ class GitHubReleaseCheckServiceSpec extends AsyncFlatSpec {
 }
 
 case class TestBacklogHttpDSL() extends HttpDSL[Task] {
-  override def get[A](query: HttpQuery)(implicit format: JsonFormat[A]): Task[Either[HttpError, A]] = {
+  override def get(query: HttpQuery): Task[Response] = {
     val content = query.baseUrl match {
       case "1" =>
         "1.0.0"
@@ -46,16 +45,15 @@ case class TestBacklogHttpDSL() extends HttpDSL[Task] {
     }
 
     Task {
-      Right(content.asInstanceOf[A])
+      Right(content.getBytes())
     }
   }
 
 }
 
 case class TestGitHubHttpDSL() extends HttpDSL[Task] {
-  import spray.json._
 
-  override def get[A](query: HttpQuery)(implicit format: JsonFormat[A]): Task[Either[HttpError, A]] = {
+  override def get(query: HttpQuery): Task[Response] = {
     val content =
       """
 [
@@ -73,7 +71,7 @@ case class TestGitHubHttpDSL() extends HttpDSL[Task] {
     """.stripMargin
 
     Task {
-      Right(content.parseJson.convertTo[A])
+      Right(content.getBytes())
     }
   }
 

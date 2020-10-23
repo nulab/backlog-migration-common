@@ -2,6 +2,7 @@ package com.nulabinc.backlog.migration.common.services
 
 import cats.Monad.ops._
 import cats.{Applicative, Monad}
+import com.nulabinc.backlog.migration.common.codec.Encoder
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, HttpDSL, HttpError, HttpQuery}
 import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 import com.nulabinc.backlog.migration.common.utils.Logging
@@ -29,9 +30,15 @@ trait ReleaseCheckService {
 object BacklogReleaseCheckService extends ReleaseCheckService {
   import com.nulabinc.backlog.migration.common.shared.syntax._
 
+  private val encoder = new Encoder[Array[Byte], String] {
+    override def encode(arr: Array[Byte]): String =
+      new String(arr)
+  }
+
   override def parse[F[_]: Monad: HttpDSL](query: HttpQuery): F[Either[HttpError, String]] = {
     val result = for {
-      content <- HttpDSL[F].get[String](query).handleError
+      arr <- HttpDSL[F].get(query).handleError
+      content = encoder.encode(arr)
     } yield content.trim()
     result.value
   }
@@ -39,14 +46,23 @@ object BacklogReleaseCheckService extends ReleaseCheckService {
 
 object GitHubReleaseCheckService extends ReleaseCheckService with Logging {
   import com.nulabinc.backlog.migration.common.shared.syntax._
+  import spray.json._
 
-  case class GitHubRelease(tag_name: String)
+  private case class GitHubRelease(tag_name: String)
 
-  implicit val githubReleaseReads = jsonFormat1(GitHubRelease)
+  private implicit val githubReleaseReads = jsonFormat1(GitHubRelease)
+
+  private val encoder = new Encoder[Array[Byte], Seq[GitHubRelease]] {
+    override def encode(arr: Array[Byte]): Seq[GitHubRelease] = {
+      val str = new String(arr)
+      str.parseJson.convertTo[Seq[GitHubRelease]]
+    }
+  }
 
   override def parse[F[_]: Monad: HttpDSL](query: HttpQuery): F[Either[HttpError, String]] = {
     val result = for {
-      releases <- HttpDSL[F].get[Seq[GitHubRelease]](query).handleError
+      arr <- HttpDSL[F].get(query).handleError
+      releases = encoder.encode(arr)
     } yield {
       releases.headOption.map(_.tag_name).getOrElse {
         logger.warn("Failed to fetch GitHub releases. Empty array")

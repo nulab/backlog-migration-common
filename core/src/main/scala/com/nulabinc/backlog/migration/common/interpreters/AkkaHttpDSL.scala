@@ -40,16 +40,10 @@ class AkkaHttpDSL()(implicit
   def terminate(): Task[Unit] =
     Task.deferFuture(http.shutdownAllConnectionPools())
 
-  override def get[A](query: HttpQuery)(implicit format: JsonFormat[A]): Task[Response[A]] =
+  override def get(query: HttpQuery): Task[Response] =
     for {
       serverResponse <- doRequest(createRequest(HttpMethods.GET, query))
-      response = serverResponse.map {
-        case JsonResponse(str) =>
-          str.parseJson.convertTo[A](format)
-        case StringResponse(str) =>
-          str.asInstanceOf[A]
-      }
-    } yield response
+    } yield serverResponse
 
   private def createRequest(method: HttpMethod, query: HttpQuery): HttpRequest =
     HttpRequest(
@@ -57,31 +51,19 @@ class AkkaHttpDSL()(implicit
       uri = Uri(query.baseUrl + query.path)
     ).withHeaders(reqHeaders)
 
-  private sealed trait ResponseData {
-    val str: String
-  }
-  private case class StringResponse(str: String) extends ResponseData
-  private case class JsonResponse(str: String)   extends ResponseData
-
-  private def doRequest(request: HttpRequest): Task[Response[ResponseData]] = {
+  private def doRequest(request: HttpRequest): Task[Response] = {
     logger.info(s"Execute request $request")
     for {
       response <- Task.deferFuture(http.singleRequest(request, settings = settings))
       data <- Task.deferFuture {
-        response.entity.toStrict(timeout).map { strict =>
-          val str = strict.data.utf8String
-          if (strict.contentType == ContentTypes.`application/json`)
-            JsonResponse(str)
-          else
-            StringResponse(str)
-        }
+        response.entity.toStrict(timeout).map(_.data.toArray)
       }
     } yield {
       val status = response.status.intValue()
       logger.info(s"Received response with status: $status")
       if (response.status.isFailure()) {
         if (status >= 400 && status < 500)
-          Left(RequestError(data.str))
+          Left(RequestError(new String(data)))
         else {
           Left(ServerDown)
         }
