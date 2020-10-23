@@ -22,6 +22,8 @@ object ConsoleMessages {
   val srcProduct: String = Messages("common.src")
   val dstProduct: String = Messages("common.dst")
 
+  val confirm: String = Messages("cli.confirm")
+
   def notLatestVersion(latest: String, current: String): String =
     s"""
        |--------------------------------------------------
@@ -162,5 +164,20 @@ object ConsoleMessages {
          |--------------------------------------------------
          |${Messages("cli.invalid_setup")}
        """.stripMargin
+  }
+
+  object Validations {
+    lazy val srcAccessError: String = accessError(srcProduct)
+    lazy val dstAccessError: String = accessError(dstProduct)
+
+    def accessError(itemName: String): String =
+      Messages("cli.param.check.access", itemName)
+
+    def disabledHost(itemName: String, url: String): String =
+      Messages("cli.param.error.disable.host", itemName, url)
+
+    def accessBlocked(itemName: String): String =
+      Messages("cli.param.error.disable.access", itemName)
+
   }
 }
