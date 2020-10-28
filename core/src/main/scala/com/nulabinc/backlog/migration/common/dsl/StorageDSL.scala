@@ -19,6 +19,6 @@ trait StorageDSL[F[_]] {
 
   def exists(path: Path): F[Boolean]
 
-  def delete(path: Path): F[Boolean]
+  def delete(path: Path): F[Unit]
 
 }

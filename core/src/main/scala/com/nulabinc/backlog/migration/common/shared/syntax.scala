@@ -25,6 +25,8 @@ object syntax {
         case false => Left(error)
         case true  => Right(())
       }
+    def lift[E]: EitherT[F, E, Unit] =
+      EitherT(result.map(Right(_)))
   }
 
   implicit class EitherOps[F[_]: Monad, E, A](result: Either[E, A]) {
@@ -50,5 +52,10 @@ object syntax {
         case Some(v) => v.map(Right(_))
         case None    => Applicative[F].pure(Left(error))
       }
+  }
+
+  implicit class UnitOps[F[_]: Monad](value: F[Unit]) {
+    def lift[E]: EitherT[F, E, Unit] =
+      EitherT(value.map(Right(_)))
   }
 }

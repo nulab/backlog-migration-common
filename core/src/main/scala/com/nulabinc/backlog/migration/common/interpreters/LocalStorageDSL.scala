@@ -3,6 +3,8 @@ package com.nulabinc.backlog.migration.common.interpreters
 import java.io.{ByteArrayInputStream, InputStream}
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, StandardOpenOption}
+import java.nio.file.FileVisitOption
+import java.util.Comparator
 
 import com.nulabinc.backlog.migration.common.dsl.StorageDSL
 import monix.eval.Task
@@ -60,14 +62,22 @@ case class LocalStorageDSL() extends StorageDSL[Task] {
       path.toFile.exists()
     }
 
-  override def delete(path: Path): Task[Boolean] =
+  override def delete(path: Path): Task[Unit] =
     exists(path).map { result =>
       if (result) {
-        path.toFile.delete()
-      } else {
-        false
+        deleteRecursive(path)
       }
     }
+
+  private def deleteRecursive(path: Path): Unit = {
+    Files
+      .walk(path, FileVisitOption.FOLLOW_LINKS)
+      .sorted(Comparator.reverseOrder())
+      .map(_.toFile)
+      .peek(_ => ())
+      .forEach(file => file.delete())
+    ()
+  }
 
   private def write(
       path: Path,
