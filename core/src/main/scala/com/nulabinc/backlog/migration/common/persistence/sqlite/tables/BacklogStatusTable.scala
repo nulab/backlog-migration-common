@@ -33,5 +33,5 @@ class BacklogStatusTable(tag: Tag) extends BaseTable[BacklogStatusRow](tag, "bac
       name,
       displayOrder,
       color
-    ) <> (BacklogStatusRow.tupled, BacklogStatusRow.unapply)
+    ).<>(BacklogStatusRow.tupled, BacklogStatusRow.unapply)
 }

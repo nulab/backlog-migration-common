@@ -36,6 +36,9 @@ object ConsoleMessages {
        |--------------------------------------------------
        |${Messages("cli.cancel")}""".stripMargin
 
+  def cliUnknownError(e: Throwable): String =
+    s"${Messages("cli.error.unknown")}:${e.getMessage}"
+
   object Mappings {
     lazy val statusItem: String   = Messages("common.statuses")
     lazy val priorityItem: String = Messages("common.priorities")
@@ -179,5 +182,12 @@ object ConsoleMessages {
     def accessBlocked(itemName: String): String =
       Messages("cli.param.error.disable.access", itemName)
 
+  }
+
+  object Imports {
+    val start: String =
+      s"""
+          |${Messages("import.start")}
+          |--------------------------------------------------""".stripMargin
   }
 }
