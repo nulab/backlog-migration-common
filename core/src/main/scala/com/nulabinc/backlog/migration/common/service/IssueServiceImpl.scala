@@ -25,7 +25,7 @@ import scala.jdk.CollectionConverters._
   * @author uchida
   */
 class IssueServiceImpl @Inject() (implicit
-    val issueWrites: IssueWrites,
+    issueWrites: IssueWrites,
     backlog: BacklogAPIClient
 ) extends IssueService
     with Logging {
