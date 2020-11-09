@@ -7,7 +7,12 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogStatuses,
   BacklogUser
 }
-import com.nulabinc.backlog.migration.common.serializers.Serializer
+import com.nulabinc.backlog.migration.common.codec.Encoder
+import com.nulabinc.backlog.migration.common.codec.{
+  PriorityMappingEncoder,
+  StatusMappingEncoder,
+  UserMappingEncoder
+}
 import com.nulabinc.backlog4j.Priority
 import monix.reactive.Observable
 
@@ -15,13 +20,13 @@ object MappingSerializer {
 
   private val charset: Charset = StandardCharsets.UTF_8
 
-  private implicit val backlogStatusSerializer: Serializer[BacklogStatusName, Seq[String]] =
+  private implicit val backlogStatusEncoder: Encoder[BacklogStatusName, Seq[String]] =
     (statusName: BacklogStatusName) => Seq(statusName.trimmed)
 
-  private implicit val backlogPrioritySerializer: Serializer[Priority, Seq[String]] =
+  private implicit val backlogPriorityEncoder: Encoder[Priority, Seq[String]] =
     (priority: Priority) => Seq(priority.getName)
 
-  private implicit val backlogUserSerializer: Serializer[BacklogUser, Seq[String]] =
+  private implicit val backlogUserEncoder: Encoder[BacklogUser, Seq[String]] =
     (user: BacklogUser) => Seq(user.name, user.optMailAddress.getOrElse(""))
 
   private val statusListHeader   = toByteArray(toRow(Seq("Name")))
@@ -29,19 +34,19 @@ object MappingSerializer {
   private val userListHeader     = toByteArray(toRow(Seq("Name", "Email")))
 
   def status[A](mappings: Seq[StatusMapping[A]])(implicit
-      serializer: Serializer[StatusMapping[A], Seq[String]],
+      encoder: StatusMappingEncoder[A],
       header: MappingHeader[StatusMapping[_]]
   ): Observable[Array[Byte]] =
     fromHeader(header) +: toObservable(mappings)
 
   def priority[A](mappings: Seq[PriorityMapping[A]])(implicit
-      serializer: Serializer[PriorityMapping[A], Seq[String]],
+      encoder: PriorityMappingEncoder[A],
       header: MappingHeader[PriorityMapping[_]]
   ): Observable[Array[Byte]] =
     fromHeader(header) +: toObservable(mappings)
 
   def user[A](mappings: Seq[UserMapping[A]])(implicit
-      serializer: Serializer[UserMapping[A], Seq[String]],
+      encoder: UserMappingEncoder[A],
       header: MappingHeader[UserMapping[_]]
   ): Observable[Array[Byte]] =
     fromHeader(header) +: toObservable(mappings)
@@ -60,12 +65,8 @@ object MappingSerializer {
 
   private def toObservable[A](
       items: Seq[A]
-  )(implicit serializer: Serializer[A, Seq[String]]): Observable[Array[Byte]] =
-    Observable
-      .fromIteratorUnsafe(items.iterator)
-      .map(serializer.serialize)
-      .map(toRow)
-      .map(toByteArray)
+  )(implicit encoder: Encoder[A, Seq[String]]): Observable[Array[Byte]] =
+    Observable.fromIteratorUnsafe(items.iterator).map(encoder.encode).map(toRow).map(toByteArray)
 
   private def toRow(values: Seq[String]): String =
     s""""${values.mkString("\",\"")}\"\n""".stripMargin

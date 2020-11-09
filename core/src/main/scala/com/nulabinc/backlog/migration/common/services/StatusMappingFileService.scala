@@ -6,6 +6,7 @@ import cats.Foldable.ops._
 import cats.Monad
 import cats.Monad.ops._
 import cats.data.Validated.{Invalid, Valid}
+import com.nulabinc.backlog.migration.common.codec.StatusMappingEncoder
 import com.nulabinc.backlog.migration.common.deserializers.Deserializer
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import com.nulabinc.backlog.migration.common.domain.mappings._
@@ -17,7 +18,6 @@ import com.nulabinc.backlog.migration.common.errors.{
   ValidationError
 }
 import com.nulabinc.backlog.migration.common.formatters.Formatter
-import com.nulabinc.backlog.migration.common.serializers.Serializer
 import com.nulabinc.backlog.migration.common.validators.MappingValidatorNec
 import org.apache.commons.csv.CSVRecord
 
@@ -49,7 +49,7 @@ object StatusMappingFileService {
       dstItems: BacklogStatuses
   )(implicit
       formatter: Formatter[StatusMapping[A]],
-      serializer: Serializer[StatusMapping[A], Seq[String]],
+      encoder: StatusMappingEncoder[A],
       deserializer: Deserializer[CSVRecord, StatusMapping[A]],
       header: MappingHeader[StatusMapping[_]]
   ): F[Unit] =

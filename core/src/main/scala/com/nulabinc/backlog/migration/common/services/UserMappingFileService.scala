@@ -7,6 +7,7 @@ import cats.Monad
 import cats.Monad.ops._
 import cats.data.Validated.{Invalid, Valid}
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
+import com.nulabinc.backlog.migration.common.codec.UserMappingEncoder
 import com.nulabinc.backlog.migration.common.deserializers.Deserializer
 import com.nulabinc.backlog.migration.common.domain.BacklogUser
 import com.nulabinc.backlog.migration.common.domain.mappings._
@@ -18,7 +19,6 @@ import com.nulabinc.backlog.migration.common.errors.{
   ValidationError
 }
 import com.nulabinc.backlog.migration.common.formatters.Formatter
-import com.nulabinc.backlog.migration.common.serializers.Serializer
 import com.nulabinc.backlog.migration.common.validators.MappingValidatorNec
 import org.apache.commons.csv.CSVRecord
 
@@ -46,7 +46,7 @@ object UserMappingFileService {
       dstApiConfiguration: BacklogApiConfiguration
   )(implicit
       formatter: Formatter[UserMapping[A]],
-      serializer: Serializer[UserMapping[A], Seq[String]],
+      encoder: UserMappingEncoder[A],
       deserializer: Deserializer[CSVRecord, UserMapping[A]],
       header: MappingHeader[UserMapping[_]]
   ): F[Unit] =
