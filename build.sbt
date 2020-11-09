@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
   ),
   libraryDependencies ++= {
     val catsVersion     = "2.1.0"
-    val monixVersion    = "3.1.0"
+    val monixVersion    = "3.3.0"
     val slickVersion    = "3.3.2"
     val akkaVersion     = "2.6.10"
     val akkaHttpVersion = "10.2.1"
