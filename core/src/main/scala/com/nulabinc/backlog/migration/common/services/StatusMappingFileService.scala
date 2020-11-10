@@ -6,18 +6,17 @@ import cats.Foldable.ops._
 import cats.Monad
 import cats.Monad.ops._
 import cats.data.Validated.{Invalid, Valid}
-import com.nulabinc.backlog.migration.common.deserializers.Deserializer
+import com.nulabinc.backlog.migration.common.codec.{StatusMappingEncoder, StatusMappingDecoder}
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
+import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.errors.{
   MappingFileError,
   MappingFileNotFound,
   MappingValidationError,
   ValidationError
 }
-import com.nulabinc.backlog.migration.common.formatters.Formatter
-import com.nulabinc.backlog.migration.common.serializers.Serializer
 import com.nulabinc.backlog.migration.common.validators.MappingValidatorNec
 import org.apache.commons.csv.CSVRecord
 
@@ -49,8 +48,8 @@ object StatusMappingFileService {
       dstItems: BacklogStatuses
   )(implicit
       formatter: Formatter[StatusMapping[A]],
-      serializer: Serializer[StatusMapping[A], Seq[String]],
-      deserializer: Deserializer[CSVRecord, StatusMapping[A]],
+      encoder: StatusMappingEncoder[A],
+      decoder: StatusMappingDecoder[A],
       header: MappingHeader[StatusMapping[_]]
   ): F[Unit] =
     for {
@@ -59,14 +58,14 @@ object StatusMappingFileService {
         if (exists) {
           for {
             records <- StorageDSL[F].read(mappingFilePath, MappingFileService.readLine)
-            mappings = MappingDeserializer.status(records)
+            mappings = MappingDecoder.status(records)
             result   = merge(mappings, srcItems)
             _ <-
               if (result.addedList.nonEmpty)
                 for {
                   _ <- StorageDSL[F].writeNewFile(
                     mappingFilePath,
-                    MappingSerializer.status(result.mergeList)
+                    MappingEncoder.status(result.mergeList)
                   )
                   _ <- ConsoleDSL[F].println(
                     MappingMessages.statusMappingMerged(mappingFilePath, result.addedList)
@@ -80,7 +79,7 @@ object StatusMappingFileService {
           for {
             _ <- StorageDSL[F].writeNewFile(
               mappingFilePath,
-              MappingSerializer.status(result.mergeList)
+              MappingEncoder.status(result.mergeList)
             )
             _ <- ConsoleDSL[F].println(
               MappingMessages.statusMappingCreated(mappingFilePath)
@@ -89,7 +88,7 @@ object StatusMappingFileService {
         }
       _ <- StorageDSL[F].writeNewFile(
         mappingListPath,
-        MappingSerializer.statusList(dstItems)
+        MappingEncoder.statusList(dstItems)
       )
     } yield ()
 
@@ -98,7 +97,7 @@ object StatusMappingFileService {
     *
    * @param path
     * @param dstItems
-    * @param deserializer
+    * @param decoder
     * @tparam A
     * @tparam F
     * @return
@@ -107,7 +106,7 @@ object StatusMappingFileService {
       path: Path,
       dstItems: BacklogStatuses
   )(implicit
-      deserializer: Deserializer[CSVRecord, StatusMapping[A]]
+      decoder: StatusMappingDecoder[A]
   ): F[Either[MappingFileError, Seq[ValidatedStatusMapping[A]]]] = {
     val result = for {
       _           <- StorageDSL[F].exists(path).orError(MappingFileNotFound("status", path)).handleError
@@ -122,17 +121,17 @@ object StatusMappingFileService {
     * Deserialize a mapping file.
     *
    * @param path
-    * @param deserializer
+    * @param decoder
     * @tparam A
     * @tparam F
     * @return
     */
   def getMappings[A, F[_]: Monad: ConsoleDSL: StorageDSL](path: Path)(implicit
-      deserializer: Deserializer[CSVRecord, StatusMapping[A]]
+      decoder: StatusMappingDecoder[A]
   ): F[Either[MappingFileError, Seq[StatusMapping[A]]]] =
     for {
       records <- StorageDSL[F].read(path, MappingFileService.readLine)
-      mappings = MappingDeserializer.status(records)
+      mappings = MappingDecoder.status(records)
     } yield Right(mappings)
 
   /**

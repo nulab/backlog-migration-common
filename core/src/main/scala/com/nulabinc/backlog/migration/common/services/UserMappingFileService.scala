@@ -7,7 +7,8 @@ import cats.Monad
 import cats.Monad.ops._
 import cats.data.Validated.{Invalid, Valid}
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
-import com.nulabinc.backlog.migration.common.deserializers.Deserializer
+import com.nulabinc.backlog.migration.common.codec.{UserMappingEncoder, UserMappingDecoder}
+import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.domain.BacklogUser
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
@@ -17,8 +18,6 @@ import com.nulabinc.backlog.migration.common.errors.{
   MappingValidationError,
   ValidationError
 }
-import com.nulabinc.backlog.migration.common.formatters.Formatter
-import com.nulabinc.backlog.migration.common.serializers.Serializer
 import com.nulabinc.backlog.migration.common.validators.MappingValidatorNec
 import org.apache.commons.csv.CSVRecord
 
@@ -46,8 +45,8 @@ object UserMappingFileService {
       dstApiConfiguration: BacklogApiConfiguration
   )(implicit
       formatter: Formatter[UserMapping[A]],
-      serializer: Serializer[UserMapping[A], Seq[String]],
-      deserializer: Deserializer[CSVRecord, UserMapping[A]],
+      encoder: UserMappingEncoder[A],
+      decoder: UserMappingDecoder[A],
       header: MappingHeader[UserMapping[_]]
   ): F[Unit] =
     for {
@@ -56,14 +55,14 @@ object UserMappingFileService {
         if (mappingFileExists) {
           for {
             records <- StorageDSL[F].read(mappingFilePath, MappingFileService.readLine)
-            mappings = MappingDeserializer.user(records)
+            mappings = MappingDecoder.user(records)
             result   = merge(mappings, srcItems, dstApiConfiguration.isNAISpace)
             _ <-
               if (result.addedList.nonEmpty)
                 for {
                   _ <- StorageDSL[F].writeNewFile(
                     mappingFilePath,
-                    MappingSerializer.user(result.mergeList)
+                    MappingEncoder.user(result.mergeList)
                   )
                   _ <- ConsoleDSL[F].println(
                     MappingMessages.userMappingMerged(mappingFilePath, result.addedList)
@@ -77,7 +76,7 @@ object UserMappingFileService {
           for {
             _ <- StorageDSL[F].writeNewFile(
               mappingFilePath,
-              MappingSerializer.user(result.mergeList)
+              MappingEncoder.user(result.mergeList)
             )
             _ <- ConsoleDSL[F].println(
               MappingMessages.userMappingCreated(mappingFilePath)
@@ -86,7 +85,7 @@ object UserMappingFileService {
         }
       _ <- StorageDSL[F].writeNewFile(
         mappingListPath,
-        MappingSerializer.userList(dstItems)
+        MappingEncoder.userList(dstItems)
       )
     } yield ()
 
@@ -104,7 +103,7 @@ object UserMappingFileService {
       path: Path,
       dstItems: Seq[BacklogUser]
   )(implicit
-      deserializer: Deserializer[CSVRecord, UserMapping[A]]
+      decoder: UserMappingDecoder[A]
   ): F[Either[MappingFileError, Seq[ValidatedUserMapping[A]]]] = {
     val result = for {
       _           <- StorageDSL[F].exists(path).orError(MappingFileNotFound("users", path)).handleError
@@ -125,11 +124,11 @@ object UserMappingFileService {
     * @return
     */
   def getMappings[A, F[_]: Monad: StorageDSL](path: Path)(implicit
-      deserializer: Deserializer[CSVRecord, UserMapping[A]]
+      decoder: UserMappingDecoder[A]
   ): F[Either[MappingFileError, Seq[UserMapping[A]]]] =
     for {
       records <- StorageDSL[F].read(path, MappingFileService.readLine)
-      mappings = MappingDeserializer.user(records)
+      mappings = MappingDecoder.user(records)
     } yield Right(mappings)
 
   /**
