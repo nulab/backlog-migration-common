@@ -6,18 +6,16 @@ import cats.Foldable.ops._
 import cats.Monad
 import cats.Monad.ops._
 import cats.data.Validated.{Invalid, Valid}
-import com.nulabinc.backlog.migration.common.codec.Encoder
-import com.nulabinc.backlog.migration.common.deserializers.Deserializer
+import com.nulabinc.backlog.migration.common.codec.{PriorityMappingDecoder, PriorityMappingEncoder}
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
+import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.errors.{
   MappingFileError,
   MappingFileNotFound,
   MappingValidationError,
   ValidationError
 }
-import com.nulabinc.backlog.migration.common.codec.PriorityMappingEncoder
-import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.validators.MappingValidatorNec
 import com.nulabinc.backlog4j.Priority
 import org.apache.commons.csv.CSVRecord
@@ -36,7 +34,7 @@ object PriorityMappingFileService {
   )(implicit
       formatter: Formatter[PriorityMapping[A]],
       encoder: PriorityMappingEncoder[A],
-      deserializer: Deserializer[CSVRecord, PriorityMapping[A]],
+      decoder: PriorityMappingDecoder[A],
       header: MappingHeader[PriorityMapping[_]]
   ): F[Unit] =
     for {
@@ -45,7 +43,7 @@ object PriorityMappingFileService {
         if (exists) {
           for {
             records <- StorageDSL[F].read(mappingFilePath, MappingFileService.readLine)
-            mappings = MappingDeserializer.priority(records)
+            mappings = MappingDecoder.priority(records)
             result   = merge(mappings, srcItems)
             _ <-
               if (result.addedList.nonEmpty)
@@ -84,7 +82,7 @@ object PriorityMappingFileService {
     *
    * @param path
     * @param dstItems
-    * @param deserializer
+    * @param decoder
     * @tparam A
     * @tparam F
     * @return
@@ -93,7 +91,7 @@ object PriorityMappingFileService {
       path: Path,
       dstItems: Seq[Priority]
   )(implicit
-      deserializer: Deserializer[CSVRecord, PriorityMapping[A]]
+      decoder: PriorityMappingDecoder[A]
   ): F[Either[MappingFileError, Seq[ValidatedPriorityMapping[A]]]] = {
     val result = for {
       _           <- StorageDSL[F].exists(path).orError(MappingFileNotFound("priority", path)).handleError
@@ -108,17 +106,17 @@ object PriorityMappingFileService {
     * Deserialize a mapping file.
     *
    * @param path
-    * @param deserializer
+    * @param decoder
     * @tparam A
     * @tparam F
     * @return
     */
   def getMappings[A, F[_]: Monad: ConsoleDSL: StorageDSL](path: Path)(implicit
-      deserializer: Deserializer[CSVRecord, PriorityMapping[A]]
+      decoder: PriorityMappingDecoder[A]
   ): F[Either[MappingFileError, Seq[PriorityMapping[A]]]] =
     for {
       records <- StorageDSL[F].read(path, MappingFileService.readLine)
-      mappings = MappingDeserializer.priority(records)
+      mappings = MappingDecoder.priority(records)
     } yield Right(mappings)
 
   /**
