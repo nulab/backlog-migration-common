@@ -8,8 +8,8 @@ import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging}
 import com.nulabinc.backlog4j.ChangeLog
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 private[common] class ChangeLogWrites @Inject() (
     implicit val attachmentInfoWrites: AttachmentInfoWrites,
     implicit val attributeInfoWrites: AttributeInfoWrites

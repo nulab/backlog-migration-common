@@ -13,8 +13,8 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class SharedFileServiceImpl @Inject() (
     projectKey: BacklogProjectKey,
     backlog: BacklogAPIClient

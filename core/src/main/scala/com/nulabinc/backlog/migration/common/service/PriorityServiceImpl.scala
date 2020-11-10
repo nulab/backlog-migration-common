@@ -7,8 +7,8 @@ import com.nulabinc.backlog4j.Priority
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class PriorityServiceImpl @Inject() (backlog: BacklogAPIClient) extends PriorityService {
 
   override def allPriorities(): Seq[Priority] =

@@ -17,8 +17,8 @@ import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class CommentServiceImpl @Inject() (
     implicit val issueWrites: IssueWrites,
     implicit val commentWrites: CommentWrites,
@@ -551,7 +551,7 @@ class CommentServiceImpl @Inject() (
       customFieldSetting.optId
     ) match {
       case (Some(value), property: BacklogCustomFieldMultipleProperty, Some(id))
-          if (value.nonEmpty) =>
+          if value.nonEmpty =>
         for {
           item   <- property.items.find(_.name == value)
           itemId <- item.optId
@@ -626,7 +626,7 @@ class CommentServiceImpl @Inject() (
           id,
           List.empty[Long].map(Long.box).asJava
         )
-        params.customFieldOtherValue(id, (""))
+        params.customFieldOtherValue(id, "")
         ()
       case _ =>
         logger.warn("Unknown pattern of multiple list")

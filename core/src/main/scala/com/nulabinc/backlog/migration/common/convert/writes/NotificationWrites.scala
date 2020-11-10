@@ -8,8 +8,8 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.Notification
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 private[common] class NotificationWrites @Inject() (implicit
     val userWrites: UserWrites
 ) extends Writes[Notification, BacklogNotification]

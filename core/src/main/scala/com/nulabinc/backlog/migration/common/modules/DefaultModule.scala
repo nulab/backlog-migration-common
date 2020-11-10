@@ -11,8 +11,8 @@ import com.nulabinc.backlog4j.IssueType
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
 
   protected val backlog: BacklogAPIClient = createBacklogAPIClient()

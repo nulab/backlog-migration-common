@@ -10,8 +10,8 @@ import com.nulabinc.backlog4j.api.option.CreateProjectParams
 import com.nulabinc.backlog4j.{BacklogAPIException, Project}
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class ProjectServiceImpl @Inject() (implicit
     val projectWrites: ProjectWrites,
     backlog: BacklogAPIClient

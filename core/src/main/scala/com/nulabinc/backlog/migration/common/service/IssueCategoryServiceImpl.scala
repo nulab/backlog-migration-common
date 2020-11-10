@@ -11,8 +11,8 @@ import com.nulabinc.backlog4j.api.option.AddCategoryParams
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class IssueCategoryServiceImpl @Inject() (implicit
     val categoryWrites: CategoryWrites,
     projectKey: BacklogProjectKey,

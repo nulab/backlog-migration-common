@@ -8,8 +8,8 @@ import com.nulabinc.backlog4j.Issue
 import com.nulabinc.backlog4j.api.option.{GetIssuesCountParams, GetIssuesParams}
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 trait IssueService {
 
   def issueOfId(id: Long): BacklogIssue

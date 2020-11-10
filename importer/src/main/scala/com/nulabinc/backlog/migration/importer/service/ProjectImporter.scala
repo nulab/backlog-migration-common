@@ -15,8 +15,8 @@ import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.ansi
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 private[importer] class ProjectImporter @Inject() (
     backlogPaths: BacklogPaths,
     groupService: GroupService,
@@ -197,20 +197,22 @@ private[importer] class ProjectImporter @Inject() (
       BacklogUnmarshaller.statuses(backlogPaths) // Status ids are old.
 
     // Import Statuses excluding default statuses
-    val mustImportCustomStatuses = willExistDestinationStatuses.filter {
-      case s: ExistingExportedBacklogStatus =>
-        projectStatuses.isCustomStatus(s.status) && projectStatuses.notExistByName(s.name)
-      case s: DeletedExportedBacklogStatus =>
-        projectStatuses.notExistByName(s.name)
-    }.flatMap {
-      case backlogStatus: ExistingExportedBacklogStatus =>
-        backlogStatus.status match {
-          case _: BacklogDefaultStatus => None
-          case s: BacklogCustomStatus  => Some(s)
-        }
-      case s: DeletedExportedBacklogStatus =>
-        Some(BacklogCustomStatus.create(s.name))
-    }
+    val mustImportCustomStatuses = willExistDestinationStatuses
+      .filter {
+        case s: ExistingExportedBacklogStatus =>
+          projectStatuses.isCustomStatus(s.status) && projectStatuses.notExistByName(s.name)
+        case s: DeletedExportedBacklogStatus =>
+          projectStatuses.notExistByName(s.name)
+      }
+      .flatMap {
+        case backlogStatus: ExistingExportedBacklogStatus =>
+          backlogStatus.status match {
+            case _: BacklogDefaultStatus => None
+            case s: BacklogCustomStatus  => Some(s)
+          }
+        case s: DeletedExportedBacklogStatus =>
+          Some(BacklogCustomStatus.create(s.name))
+      }
     val console = (ProgressBar.progress _)(
       Messages("common.statuses"),
       Messages("message.importing"),

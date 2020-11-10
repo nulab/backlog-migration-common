@@ -6,8 +6,8 @@ import com.osinka.i18n.Lang
 import org.slf4j.{Logger, LoggerFactory}
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 trait Logging {
 
   implicit val userLang =

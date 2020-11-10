@@ -6,7 +6,7 @@ import cats.Foldable.ops._
 import cats.Monad
 import cats.Monad.ops._
 import cats.data.Validated.{Invalid, Valid}
-import com.nulabinc.backlog.migration.common.codec.{StatusMappingEncoder, StatusMappingDecoder}
+import com.nulabinc.backlog.migration.common.codec.{StatusMappingDecoder, StatusMappingEncoder}
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
@@ -37,10 +37,10 @@ object StatusMappingFileService {
   import com.nulabinc.backlog.migration.common.shared.syntax._
 
   /**
-    Create mapping files.
-      - statuses.csv       Link the source and destination states. User must edit to link it.
-      - statuses_list.csv  List of items that can be specified in statuses.csv
-    */
+   *    Create mapping files.
+   *      - statuses.csv       Link the source and destination states. User must edit to link it.
+   *      - statuses_list.csv  List of items that can be specified in statuses.csv
+   */
   def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](
       mappingFilePath: Path,
       mappingListPath: Path,
@@ -93,15 +93,15 @@ object StatusMappingFileService {
     } yield ()
 
   /**
-    * List of items that can be specified in statuses.csv
-    *
+   * List of items that can be specified in statuses.csv
+   *
    * @param path
-    * @param dstItems
-    * @param decoder
-    * @tparam A
-    * @tparam F
-    * @return
-    */
+   * @param dstItems
+   * @param decoder
+   * @tparam A
+   * @tparam F
+   * @return
+   */
   def execute[A, F[_]: Monad: StorageDSL: ConsoleDSL](
       path: Path,
       dstItems: BacklogStatuses
@@ -118,14 +118,14 @@ object StatusMappingFileService {
   }
 
   /**
-    * Deserialize a mapping file.
-    *
+   * Deserialize a mapping file.
+   *
    * @param path
-    * @param decoder
-    * @tparam A
-    * @tparam F
-    * @return
-    */
+   * @param decoder
+   * @tparam A
+   * @tparam F
+   * @return
+   */
   def getMappings[A, F[_]: Monad: ConsoleDSL: StorageDSL](path: Path)(implicit
       decoder: StatusMappingDecoder[A]
   ): F[Either[MappingFileError, Seq[StatusMapping[A]]]] =
@@ -135,12 +135,12 @@ object StatusMappingFileService {
     } yield Right(mappings)
 
   /**
-    * Validate mappings
-    * @param mappings
-    * @param dstItems
-    * @tparam A
-    * @return
-    */
+   * Validate mappings
+   * @param mappings
+   * @param dstItems
+   * @tparam A
+   * @return
+   */
   def validateMappings[A](
       mappings: Seq[StatusMapping[A]],
       dstItems: BacklogStatuses
@@ -158,13 +158,13 @@ object StatusMappingFileService {
   }
 
   /**
-    * Merge old mappings and new items.
-    *
+   * Merge old mappings and new items.
+   *
    * @param mappings
-    * @param srcItems
-    * @tparam A
-    * @return
-    */
+   * @param srcItems
+   * @tparam A
+   * @return
+   */
   private def merge[A](
       mappings: Seq[StatusMapping[A]],
       srcItems: Seq[A]

@@ -4,8 +4,8 @@ import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone}
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 object DateUtil {
 
   private[this] val ISO_FORMAT        = "yyyy-MM-dd'T'HH:mm:ssXXX"

@@ -11,8 +11,8 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.CustomField.FieldType
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class CustomFieldSettingNameWrites @Inject() ()
     extends Writes[String, BacklogCustomFieldSetting]
     with Logging {

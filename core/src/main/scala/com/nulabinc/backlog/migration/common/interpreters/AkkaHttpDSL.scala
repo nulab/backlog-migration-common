@@ -23,11 +23,13 @@ class AkkaHttpDSL()(implicit
     exc: ExecutionContext
 ) extends HttpDSL[Task] {
   private val logger = LoggerFactory.getLogger(getClass)
-  private val settings = createOptClientTransport().map { transport =>
-    ConnectionPoolSettings(actorSystem).withConnectionSettings(
-      ClientConnectionSettings(actorSystem).withTransport(transport)
-    )
-  }.getOrElse(ConnectionPoolSettings(actorSystem))
+  private val settings = createOptClientTransport()
+    .map { transport =>
+      ConnectionPoolSettings(actorSystem).withConnectionSettings(
+        ClientConnectionSettings(actorSystem).withTransport(transport)
+      )
+    }
+    .getOrElse(ConnectionPoolSettings(actorSystem))
 
   private val http             = Http()
   private val timeout          = 10.seconds

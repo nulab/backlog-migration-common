@@ -7,8 +7,8 @@ import com.nulabinc.backlog.migration.common.domain.BacklogVersion
 import com.nulabinc.backlog.migration.common.utils.Logging
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class VersionNameWrites @Inject() () extends Writes[String, BacklogVersion] with Logging {
 
   override def writes(name: String): BacklogVersion = {

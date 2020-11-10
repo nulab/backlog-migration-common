@@ -8,8 +8,8 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.Project
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 private[common] class ProjectWrites @Inject() ()
     extends Writes[Project, BacklogProject]
     with Logging {

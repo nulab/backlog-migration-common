@@ -12,8 +12,8 @@ import org.scalatest.{FlatSpec, Matchers}
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
 
   def commentService() = {

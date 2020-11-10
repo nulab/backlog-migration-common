@@ -8,8 +8,8 @@ import com.nulabinc.backlog.migration.common.utils.IOUtil
 import spray.json.JsonParser
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 object BacklogUnmarshaller {
 
   import com.nulabinc.backlog.migration.common.formatters.BacklogJsonProtocol._

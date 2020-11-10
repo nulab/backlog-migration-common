@@ -7,8 +7,8 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import scala.collection.mutable
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 private[importer] case class IssueContext(
     project: BacklogProject,
     propertyResolver: PropertyResolver,

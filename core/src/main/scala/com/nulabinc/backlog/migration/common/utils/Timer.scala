@@ -1,8 +1,8 @@
 package com.nulabinc.backlog.migration.common.utils
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 object Timer {
   var s: Long = 0L
   def time(label: String) = {

@@ -78,15 +78,15 @@ object PriorityMappingFileService {
     } yield ()
 
   /**
-    * List of items that can be specified in Priorityes.csv
-    *
+   * List of items that can be specified in Priorityes.csv
+   *
    * @param path
-    * @param dstItems
-    * @param decoder
-    * @tparam A
-    * @tparam F
-    * @return
-    */
+   * @param dstItems
+   * @param decoder
+   * @tparam A
+   * @tparam F
+   * @return
+   */
   def execute[A, F[_]: Monad: StorageDSL: ConsoleDSL](
       path: Path,
       dstItems: Seq[Priority]
@@ -103,14 +103,14 @@ object PriorityMappingFileService {
   }
 
   /**
-    * Deserialize a mapping file.
-    *
+   * Deserialize a mapping file.
+   *
    * @param path
-    * @param decoder
-    * @tparam A
-    * @tparam F
-    * @return
-    */
+   * @param decoder
+   * @tparam A
+   * @tparam F
+   * @return
+   */
   def getMappings[A, F[_]: Monad: ConsoleDSL: StorageDSL](path: Path)(implicit
       decoder: PriorityMappingDecoder[A]
   ): F[Either[MappingFileError, Seq[PriorityMapping[A]]]] =
@@ -120,12 +120,12 @@ object PriorityMappingFileService {
     } yield Right(mappings)
 
   /**
-    * Validate mappings
-    * @param mappings
-    * @param dstItems
-    * @tparam A
-    * @return
-    */
+   * Validate mappings
+   * @param mappings
+   * @param dstItems
+   * @tparam A
+   * @return
+   */
   def validateMappings[A](
       mappings: Seq[PriorityMapping[A]],
       dstItems: Seq[Priority]
@@ -143,12 +143,12 @@ object PriorityMappingFileService {
   }
 
   /**
-    * Merge old mappings and new items.
-    * @param mappings
-    * @param srcItems
-    * @tparam A
-    * @return
-    */
+   * Merge old mappings and new items.
+   * @param mappings
+   * @param srcItems
+   * @tparam A
+   * @return
+   */
   private def merge[A](
       mappings: Seq[PriorityMapping[A]],
       srcItems: Seq[A]

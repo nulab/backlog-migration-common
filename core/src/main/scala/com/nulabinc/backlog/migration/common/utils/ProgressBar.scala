@@ -6,8 +6,8 @@ import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.ansi
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 object ProgressBar extends Logging {
 
   def progress(
@@ -50,7 +50,7 @@ object ProgressBar extends Logging {
 
   def progressBar(index: Int, total: Int): String = {
     val decile   = (10.0 * (index.toFloat / total.toFloat)).toInt
-    val rate     = (index.toFloat / total.toFloat)
+    val rate     = index.toFloat / total.toFloat
     val progress = Messages("message.progress.value", index, total)
     val value =
       s"${progress} [${("#" * decile)}${(" " * (10 - decile))}] " + f"${100.0 * rate}%5.1f%% "

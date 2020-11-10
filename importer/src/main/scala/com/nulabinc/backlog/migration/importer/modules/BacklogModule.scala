@@ -4,8 +4,8 @@ import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.modules.DefaultModule
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 private[importer] class BacklogModule(apiConfig: BacklogApiConfiguration)
     extends DefaultModule(apiConfig) {
 

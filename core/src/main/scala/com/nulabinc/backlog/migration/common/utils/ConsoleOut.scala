@@ -7,8 +7,8 @@ import org.fusesource.jansi.Ansi.Color._
 import org.fusesource.jansi.Ansi.ansi
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 object ConsoleOut extends Logging {
 
   val outStream: PrintStream = System.out
