@@ -5,8 +5,8 @@ import java.nio.charset.Charset
 import better.files.{File => Path}
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 object IOUtil {
 
   def createDirectory(path: Path): Unit =

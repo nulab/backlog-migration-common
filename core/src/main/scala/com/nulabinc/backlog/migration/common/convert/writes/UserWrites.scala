@@ -8,8 +8,8 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.User
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class UserWrites @Inject() () extends Writes[User, BacklogUser] with Logging {
 
   override def writes(user: User): BacklogUser = {

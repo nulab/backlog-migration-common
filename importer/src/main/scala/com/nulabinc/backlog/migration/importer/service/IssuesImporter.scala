@@ -17,8 +17,8 @@ import com.osinka.i18n.Messages
 import javax.inject.Inject
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 private[importer] class IssuesImporter @Inject() (
     backlogPaths: BacklogPaths,
     sharedFileService: SharedFileService,

@@ -3,8 +3,8 @@ package com.nulabinc.backlog.migration.common.service
 import com.nulabinc.backlog.migration.common.domain.{BacklogCustomStatus, BacklogStatuses}
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 trait StatusService {
 
   def allStatuses(): BacklogStatuses

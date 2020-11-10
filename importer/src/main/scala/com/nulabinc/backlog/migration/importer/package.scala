@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 package object importer {}

@@ -8,8 +8,8 @@ import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
 import com.nulabinc.backlog4j.internal.json.customFields.DateCustomFieldSetting.InitialValueType
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 trait SimpleFixture {
 
   val userId1       = 1

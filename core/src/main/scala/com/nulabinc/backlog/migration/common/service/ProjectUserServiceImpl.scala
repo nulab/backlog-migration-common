@@ -11,8 +11,8 @@ import com.nulabinc.backlog4j.BacklogAPIException
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class ProjectUserServiceImpl @Inject() (implicit
     val userWrites: UserWrites,
     projectKey: BacklogProjectKey,

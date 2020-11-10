@@ -5,8 +5,8 @@ import com.nulabinc.backlog4j.Project.IssueTypeColor
 import com.nulabinc.backlog4j.User.RoleType
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 object BacklogConstantValue {
 
   val USER_PASSWORD: String = "password"

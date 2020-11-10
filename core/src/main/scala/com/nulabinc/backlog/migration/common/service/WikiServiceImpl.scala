@@ -20,8 +20,8 @@ import com.nulabinc.backlog4j.api.option.{AddWikiAttachmentParams, GetWikisParam
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class WikiServiceImpl @Inject() (implicit
     val wikiWrites: WikiWrites,
     projectKey: BacklogProjectKey,

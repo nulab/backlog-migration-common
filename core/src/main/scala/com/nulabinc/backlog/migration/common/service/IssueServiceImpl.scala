@@ -22,8 +22,8 @@ import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class IssueServiceImpl @Inject() (implicit
     issueWrites: IssueWrites,
     backlog: BacklogAPIClient

@@ -12,8 +12,8 @@ import com.nulabinc.backlog4j.{CustomFieldSetting, IssueType}
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class CustomFieldSettingWrites @Inject() (propertyValue: PropertyValue)
     extends Writes[CustomFieldSetting, BacklogCustomFieldSetting]
     with Logging {

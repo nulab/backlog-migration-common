@@ -7,7 +7,7 @@ import cats.Monad
 import cats.Monad.ops._
 import cats.data.Validated.{Invalid, Valid}
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
-import com.nulabinc.backlog.migration.common.codec.{UserMappingEncoder, UserMappingDecoder}
+import com.nulabinc.backlog.migration.common.codec.{UserMappingDecoder, UserMappingEncoder}
 import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.domain.BacklogUser
 import com.nulabinc.backlog.migration.common.domain.mappings._
@@ -90,15 +90,15 @@ object UserMappingFileService {
     } yield ()
 
   /**
-    * List of items that can be specified in users.csv
-    *
+   * List of items that can be specified in users.csv
+   *
    * @param path
-    * @param dstItems
-    * @param deserializer
-    * @tparam A
-    * @tparam F
-    * @return
-    */
+   * @param dstItems
+   * @param deserializer
+   * @tparam A
+   * @tparam F
+   * @return
+   */
   def execute[A, F[_]: Monad: StorageDSL: ConsoleDSL](
       path: Path,
       dstItems: Seq[BacklogUser]
@@ -115,14 +115,14 @@ object UserMappingFileService {
   }
 
   /**
-    * Deserialize user mappings from a mapping file.
-    *
+   * Deserialize user mappings from a mapping file.
+   *
    * @param path
-    * @param deserializer
-    * @tparam A
-    * @tparam F
-    * @return
-    */
+   * @param deserializer
+   * @tparam A
+   * @tparam F
+   * @return
+   */
   def getMappings[A, F[_]: Monad: StorageDSL](path: Path)(implicit
       decoder: UserMappingDecoder[A]
   ): F[Either[MappingFileError, Seq[UserMapping[A]]]] =
@@ -132,12 +132,12 @@ object UserMappingFileService {
     } yield Right(mappings)
 
   /**
-    * Validate mappings
-    * @param mappings
-    * @param dstItems
-    * @tparam A
-    * @return
-    */
+   * Validate mappings
+   * @param mappings
+   * @param dstItems
+   * @tparam A
+   * @return
+   */
   def validateMappings[A](
       mappings: Seq[UserMapping[A]],
       dstItems: Seq[BacklogUser]
@@ -155,13 +155,13 @@ object UserMappingFileService {
   }
 
   /**
-    * Merge old mappings and new items.
-    *
+   * Merge old mappings and new items.
+   *
    * @param mappings
-    * @param srcItems
-    * @tparam A
-    * @return
-    */
+   * @param srcItems
+   * @tparam A
+   * @return
+   */
   private def merge[A](
       mappings: Seq[UserMapping[A]],
       srcItems: Seq[A],

@@ -4,8 +4,8 @@ import com.nulabinc.backlog.migration.common.client.params.ImportUpdateIssuePara
 import com.nulabinc.backlog.migration.common.domain.BacklogComment
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 trait CommentService {
 
   def allCommentsOfIssue(issueId: Long): Seq[BacklogComment]

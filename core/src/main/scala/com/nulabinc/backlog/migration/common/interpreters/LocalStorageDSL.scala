@@ -21,14 +21,17 @@ case class LocalStorageDSL() extends StorageDSL[Task] {
     Task.deferAction { implicit scheduler =>
       Task.eval {
         val is = Files.newInputStream(path)
-        Try(f(is)).map { result =>
-          is.close()
-          result
-        }.recover {
-          case NonFatal(ex) =>
+        Try(f(is))
+          .map { result =>
             is.close()
-            throw ex
-        }.get
+            result
+          }
+          .recover {
+            case NonFatal(ex) =>
+              is.close()
+              throw ex
+          }
+          .get
       }
     }
 
@@ -85,15 +88,20 @@ case class LocalStorageDSL() extends StorageDSL[Task] {
       option: StandardOpenOption
   ): Task[Unit] =
     Task.deferAction { implicit scheduler =>
-      Task.fromFuture {
-        val os = Files.newOutputStream(path, option)
-        writeStream.foreach { bytes =>
-          os.write(bytes)
-        }.map(_ => os.close()).recover {
-          case NonFatal(ex) =>
-            ex.printStackTrace()
-            os.close()
+      Task
+        .fromFuture {
+          val os = Files.newOutputStream(path, option)
+          writeStream
+            .foreach { bytes =>
+              os.write(bytes)
+            }
+            .map(_ => os.close())
+            .recover {
+              case NonFatal(ex) =>
+                ex.printStackTrace()
+                os.close()
+            }
         }
-      }.map(_ => ())
+        .map(_ => ())
     }
 }

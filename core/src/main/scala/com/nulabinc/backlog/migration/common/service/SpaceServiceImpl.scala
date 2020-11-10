@@ -7,8 +7,8 @@ import com.nulabinc.backlog.migration.common.convert.writes.SpaceWrites
 import com.nulabinc.backlog.migration.common.domain.BacklogSpace
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class SpaceServiceImpl @Inject() (
     implicit val spaceWrites: SpaceWrites,
     implicit val backlog: BacklogAPIClient

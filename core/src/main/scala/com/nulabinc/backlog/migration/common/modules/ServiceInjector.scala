@@ -8,8 +8,8 @@ import com.nulabinc.backlog.migration.common.service._
 import com.nulabinc.backlog4j.conf.BacklogPackageConfigure
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 object ServiceInjector {
 
   def createInjector(apiConfig: BacklogApiConfiguration): Injector = {

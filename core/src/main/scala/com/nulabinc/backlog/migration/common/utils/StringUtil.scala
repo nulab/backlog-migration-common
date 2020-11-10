@@ -3,8 +3,8 @@ package com.nulabinc.backlog.migration.common.utils
 import scala.util.matching.Regex
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 object StringUtil {
 
   private[this] val EOI = '\uFFFF'
@@ -40,8 +40,8 @@ object StringUtil {
 
   def notEmpty(s: String): Option[String] = {
     Option(s) match {
-      case Some(string) if (string.trim.nonEmpty) => Some(string)
-      case _                                      => None
+      case Some(string) if string.trim.nonEmpty => Some(string)
+      case _                                    => None
     }
   }
 

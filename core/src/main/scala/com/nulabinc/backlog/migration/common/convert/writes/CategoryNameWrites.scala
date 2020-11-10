@@ -7,8 +7,8 @@ import com.nulabinc.backlog.migration.common.domain.BacklogIssueCategory
 import com.nulabinc.backlog.migration.common.utils.Logging
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class CategoryNameWrites @Inject() () extends Writes[String, BacklogIssueCategory] with Logging {
 
   override def writes(name: String): BacklogIssueCategory = {

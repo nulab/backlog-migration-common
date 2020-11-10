@@ -8,8 +8,8 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.Category
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 private[common] class CategoryWrites @Inject() ()
     extends Writes[Category, BacklogIssueCategory]
     with Logging {

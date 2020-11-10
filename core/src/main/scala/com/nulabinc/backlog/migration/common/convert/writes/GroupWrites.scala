@@ -10,8 +10,8 @@ import com.nulabinc.backlog4j.Group
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 private[common] class GroupWrites @Inject() (implicit
     val userWrites: UserWrites
 ) extends Writes[Group, BacklogGroup]

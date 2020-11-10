@@ -20,8 +20,8 @@ import com.nulabinc.backlog4j.BacklogAPIException
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class CustomFieldSettingServiceImpl @Inject() (implicit
     val customFieldSettingWrites: CustomFieldSettingWrites,
     projectKey: BacklogProjectKey,
@@ -100,7 +100,7 @@ class CustomFieldSettingServiceImpl @Inject() (implicit
       }
     } catch {
       case api: BacklogAPIException
-          if (api.getMessage.contains("current plan is not customField available.")) =>
+          if api.getMessage.contains("current plan is not customField available.") =>
         logger.warn(api.getMessage, api)
         None
       case e: Throwable =>
@@ -310,7 +310,7 @@ class CustomFieldSettingServiceImpl @Inject() (implicit
       }
     } catch {
       case api: BacklogAPIException
-          if (api.getMessage.contains("current plan is not customField available.")) =>
+          if api.getMessage.contains("current plan is not customField available.") =>
         logger.warn(api.getMessage, api)
         None
       case e: Throwable =>

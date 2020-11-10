@@ -13,8 +13,8 @@ import org.scalatest.{FlatSpec, Matchers}
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
 
   def issueService() = {

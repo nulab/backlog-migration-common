@@ -9,8 +9,8 @@ import org.fusesource.jansi.Ansi.Color._
 import org.fusesource.jansi.Ansi.ansi
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 private[importer] class IssueProgressBar() extends Logging {
 
   var totalSize = 0

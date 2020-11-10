@@ -16,8 +16,8 @@ import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, IOUtil, Logging,
 import com.osinka.i18n.Messages
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 private[importer] class WikisImporter @Inject() (
     backlogPaths: BacklogPaths,
     wikiService: WikiService,

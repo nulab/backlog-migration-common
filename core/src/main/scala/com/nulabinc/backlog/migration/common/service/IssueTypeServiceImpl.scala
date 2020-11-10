@@ -12,8 +12,8 @@ import com.nulabinc.backlog4j.Project
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class IssueTypeServiceImpl @Inject() (implicit
     val issueTypeWrites: IssueTypeWrites,
     projectKey: BacklogProjectKey,

@@ -3,9 +3,10 @@ package com.nulabinc.backlog.migration.common.service
 import com.nulabinc.backlog.migration.common.domain.BacklogCustomFieldSetting
 import com.nulabinc.backlog.migration.common.domain._
 
-/**
-  * @author uchida
-  */
+/**
+ * 
+ * @author uchida
+ */
 trait PropertyResolver {
 
   def optResolvedVersionId(name: String): Option[Long]

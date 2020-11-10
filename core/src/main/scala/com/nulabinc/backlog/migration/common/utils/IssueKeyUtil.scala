@@ -3,8 +3,8 @@ package com.nulabinc.backlog.migration.common.utils
 import scala.util.matching.Regex
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 object IssueKeyUtil {
 
   def replace(issueKey: String, projectKey: String): String = {

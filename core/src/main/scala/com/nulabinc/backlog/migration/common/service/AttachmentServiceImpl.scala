@@ -13,8 +13,8 @@ import com.nulabinc.backlog4j.internal.file.AttachmentDataImpl
 import scala.jdk.CollectionConverters._
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class AttachmentServiceImpl @Inject() (implicit
     val attachmentWrites: AttachmentWrites,
     backlog: BacklogAPIClient

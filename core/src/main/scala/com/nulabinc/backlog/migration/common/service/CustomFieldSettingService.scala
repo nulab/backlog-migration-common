@@ -7,8 +7,8 @@ import com.nulabinc.backlog.migration.common.domain.{
 import com.nulabinc.backlog4j.api.option.{AddCustomFieldParams, UpdateCustomFieldParams}
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 trait CustomFieldSettingService {
 
   def allCustomFieldSettings(): BacklogCustomFieldSettings

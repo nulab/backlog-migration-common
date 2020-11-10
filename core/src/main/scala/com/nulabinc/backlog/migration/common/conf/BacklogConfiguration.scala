@@ -5,8 +5,8 @@ import java.io.File
 import com.typesafe.config.{ConfigException, ConfigFactory}
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 trait BacklogConfiguration {
 
   val NaiSpaceDomain = "backlog.com"

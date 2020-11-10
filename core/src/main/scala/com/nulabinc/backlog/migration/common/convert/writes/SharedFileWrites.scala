@@ -8,8 +8,8 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.SharedFile
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 private[common] class SharedFileWrites @Inject() ()
     extends Writes[SharedFile, BacklogSharedFile]
     with Logging {

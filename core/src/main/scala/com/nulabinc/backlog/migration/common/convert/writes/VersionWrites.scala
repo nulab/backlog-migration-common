@@ -8,8 +8,8 @@ import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging}
 import com.nulabinc.backlog4j.Version
 
 /**
-  * @author uchida
-  */
+ * @author uchida
+ */
 class VersionWrites @Inject() () extends Writes[Version, BacklogVersion] with Logging {
 
   override def writes(version: Version): BacklogVersion = {
