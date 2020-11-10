@@ -50,7 +50,7 @@ object PriorityMappingFileService {
                 for {
                   _ <- StorageDSL[F].writeNewFile(
                     mappingFilePath,
-                    MappingSerializer.priority(result.mergeList)
+                    MappingEncoder.priority(result.mergeList)
                   )
                   _ <- ConsoleDSL[F].println(
                     MappingMessages.priorityMappingMerged(mappingFilePath, result.addedList)
@@ -64,7 +64,7 @@ object PriorityMappingFileService {
           for {
             _ <- StorageDSL[F].writeNewFile(
               mappingFilePath,
-              MappingSerializer.priority(result.mergeList)
+              MappingEncoder.priority(result.mergeList)
             )
             _ <- ConsoleDSL[F].println(
               MappingMessages.priorityMappingCreated(mappingFilePath)
@@ -73,7 +73,7 @@ object PriorityMappingFileService {
         }
       _ <- StorageDSL[F].writeNewFile(
         mappingListPath,
-        MappingSerializer.priorityList(dstItems)
+        MappingEncoder.priorityList(dstItems)
       )
     } yield ()
 

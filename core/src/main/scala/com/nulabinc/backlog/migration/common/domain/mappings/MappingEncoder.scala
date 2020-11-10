@@ -16,7 +16,7 @@ import com.nulabinc.backlog.migration.common.codec.{
 import com.nulabinc.backlog4j.Priority
 import monix.reactive.Observable
 
-object MappingSerializer {
+object MappingEncoder {
 
   private val charset: Charset = StandardCharsets.UTF_8
 

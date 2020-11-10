@@ -62,7 +62,7 @@ object UserMappingFileService {
                 for {
                   _ <- StorageDSL[F].writeNewFile(
                     mappingFilePath,
-                    MappingSerializer.user(result.mergeList)
+                    MappingEncoder.user(result.mergeList)
                   )
                   _ <- ConsoleDSL[F].println(
                     MappingMessages.userMappingMerged(mappingFilePath, result.addedList)
@@ -76,7 +76,7 @@ object UserMappingFileService {
           for {
             _ <- StorageDSL[F].writeNewFile(
               mappingFilePath,
-              MappingSerializer.user(result.mergeList)
+              MappingEncoder.user(result.mergeList)
             )
             _ <- ConsoleDSL[F].println(
               MappingMessages.userMappingCreated(mappingFilePath)
@@ -85,7 +85,7 @@ object UserMappingFileService {
         }
       _ <- StorageDSL[F].writeNewFile(
         mappingListPath,
-        MappingSerializer.userList(dstItems)
+        MappingEncoder.userList(dstItems)
       )
     } yield ()
 

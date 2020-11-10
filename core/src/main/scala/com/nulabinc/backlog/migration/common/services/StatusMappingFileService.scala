@@ -65,7 +65,7 @@ object StatusMappingFileService {
                 for {
                   _ <- StorageDSL[F].writeNewFile(
                     mappingFilePath,
-                    MappingSerializer.status(result.mergeList)
+                    MappingEncoder.status(result.mergeList)
                   )
                   _ <- ConsoleDSL[F].println(
                     MappingMessages.statusMappingMerged(mappingFilePath, result.addedList)
@@ -79,7 +79,7 @@ object StatusMappingFileService {
           for {
             _ <- StorageDSL[F].writeNewFile(
               mappingFilePath,
-              MappingSerializer.status(result.mergeList)
+              MappingEncoder.status(result.mergeList)
             )
             _ <- ConsoleDSL[F].println(
               MappingMessages.statusMappingCreated(mappingFilePath)
@@ -88,7 +88,7 @@ object StatusMappingFileService {
         }
       _ <- StorageDSL[F].writeNewFile(
         mappingListPath,
-        MappingSerializer.statusList(dstItems)
+        MappingEncoder.statusList(dstItems)
       )
     } yield ()
 
