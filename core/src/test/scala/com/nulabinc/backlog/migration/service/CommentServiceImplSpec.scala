@@ -6,11 +6,7 @@ import com.nulabinc.backlog.migration.common.client.params.ImportUpdateIssuePara
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.modules.DefaultModule
 import com.nulabinc.backlog.migration.common.service.CommentServiceImpl
-import com.nulabinc.backlog.migration.{
-  SimpleFixture,
-  TestModule,
-  TestPropertyResolver
-}
+import com.nulabinc.backlog.migration.{SimpleFixture, TestModule, TestPropertyResolver}
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.jdk.CollectionConverters._
@@ -36,8 +32,8 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
 
   "setUpdateParam" should "return the valid params" in {
     val propertyResolver = new TestPropertyResolver()
-    val toRemoteIssueId = (localIssueId: Long) => Some(1): Option[Long]
-    val postAttachment = (fileName: String) => None: Option[Long]
+    val toRemoteIssueId  = (localIssueId: Long) => Some(1): Option[Long]
+    val postAttachment   = (fileName: String) => None: Option[Long]
 
     val params = commentService().setUpdateParam(
       issueId1,
@@ -45,9 +41,7 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
       toRemoteIssueId,
       postAttachment
     )(comment1)
-    params.getParamList.asScala.foreach(p =>
-      println(s"${p.getName}:${p.getValue}")
-    )
+    params.getParamList.asScala.foreach(p => println(s"${p.getName}:${p.getValue}"))
     getValue(params, "comment").map(_.trim) should be(Some(commentContent))
     getValues(params, "notifiedUserId[]").map(_.toLong) should be(Seq(userId3))
     getValue(params, "created") should be(Some(commentCreated))
@@ -89,8 +83,7 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
       Some(dateCustomFieldValue)
     )
 
-    getValue(params, s"customField_${singleListCustomFieldId}")
-      .map(_.toInt) should be(item1.optId)
+    getValue(params, s"customField_${singleListCustomFieldId}").map(_.toInt) should be(item1.optId)
     getValues(params, s"customField_${multipleListCustomFieldId}")
       .map(_.toInt) should contain theSameElementsAs (Seq(
       item1.optId,
@@ -98,16 +91,14 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
     ).flatten.map(_.toInt))
     getValues(params, s"customField_${checkBoxCustomFieldId}").map(
       _.toInt
-    ) should contain theSameElementsAs (Seq(item1.optId, item2.optId).flatten
-      .map(_.toInt))
-    getValue(params, s"customField_${radioCustomFieldId}")
-      .map(_.toInt) should be(item1.optId)
+    ) should contain theSameElementsAs (Seq(item1.optId, item2.optId).flatten.map(_.toInt))
+    getValue(params, s"customField_${radioCustomFieldId}").map(_.toInt) should be(item1.optId)
   }
 
   "setUpdateParam(Reset)" should "return the valid params" in {
     val propertyResolver = new TestPropertyResolver()
-    val toRemoteIssueId = (localIssueId: Long) => Some(1): Option[Long]
-    val postAttachment = (fileName: String) => None: Option[Long]
+    val toRemoteIssueId  = (localIssueId: Long) => Some(1): Option[Long]
+    val postAttachment   = (fileName: String) => None: Option[Long]
 
     val params = commentService().setUpdateParam(
       issueId1,
@@ -139,9 +130,7 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
       params: ImportUpdateIssueParams,
       name: String
   ): Seq[String] = {
-    params.getParamList.asScala.toSeq
-      .filter(p => p.getName == name)
-      .map(_.getValue)
+    params.getParamList.asScala.toSeq.filter(p => p.getName == name).map(_.getValue)
   }
 
 }
