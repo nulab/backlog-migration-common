@@ -27,9 +27,9 @@ class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
 
   "setCreateParam" should "return the valid params" in {
     val propertyResolver = new TestPropertyResolver()
-    val toRemoteIssueId = (localIssueId: Long) => None: Option[Long]
-    val issueOfId = (id: Long) => issue2
-    val postAttachment = (fileName: String) => None: Option[Long]
+    val toRemoteIssueId  = (localIssueId: Long) => None: Option[Long]
+    val issueOfId        = (id: Long) => issue2
+    val postAttachment   = (fileName: String) => None: Option[Long]
 
     val params = issueService().setCreateParam(
       projectId,
@@ -84,13 +84,11 @@ class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
     getValues(
       params,
       s"customField_${multipleListCustomFieldId}"
-    ) should contain theSameElementsAs (Seq(item1.optId, item2.optId).flatten
-      .map(_.toString))
+    ) should contain theSameElementsAs (Seq(item1.optId, item2.optId).flatten.map(_.toString))
     getValues(
       params,
       s"customField_${checkBoxCustomFieldId}"
-    ) should contain theSameElementsAs (Seq(item1.optId, item2.optId).flatten
-      .map(_.toString))
+    ) should contain theSameElementsAs (Seq(item1.optId, item2.optId).flatten.map(_.toString))
     getValue(params, s"customField_${radioCustomFieldId}") should be(
       item1.optId.map(_.toString)
     )
@@ -121,7 +119,7 @@ class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
     filter.append(s"&keyword=test")
 
     val optFilter = Some(filter.toString())
-    val params = new GetIssuesParams(List(projectId).asJava)
+    val params    = new GetIssuesParams(List(projectId).asJava)
     issueService().addIssuesParams(params, optFilter)
     getValue(params, "projectId[]").map(_.toInt) should be(Some(projectId))
     getValue(params, "categoryId[]").map(_.toInt) should be(Some(categoryId1))
@@ -230,9 +228,7 @@ class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
       params: ImportIssueParams,
       name: String
   ): Seq[String] = {
-    params.getParamList.asScala.toSeq
-      .filter(p => p.getName == name)
-      .map(_.getValue)
+    params.getParamList.asScala.toSeq.filter(p => p.getName == name).map(_.getValue)
   }
 
 }

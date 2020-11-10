@@ -1,10 +1,7 @@
 package com.nulabinc.backlog.migration
 
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
-import com.nulabinc.backlog.migration.common.domain.{
-  BacklogCustomFieldSetting,
-  _
-}
+import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, _}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
@@ -15,9 +12,9 @@ import com.nulabinc.backlog4j.internal.json.customFields.DateCustomFieldSetting.
   */
 trait SimpleFixture {
 
-  val userId1 = 1
+  val userId1       = 1
   val userIdString1 = "test1"
-  val userName1 = "name1"
+  val userName1     = "name1"
 
   val user1 = BacklogUser(
     optId = Some(userId1),
@@ -28,9 +25,9 @@ trait SimpleFixture {
     roleType = BacklogConstantValue.USER_ROLE
   )
 
-  val userId2 = 2
+  val userId2       = 2
   val userIdString2 = "test2"
-  val userName2 = "name2"
+  val userName2     = "name2"
 
   val user2 = BacklogUser(
     optId = Some(userId2),
@@ -41,9 +38,9 @@ trait SimpleFixture {
     roleType = BacklogConstantValue.USER_ROLE
   )
 
-  val userId3 = 3
+  val userId3       = 3
   val userIdString3 = "test3"
-  val userName3 = "name3"
+  val userName3     = "name3"
 
   val user3 = BacklogUser(
     optId = Some(userId3),
@@ -56,42 +53,42 @@ trait SimpleFixture {
 
   val sharedFile = BacklogSharedFile(dir = "/test", name = "attachment1")
 
-  val projectId = 11
-  val issueId1 = 12
-  val issueId2 = 13
-  val optIssueKey = Some("TEST-13")
-  val summary = "summary"
+  val projectId                      = 11
+  val issueId1                       = 12
+  val issueId2                       = 13
+  val optIssueKey                    = Some("TEST-13")
+  val summary                        = "summary"
   val optParentIssueId: Option[Long] = Some(issueId2)
-  val description = "description"
-  val startDate = "2017-03-15"
-  val dueDate = "2017-03-16"
-  val estimatedHours: Float = 0.17f
-  val actualHours: Float = 0.18f
-  val issueTypeName = "Task"
-  val issueTypeId = 30
-  val statusId = Issue.StatusType.Open.getIntValue
-  val status = BacklogDefaultStatus(1, BacklogStatusName("Open"), 1000)
-  val statusId1 = Issue.StatusType.InProgress.getIntValue
-  val status1 = BacklogDefaultStatus(2, BacklogStatusName("In progress"), 2000)
-  val categoryName1 = "Development"
-  val categoryName2 = "Test"
-  val categoryId1 = 31
-  val categoryId2 = 32
-  val versionName1 = "0.0.1"
-  val versionName2 = "0.0.2"
-  val versionName3 = "0.0.3"
-  val versionName4 = "0.0.4"
-  val versionId1 = 33
-  val versionId2 = 34
-  val versionId3 = 35
-  val versionId4 = 36
-  val priorityName = PriorityType.Normal.toString
-  val priorityId = PriorityType.Normal.getIntValue
-  val resolutionId = ResolutionType.Fixed.getIntValue
-  val resolutionName = ResolutionType.Fixed.name()
+  val description                    = "description"
+  val startDate                      = "2017-03-15"
+  val dueDate                        = "2017-03-16"
+  val estimatedHours: Float          = 0.17f
+  val actualHours: Float             = 0.18f
+  val issueTypeName                  = "Task"
+  val issueTypeId                    = 30
+  val statusId                       = Issue.StatusType.Open.getIntValue
+  val status                         = BacklogDefaultStatus(1, BacklogStatusName("Open"), 1000)
+  val statusId1                      = Issue.StatusType.InProgress.getIntValue
+  val status1                        = BacklogDefaultStatus(2, BacklogStatusName("In progress"), 2000)
+  val categoryName1                  = "Development"
+  val categoryName2                  = "Test"
+  val categoryId1                    = 31
+  val categoryId2                    = 32
+  val versionName1                   = "0.0.1"
+  val versionName2                   = "0.0.2"
+  val versionName3                   = "0.0.3"
+  val versionName4                   = "0.0.4"
+  val versionId1                     = 33
+  val versionId2                     = 34
+  val versionId3                     = 35
+  val versionId4                     = 36
+  val priorityName                   = PriorityType.Normal.toString
+  val priorityId                     = PriorityType.Normal.getIntValue
+  val resolutionId                   = ResolutionType.Fixed.getIntValue
+  val resolutionName                 = ResolutionType.Fixed.name()
 
-  val issueCreated = "2015-05-01T16:01:51+09:00"
-  val issueUpdated = "2015-05-01T16:01:51+09:00"
+  val issueCreated   = "2015-05-01T16:01:51+09:00"
+  val issueUpdated   = "2015-05-01T16:01:51+09:00"
   val commentCreated = "2016-05-01T16:01:51+09:00"
 
   val operation =
@@ -106,8 +103,8 @@ trait SimpleFixture {
   val item2 = BacklogItem(Some(2), "b")
 
   //Text
-  val textCustomFieldId = 1
-  val textCustomFieldName = "text"
+  val textCustomFieldId    = 1
+  val textCustomFieldName  = "text"
   val textCustomFieldValue = "text value"
   val textCustomField = BacklogCustomField(
     textCustomFieldName,
@@ -124,13 +121,12 @@ trait SimpleFixture {
       required = true,
       applicableIssueTypes = Seq("Task"),
       delete = false,
-      property =
-        BacklogCustomFieldTextProperty(typeId = FieldType.Text.getIntValue)
+      property = BacklogCustomFieldTextProperty(typeId = FieldType.Text.getIntValue)
     )
 
   //TextArea
-  val textAreaCustomFieldId = 2
-  val textAreaCustomFieldName = "text area"
+  val textAreaCustomFieldId    = 2
+  val textAreaCustomFieldName  = "text area"
   val textAreaCustomFieldValue = "text area value"
   val textAreaCustomField =
     BacklogCustomField(
@@ -148,13 +144,12 @@ trait SimpleFixture {
       required = true,
       applicableIssueTypes = Seq("Task"),
       delete = false,
-      property =
-        BacklogCustomFieldTextProperty(typeId = FieldType.TextArea.getIntValue)
+      property = BacklogCustomFieldTextProperty(typeId = FieldType.TextArea.getIntValue)
     )
 
   //Numeric
-  val numericCustomFieldId = 3
-  val numericCustomFieldName = "numeric"
+  val numericCustomFieldId    = 3
+  val numericCustomFieldName  = "numeric"
   val numericCustomFieldValue = "12.12"
   val numericCustomField =
     BacklogCustomField(
@@ -182,8 +177,8 @@ trait SimpleFixture {
     )
 
   //Date
-  val dateCustomFieldId = 4
-  val dateCustomFieldName = "date"
+  val dateCustomFieldId    = 4
+  val dateCustomFieldName  = "date"
   val dateCustomFieldValue = "2017-03-20"
   val dateCustomField =
     BacklogCustomField(
@@ -216,7 +211,7 @@ trait SimpleFixture {
     )
 
   //SingleList
-  val singleListCustomFieldId = 5
+  val singleListCustomFieldId   = 5
   val singleListCustomFieldName = "singleList"
   val singleListCustomField =
     BacklogCustomField(
@@ -243,7 +238,7 @@ trait SimpleFixture {
     )
 
   //MultipleList
-  val multipleListCustomFieldId = 6
+  val multipleListCustomFieldId   = 6
   val multipleListCustomFieldName = "multipleList"
   val multipleListCustomField =
     BacklogCustomField(
@@ -270,7 +265,7 @@ trait SimpleFixture {
     )
 
   //CheckBox
-  val checkBoxCustomFieldId = 7
+  val checkBoxCustomFieldId   = 7
   val checkBoxCustomFieldName = "checkBox"
   val checkBoxCustomField =
     BacklogCustomField(
@@ -297,7 +292,7 @@ trait SimpleFixture {
     )
 
   //Radio
-  val radioCustomFieldId = 8
+  val radioCustomFieldId   = 8
   val radioCustomFieldName = "radio"
   val radioCustomField =
     BacklogCustomField(
