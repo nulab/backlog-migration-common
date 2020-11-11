@@ -270,7 +270,8 @@ class CommentServiceImpl @Inject() (
     changeLog.optNewValue match {
       case Some("") => params.categoryIds(null)
       case Some(value) =>
-        val ids = value.split(",").toSeq.map(_.trim).flatMap(propertyResolver.optResolvedCategoryId)
+        val ids =
+          value.split(",").toSeq.map(_.trim).flatMap(propertyResolver.optResolvedCategoryId)
         if (ids.nonEmpty) params.categoryIds(ids.asJava)
         else params.categoryIds(null)
       case None => params.categoryIds(null)

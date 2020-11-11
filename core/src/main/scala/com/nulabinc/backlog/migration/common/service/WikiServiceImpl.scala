@@ -15,7 +15,11 @@ import com.nulabinc.backlog.migration.common.domain.{
 }
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j._
-import com.nulabinc.backlog4j.api.option.{AddWikiAttachmentParams, GetWikisParams, UpdateWikiParams}
+import com.nulabinc.backlog4j.api.option.{
+  AddWikiAttachmentParams,
+  GetWikisParams,
+  UpdateWikiParams
+}
 
 import scala.jdk.CollectionConverters._
 

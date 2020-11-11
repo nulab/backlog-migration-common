@@ -396,7 +396,10 @@ class IssueServiceImpl @Inject() (implicit
       }
       for { resolutionIds <- uri.query.paramMap.get("resolutionId[]") } yield {
         params.resolutions(
-          resolutionIds.flatMap(StringUtil.safeStringToInt).map(Issue.ResolutionType.valueOf).asJava
+          resolutionIds
+            .flatMap(StringUtil.safeStringToInt)
+            .map(Issue.ResolutionType.valueOf)
+            .asJava
         )
       }
       for {
@@ -505,7 +508,10 @@ class IssueServiceImpl @Inject() (implicit
       }
       for { resolutionIds <- uri.query.paramMap.get("resolutionId[]") } yield {
         params.resolutions(
-          resolutionIds.flatMap(StringUtil.safeStringToInt).map(Issue.ResolutionType.valueOf).asJava
+          resolutionIds
+            .flatMap(StringUtil.safeStringToInt)
+            .map(Issue.ResolutionType.valueOf)
+            .asJava
         )
       }
       for {
