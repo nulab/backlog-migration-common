@@ -172,7 +172,7 @@ object UserMappingFileService {
         case Some(value) =>
           acc.copy(mergeList = acc.mergeList :+ value)
         case None =>
-          val mapping = UserMapping.create(item, isNAISpace)
+          val mapping = UserMapping.create(item)
           acc.copy(
             mergeList = acc.mergeList :+ mapping,
             addedList = acc.addedList :+ mapping

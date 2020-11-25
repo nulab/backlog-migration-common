@@ -50,10 +50,9 @@ sealed trait MappingValidatorNec {
   ): ValidationResult[ValidatedUserMapping[A]] =
     validateBacklogUser(unvalidated, dstItems).map { result =>
       new ValidatedUserMapping[A] {
-        override val src: A                       = unvalidated.src
-        override val srcDisplayValue: String      = unvalidated.srcDisplayValue
-        override val dst: BacklogUserMappingItem  = result._2
-        override val mappingType: UserMappingType = result._1
+        override val src: A                      = unvalidated.src
+        override val srcDisplayValue: String     = unvalidated.srcDisplayValue
+        override val dst: BacklogUserMappingItem = result
       }
     }
 
@@ -97,33 +96,16 @@ sealed trait MappingValidatorNec {
   private def validateBacklogUser[A](
       mapping: UserMapping[A],
       dstItems: Seq[BacklogUser]
-  ): ValidationResult[(UserMappingType, BacklogUserMappingItem)] =
+  ): ValidationResult[BacklogUserMappingItem] =
     mapping.optDst
       .map(_.validNec)
       .getOrElse(MappingValueIsNotSpecified(mapping).invalidNec)
       .andThen { dst =>
         validateNonEmptyString(mapping, dst.value).andThen { value =>
-          validateUserMappingType(mapping.mappingType).andThen {
-            case mappingType @ IdUserMappingType =>
-              if (dstItems.map(_.optUserId).exists(_.contains(value)))
-                (mappingType, BacklogUserMappingItem(value)).validNec
-              else DestinationItemNotFound(value).invalidNec
-            case mappingType @ MailUserMappingType =>
-              if (dstItems.map(_.optMailAddress).exists(_.contains(value)))
-                (mappingType, BacklogUserMappingItem(value)).validNec
-              else DestinationItemNotFound(value).invalidNec
-          }
+          BacklogUserMappingItem(value).validNec
         }
       }
 
-  private def validateUserMappingType(
-      str: String
-  ): ValidationResult[UserMappingType] =
-    str match {
-      case "id"   => IdUserMappingType.valid
-      case "mail" => MailUserMappingType.valid
-      case others => InvalidItemValue("id or mail", others).invalidNec
-    }
 }
 
 object MappingValidatorNec extends MappingValidatorNec
