@@ -102,9 +102,9 @@ class PropertyResolverImpl(
   override def tryResolvedStatusId(name: BacklogStatusName): Int =
     statuses.findByName(name).map(_.id).getOrElse {
       logger.debug(
-        s"[Status not found.]:${name}:${statuses.availableStatusNames.map(_.trimmed).mkString(",")}"
+        s"[Status not found.]:$name:${statuses.availableStatusNames.map(_.trimmed).mkString(",")}"
       )
-      throw new RuntimeException("Status not found.")
+      throw new RuntimeException(s"Status not found. ${name.trimmed}")
     }
 
   override def optResolvedResolutionId(name: String): Option[Long] = {
