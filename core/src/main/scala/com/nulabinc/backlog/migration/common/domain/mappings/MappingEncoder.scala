@@ -27,7 +27,7 @@ object MappingEncoder {
     (priority: Priority) => Seq(priority.getName)
 
   private implicit val backlogUserEncoder: Encoder[BacklogUser, Seq[String]] =
-    (user: BacklogUser) => Seq(user.name, user.optMailAddress.getOrElse(""))
+    (user: BacklogUser) => Seq(user.optUserId.getOrElse(""), user.optMailAddress.getOrElse(""))
 
   private val statusListHeader   = toByteArray(toRow(Seq("Name")))
   private val priorityListHeader = toByteArray(toRow(Seq("Name")))
