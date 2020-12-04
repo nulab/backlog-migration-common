@@ -43,6 +43,12 @@ sealed trait BacklogStatus {
   val name: BacklogStatusName
   val displayOrder: Int
 
+  lazy val optColor: Option[String] =
+    this match {
+      case s: BacklogCustomStatus  => Some(s.color)
+      case _: BacklogDefaultStatus => None
+    }
+
   def isCustomStatus: Boolean =
     this match {
       case _: BacklogCustomStatus  => true
