@@ -2,26 +2,20 @@ package com.nulabinc.backlog.migration.common.interpreters.persistence
 
 import doobie._
 import doobie.implicits._
-import doobie.util.transactor.Transactor
-import cats.effect.Async
-import cats.Monad
-import cats.Monad.ops._
 import com.nulabinc.backlog.migration.common.domain.BacklogStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogDefaultStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogCustomStatus
+import com.nulabinc.backlog.migration.common.domain.BacklogStatusName
 
-trait BaseTableOps[F[_]] {
-  val tableName: String
-  def createTable(): F[Unit]
+trait BaseTableOps {
+  def createTable(): Update0
 }
 
-class BacklogStatusOps[F[_]: Monad: Async](xa: Transactor[F]) extends BaseTableOps[F] {
+class BacklogStatusOps extends BaseTableOps {
 
-  val tableName: String = "backlog_statuses"
-
-  def storeBacklogStatus(status: BacklogStatus): F[Unit] =
+  def store(status: BacklogStatus): Update0 =
     sql"""
-      insert into $tableName 
+      insert into backlog_statuses
         (id, name, display_order, color, is_custom) 
       values 
         (${status.id}, ${status.name.trimmed}, ${status.displayOrder}, ${status.optColor}, ${status.isCustomStatus})
@@ -31,16 +25,35 @@ class BacklogStatusOps[F[_]: Monad: Async](xa: Transactor[F]) extends BaseTableO
         display_order = ${status.displayOrder},
         color = ${status.optColor},
         is_custom = ${status.isCustomStatus}
-    """.update.run.transact(xa).map(_ => ())
+    """.update
 
-  override def createTable(): F[Unit] =
+  def find(id: Int): Query0[BacklogStatus] =
     sql"""
-      create table $tableName (
-        id              bigint primary key,
-        name            text   not null,
-        display_order   int    not null,
+      select 
+        id, name, display_order, color, is_custom
+      from
+        backlog_statuses
+      where
+        id = $id
+    """.query[(Int, String, Int, Option[String], Boolean)].map {
+      case (id, name, displayOrder, Some(color), is_custom) if is_custom =>
+        BacklogCustomStatus(id, BacklogStatusName(name), displayOrder, color)
+      case (id, name, displayOrder, None, is_custom) if !is_custom =>
+        BacklogDefaultStatus(id, BacklogStatusName(name), displayOrder)
+      case (id, name, _, optColor, isCustom) =>
+        throw new IllegalStateException(
+          s"Cannot find backlog status. id: $id, name: $name, optColor: $optColor, isCustom: $isCustom"
+        )
+    }
+
+  def createTable(): Update0 =
+    sql"""
+      create table backlog_statuses (
+        id              int     not null primary key,
+        name            text    not null,
+        display_order   int     not null,
         color           text,
-        is_custom       int    not null
+        is_custom       boolean not null
       )
-    """.update.run.transact(xa).map(_ => ())
+    """.update
 }

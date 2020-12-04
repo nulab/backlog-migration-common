@@ -20,13 +20,13 @@ case class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler)
     ""
   )
 
-  private lazy val backlogStatusOps = new BacklogStatusOps(xa)
+  private lazy val backlogStatusOps = new BacklogStatusOps
 
   def storeBacklogStatus(status: BacklogStatus): Task[Unit] =
-    backlogStatusOps.storeBacklogStatus(status)
+    backlogStatusOps.store(status).run.transact(xa).map(_ => ())
 
   def createTable(): Task[Unit] =
     for {
-      _ <- backlogStatusOps.createTable()
+      _ <- backlogStatusOps.createTable().run.transact(xa)
     } yield ()
 }
