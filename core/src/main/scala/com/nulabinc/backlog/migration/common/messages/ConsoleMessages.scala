@@ -18,11 +18,11 @@ object ConsoleMessages {
   private implicit val userLang: Lang =
     if (Locale.getDefault.equals(Locale.JAPAN)) Lang("ja") else Lang("en")
 
-  val empty: String      = Messages("common.empty")
-  val srcProduct: String = Messages("common.src")
-  val dstProduct: String = Messages("common.dst")
-
-  val confirm: String = Messages("cli.confirm")
+  lazy val empty: String      = Messages("common.empty")
+  lazy val srcProduct: String = Messages("common.src")
+  lazy val dstProduct: String = Messages("common.dst")
+  lazy val confirm: String    = Messages("cli.confirm")
+  lazy val converted: String  = Messages("message.converted")
 
   def notLatestVersion(latest: String, current: String): String =
     s"""
@@ -38,6 +38,9 @@ object ConsoleMessages {
 
   def cliUnknownError(e: Throwable): String =
     s"${Messages("cli.error.unknown")}:${e.getMessage}"
+
+  def executed(key: String, value: String): String =
+    Messages("message.executed", key, value)
 
   object Mappings {
     lazy val statusItem: String   = Messages("common.statuses")
@@ -193,6 +196,20 @@ object ConsoleMessages {
     lazy val end: String =
       s"""--------------------------------------------------
          |${Messages("export.finish")}""".stripMargin
+  }
+
+  object Converts {
+    lazy val start: String =
+      s"""
+         |${Messages("convert.start")}
+         |--------------------------------------------------""".stripMargin
+
+    lazy val end: String =
+      s"""--------------------------------------------------
+         |${Messages("convert.finish")}""".stripMargin
+
+    lazy val projectUser: String = executed(Messages("common.project_user"), converted)
+    lazy val projectKey: String  = executed(Messages("common.project_key"), converted)
   }
 
   object Imports {
