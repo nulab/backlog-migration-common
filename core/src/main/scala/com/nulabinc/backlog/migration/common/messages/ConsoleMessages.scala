@@ -184,6 +184,17 @@ object ConsoleMessages {
 
   }
 
+  object Exports {
+    lazy val start: String =
+      s"""
+         |${Messages("export.start")}
+         |--------------------------------------------------""".stripMargin
+
+    lazy val end: String =
+      s"""--------------------------------------------------
+         |${Messages("export.finish")}""".stripMargin
+  }
+
   object Imports {
     val start: String =
       s"""
