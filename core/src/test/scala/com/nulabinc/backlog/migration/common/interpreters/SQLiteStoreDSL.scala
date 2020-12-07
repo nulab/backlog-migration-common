@@ -12,6 +12,7 @@ import com.nulabinc.backlog.migration.common.domain.Id
 import doobie._
 import doobie.implicits._
 import org.scalatest._
+import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 
 trait TestFixture {
   implicit val cs = IO.contextShift(ExecutionContexts.synchronous)
@@ -32,21 +33,31 @@ class SQLiteStoreDSLSpec
     with doobie.scalatest.IOChecker
     with TestFixture {
 
-  setup()
+  val ops           = new BacklogStatusOps
+  val defaultStatus = BacklogDefaultStatus(Id.backlogStatusId(2), BacklogStatusName("Open"), 999)
+  val customStatus =
+    BacklogCustomStatus(Id.backlogStatusId(1), BacklogStatusName("aaa"), 123, "color")
 
-  val ops = new BacklogStatusOps
+  setup()
 
   test("createTable") { check(ops.createTable()) }
 
   test("store backlog status") {
-    val customStatus =
-      BacklogCustomStatus(Id.backlogStatusId(1), BacklogStatusName("aaa"), 123, "color")
-    val defaultStatus = BacklogDefaultStatus(Id.backlogStatusId(2), BacklogStatusName("Open"), 999)
     ops.createTable().run.transact(transactor).unsafeRunSync()
     ops.store(customStatus).run.transact(transactor).unsafeRunSync() mustBe 1
     ops.store(defaultStatus).run.transact(transactor).unsafeRunSync() mustBe 1
     ops.find(1).option.transact(transactor).unsafeRunSync() mustBe Some(customStatus)
     ops.find(2).option.transact(transactor).unsafeRunSync() mustBe Some(defaultStatus)
+  }
+
+  test("store backlog statuses") {
+    val statuses = BacklogStatuses(
+      Seq(
+        defaultStatus.copy(id = Id.backlogStatusId(3)),
+        customStatus.copy(id = Id.backlogStatusId(4))
+      )
+    )
+    ops.store(statuses).transact(transactor).unsafeRunSync() mustBe 2
   }
 
 }

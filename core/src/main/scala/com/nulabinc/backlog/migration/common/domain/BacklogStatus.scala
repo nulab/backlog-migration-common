@@ -3,7 +3,7 @@ package com.nulabinc.backlog.migration.common.domain
 import com.nulabinc.backlog4j.Project.CustomStatusColor
 import com.nulabinc.backlog4j.{Issue, Status}
 
-case class BacklogStatuses(private val values: Seq[BacklogStatus]) {
+case class BacklogStatuses(val values: Seq[BacklogStatus]) {
 
   val availableStatusNames: Seq[BacklogStatusName] = values.map(_.name)
 

@@ -9,6 +9,7 @@ import com.nulabinc.backlog.migration.common.domain.BacklogStatus
 import com.nulabinc.backlog.migration.common.interpreters.persistence.BacklogStatusOps
 import monix.eval.Task
 import monix.execution.Scheduler
+import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 
 case class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler)
     extends StoreDSL[Task] {
@@ -27,6 +28,9 @@ case class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler)
 
   def storeBacklogStatus(status: BacklogStatus): Task[Unit] =
     backlogStatusOps.store(status).run.transact(xa).map(_ => ())
+
+  def storeBacklogStatus(statuses: BacklogStatuses): Task[Unit] =
+    backlogStatusOps.store(statuses).transact(xa).map(_ => ())
 
   def createTable(): Task[Unit] =
     for {

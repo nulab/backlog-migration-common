@@ -7,6 +7,7 @@ import com.nulabinc.backlog.migration.common.domain.BacklogDefaultStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogCustomStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogStatusName
 import com.nulabinc.backlog.migration.common.domain.Id
+import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 
 trait BaseTableOps {
   def createTable(): Update0
@@ -27,6 +28,23 @@ class BacklogStatusOps extends BaseTableOps {
         color = ${status.optColor},
         is_custom = ${status.isCustomStatus}
     """.update
+
+  def store(statuses: BacklogStatuses): ConnectionIO[Int] = {
+    import cats.implicits._
+
+    implicit val write: Write[BacklogStatus] =
+      Write[(Long, String, Int, Option[String], Boolean)].contramap { s =>
+        (s.id.value, s.name.trimmed, s.displayOrder, s.optColor, s.isCustomStatus)
+      }
+
+    val sql = """
+      insert into backlog_statuses
+        (id, name, display_order, color, is_custom) 
+      values 
+        (?, ?, ?, ?, ?)
+    """
+    Update[BacklogStatus](sql).updateMany(statuses.values.toList)
+  }
 
   def find(id: Int): Query0[BacklogStatus] =
     sql"""
