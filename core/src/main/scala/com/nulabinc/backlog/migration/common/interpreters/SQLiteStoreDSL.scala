@@ -3,12 +3,12 @@ package com.nulabinc.backlog.migration.common.interpreters
 import java.nio.file.Path
 import doobie._
 import doobie.implicits._
+import doobie.util.transactor.Transactor
 import com.nulabinc.backlog.migration.common.dsl.StoreDSL
+import com.nulabinc.backlog.migration.common.domain.BacklogStatus
+import com.nulabinc.backlog.migration.common.interpreters.persistence.BacklogStatusOps
 import monix.eval.Task
 import monix.execution.Scheduler
-import com.nulabinc.backlog.migration.common.domain.BacklogStatus
-import doobie.util.transactor.Transactor
-import com.nulabinc.backlog.migration.common.interpreters.persistence.BacklogStatusOps
 
 case class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler)
     extends StoreDSL[Task] {
@@ -21,6 +21,9 @@ case class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler)
   )
 
   private lazy val backlogStatusOps = new BacklogStatusOps
+
+  def findBacklogStatus(id: Int): Task[Option[BacklogStatus]] =
+    backlogStatusOps.find(id).option.transact(xa)
 
   def storeBacklogStatus(status: BacklogStatus): Task[Unit] =
     backlogStatusOps.store(status).run.transact(xa).map(_ => ())

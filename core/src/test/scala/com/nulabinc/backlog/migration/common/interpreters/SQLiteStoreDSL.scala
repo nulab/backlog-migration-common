@@ -4,12 +4,13 @@ import java.nio.file.Paths
 
 import cats.effect.Blocker
 import cats.effect.IO
-import doobie._
-import doobie.implicits._
 import com.nulabinc.backlog.migration.common.interpreters.persistence.BacklogStatusOps
-import org.scalatest._
 import com.nulabinc.backlog.migration.common.domain.BacklogCustomStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogStatusName
+import doobie._
+import doobie.implicits._
+import org.scalatest._
+import com.nulabinc.backlog.migration.common.domain.BacklogDefaultStatus
 
 trait TestFixture {
   implicit val cs = IO.contextShift(ExecutionContexts.synchronous)
@@ -36,11 +37,14 @@ class SQLiteStoreDSLSpec
 
   test("createTable") { check(ops.createTable()) }
 
-  test("store") {
-    val status = BacklogCustomStatus(1, BacklogStatusName("aaa"), 123, "color")
+  test("store backlog status") {
+    val customStatus  = BacklogCustomStatus(1, BacklogStatusName("aaa"), 123, "color")
+    val defaultStatus = BacklogDefaultStatus(2, BacklogStatusName("Open"), 999)
     ops.createTable().run.transact(transactor).unsafeRunSync()
-    ops.store(status).run.transact(transactor).unsafeRunSync() mustBe 1
-    ops.find(1).option.transact(transactor).unsafeRunSync().get mustBe status
+    ops.store(customStatus).run.transact(transactor).unsafeRunSync() mustBe 1
+    ops.store(defaultStatus).run.transact(transactor).unsafeRunSync() mustBe 1
+    ops.find(1).option.transact(transactor).unsafeRunSync() mustBe Some(customStatus)
+    ops.find(2).option.transact(transactor).unsafeRunSync() mustBe Some(defaultStatus)
   }
 
 }
