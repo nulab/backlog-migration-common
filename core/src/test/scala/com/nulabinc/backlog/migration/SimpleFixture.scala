@@ -67,9 +67,9 @@ trait SimpleFixture {
   val issueTypeName                  = "Task"
   val issueTypeId                    = 30
   val statusId                       = Issue.StatusType.Open.getIntValue
-  val status                         = BacklogDefaultStatus(1, BacklogStatusName("Open"), 1000)
+  val status                         = BacklogDefaultStatus(Id.backlogStatusId(1), BacklogStatusName("Open"), 1000)
   val statusId1                      = Issue.StatusType.InProgress.getIntValue
-  val status1                        = BacklogDefaultStatus(2, BacklogStatusName("In progress"), 2000)
+  val status1                        = BacklogDefaultStatus(Id.backlogStatusId(2), BacklogStatusName("In progress"), 2000)
   val categoryName1                  = "Development"
   val categoryName2                  = "Test"
   val categoryId1                    = 31

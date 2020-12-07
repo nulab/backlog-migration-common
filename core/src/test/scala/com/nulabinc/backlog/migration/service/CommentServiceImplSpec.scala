@@ -41,7 +41,6 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
       toRemoteIssueId,
       postAttachment
     )(comment1)
-    params.getParamList.asScala.foreach(p => println(s"${p.getName}:${p.getValue}"))
     getValue(params, "comment").map(_.trim) should be(Some(commentContent))
     getValues(params, "notifiedUserId[]").map(_.toLong) should be(Seq(userId3))
     getValue(params, "created") should be(Some(commentCreated))

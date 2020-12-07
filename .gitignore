@@ -8,3 +8,6 @@ target/
 .bloop
 .metals
 metals.sbt
+
+# Test
+test.db

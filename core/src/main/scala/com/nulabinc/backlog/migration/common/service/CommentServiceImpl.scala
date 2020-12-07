@@ -315,7 +315,7 @@ class CommentServiceImpl @Inject() (
   ): Unit =
     changeLog.optNewValue.foreach { newValue =>
       params.statusId(
-        propertyResolver.tryResolvedStatusId(BacklogStatusName(newValue))
+        propertyResolver.tryResolvedStatusId(BacklogStatusName(newValue)).value.toInt
       )
     }
 

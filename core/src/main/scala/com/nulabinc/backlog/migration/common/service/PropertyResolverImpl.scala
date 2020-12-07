@@ -2,8 +2,10 @@ package com.nulabinc.backlog.migration.common.service
 
 import com.nulabinc.backlog.migration.common.domain.{
   BacklogCustomFieldSetting,
+  BacklogStatus,
   BacklogStatusName,
-  BacklogVersion
+  BacklogVersion,
+  Id
 }
 import com.nulabinc.backlog.migration.common.utils.Logging
 
@@ -99,7 +101,7 @@ class PropertyResolverImpl(
     optUser.map(_.id)
   }
 
-  override def tryResolvedStatusId(name: BacklogStatusName): Int =
+  override def tryResolvedStatusId(name: BacklogStatusName): Id[BacklogStatus] =
     statuses.findByName(name).map(_.id).getOrElse {
       logger.debug(
         s"[Status not found.]:$name:${statuses.availableStatusNames.map(_.trimmed).mkString(",")}"
