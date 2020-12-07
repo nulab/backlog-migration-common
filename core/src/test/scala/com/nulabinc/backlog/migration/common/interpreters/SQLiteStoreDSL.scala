@@ -7,10 +7,11 @@ import cats.effect.IO
 import com.nulabinc.backlog.migration.common.interpreters.persistence.BacklogStatusOps
 import com.nulabinc.backlog.migration.common.domain.BacklogCustomStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogStatusName
+import com.nulabinc.backlog.migration.common.domain.BacklogDefaultStatus
+import com.nulabinc.backlog.migration.common.domain.Id
 import doobie._
 import doobie.implicits._
 import org.scalatest._
-import com.nulabinc.backlog.migration.common.domain.BacklogDefaultStatus
 
 trait TestFixture {
   implicit val cs = IO.contextShift(ExecutionContexts.synchronous)
@@ -38,8 +39,9 @@ class SQLiteStoreDSLSpec
   test("createTable") { check(ops.createTable()) }
 
   test("store backlog status") {
-    val customStatus  = BacklogCustomStatus(1, BacklogStatusName("aaa"), 123, "color")
-    val defaultStatus = BacklogDefaultStatus(2, BacklogStatusName("Open"), 999)
+    val customStatus =
+      BacklogCustomStatus(Id.backlogStatusId(1), BacklogStatusName("aaa"), 123, "color")
+    val defaultStatus = BacklogDefaultStatus(Id.backlogStatusId(2), BacklogStatusName("Open"), 999)
     ops.createTable().run.transact(transactor).unsafeRunSync()
     ops.store(customStatus).run.transact(transactor).unsafeRunSync() mustBe 1
     ops.store(defaultStatus).run.transact(transactor).unsafeRunSync() mustBe 1

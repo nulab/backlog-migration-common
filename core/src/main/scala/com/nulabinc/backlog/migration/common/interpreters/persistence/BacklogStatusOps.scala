@@ -6,6 +6,7 @@ import com.nulabinc.backlog.migration.common.domain.BacklogStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogDefaultStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogCustomStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogStatusName
+import com.nulabinc.backlog.migration.common.domain.Id
 
 trait BaseTableOps {
   def createTable(): Update0
@@ -37,9 +38,9 @@ class BacklogStatusOps extends BaseTableOps {
         id = $id
     """.query[(Int, String, Int, Option[String], Boolean)].map {
       case (id, name, displayOrder, Some(color), is_custom) if is_custom =>
-        BacklogCustomStatus(id, BacklogStatusName(name), displayOrder, color)
+        BacklogCustomStatus(Id.backlogStatusId(id), BacklogStatusName(name), displayOrder, color)
       case (id, name, displayOrder, None, is_custom) if !is_custom =>
-        BacklogDefaultStatus(id, BacklogStatusName(name), displayOrder)
+        BacklogDefaultStatus(Id.backlogStatusId(id), BacklogStatusName(name), displayOrder)
       case (id, name, _, optColor, isCustom) =>
         throw new IllegalStateException(
           s"Cannot find backlog status. id: $id, name: $name, optColor: $optColor, isCustom: $isCustom"

@@ -7,7 +7,9 @@ import com.nulabinc.backlog.migration.common.client.params.ImportIssueParams
 import com.nulabinc.backlog.migration.common.domain.{
   BacklogCustomFieldSetting,
   BacklogIssue,
-  BacklogStatusName
+  BacklogStatus,
+  BacklogStatusName,
+  Id
 }
 import com.nulabinc.backlog.migration.common.service.IssueService
 import com.nulabinc.backlog.migration.common.service.PropertyResolver
@@ -146,9 +148,8 @@ class TestPropertyResolver extends PropertyResolver with SimpleFixture {
     else None
   }
 
-  override def tryResolvedStatusId(name: BacklogStatusName): Int = {
-    1
-  }
+  override def tryResolvedStatusId(name: BacklogStatusName): Id[BacklogStatus] =
+    Id.backlogStatusId(1)
 
   override def optResolvedResolutionId(name: String): Option[Long] = {
     Some(ResolutionType.valueOf(name).getIntValue)

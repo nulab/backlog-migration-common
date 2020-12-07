@@ -39,7 +39,7 @@ case class BacklogStatusName(private val value: String) {
 }
 
 sealed trait BacklogStatus {
-  val id: Int
+  val id: Id[BacklogStatus]
   val name: BacklogStatusName
   val displayOrder: Int
 
@@ -57,13 +57,13 @@ sealed trait BacklogStatus {
 }
 
 case class BacklogDefaultStatus(
-    id: Int,
+    id: Id[BacklogStatus],
     name: BacklogStatusName,
     displayOrder: Int
 ) extends BacklogStatus
 
 case class BacklogCustomStatus(
-    id: Int,
+    id: Id[BacklogStatus],
     name: BacklogStatusName,
     displayOrder: Int,
     color: String
@@ -73,7 +73,7 @@ object BacklogCustomStatus {
 
   def from(status: Status): BacklogCustomStatus =
     BacklogCustomStatus(
-      id = status.getId,
+      id = Id[BacklogStatus](status.getId.toLong),
       name = BacklogStatusName(status.getName),
       displayOrder = status.getDisplayOrder,
       color = status.getColor.getStrValue
@@ -81,7 +81,7 @@ object BacklogCustomStatus {
 
   def create(name: BacklogStatusName): BacklogCustomStatus =
     BacklogCustomStatus(
-      id = Int.MinValue,
+      id = Id[BacklogStatus](Int.MinValue),
       name = name,
       displayOrder = 3999, // undefined custom status order must be before [Closed]
       color = CustomStatusColor.Color1.getStrValue
@@ -95,7 +95,7 @@ object BacklogStatus {
       BacklogCustomStatus.from(status)
     else
       BacklogDefaultStatus(
-        id = status.getId,
+        id = Id[BacklogStatus](status.getId.toLong),
         name = BacklogStatusName(status.getName),
         displayOrder = status.getDisplayOrder
       )

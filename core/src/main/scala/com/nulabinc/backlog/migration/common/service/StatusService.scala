@@ -1,6 +1,11 @@
 package com.nulabinc.backlog.migration.common.service
 
-import com.nulabinc.backlog.migration.common.domain.{BacklogCustomStatus, BacklogStatuses}
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogCustomStatus,
+  BacklogStatus,
+  BacklogStatuses,
+  Id
+}
 
 /**
  * @author uchida
@@ -11,8 +16,8 @@ trait StatusService {
 
   def add(status: BacklogCustomStatus): BacklogCustomStatus
 
-  def updateOrder(ids: Seq[Int]): Unit
+  def updateOrder(ids: Seq[Id[BacklogStatus]]): Unit
 
-  def remove(id: Int): Unit
+  def remove(id: Id[BacklogStatus]): Unit
 
 }

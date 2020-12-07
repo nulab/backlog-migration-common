@@ -14,6 +14,18 @@ import scala.math.BigDecimal
 
 object BacklogJsonProtocol extends DefaultJsonProtocol {
 
+  // id
+  class IdFormat[A]() extends RootJsonFormat[Id[A]] {
+    override def read(json: JsValue): Id[A] = json match {
+      case JsNumber(idVal) => Id(idVal.toInt)
+      case _ =>
+        throw DeserializationException(s"Expected a js number got ${json.prettyPrint}")
+    }
+
+    override def write(obj: Id[A]): JsValue = JsNumber(obj.value)
+  }
+  implicit val backlogStatusIdFormat = new IdFormat[BacklogStatus]
+
   implicit val BacklogItemFormat           = jsonFormat2(BacklogItem)
   implicit val BacklogUserFormat           = jsonFormat6(BacklogUser)
   implicit val BacklogNotificationFormat   = jsonFormat2(BacklogNotification)

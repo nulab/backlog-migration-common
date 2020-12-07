@@ -5,7 +5,8 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogCustomStatus,
   BacklogProjectKey,
   BacklogStatus,
-  BacklogStatuses
+  BacklogStatuses,
+  Id
 }
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.BacklogAPIException
@@ -49,7 +50,7 @@ class StatusServiceImpl @Inject() (
     BacklogCustomStatus.from(added)
   }
 
-  override def updateOrder(ids: Seq[Int]): Unit =
+  override def updateOrder(ids: Seq[Id[BacklogStatus]]): Unit =
     Try {
       backlog.updateOrderOfStatus(
         new UpdateOrderOfStatusParams(projectKey.value, ids.asJava)
@@ -62,7 +63,7 @@ class StatusServiceImpl @Inject() (
         throw ex
     }.getOrElse(())
 
-  override def remove(id: Int): Unit =
+  override def remove(id: Id[BacklogStatus]): Unit =
     backlog.removeStatus(projectKey.value, id, 1) // Any status id is OK
 
   private def defaultStatuses(): BacklogStatuses =

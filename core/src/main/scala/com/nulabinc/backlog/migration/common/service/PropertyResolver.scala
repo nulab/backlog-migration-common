@@ -23,7 +23,7 @@ trait PropertyResolver {
 
   def optResolvedUserId(userId: String): Option[Long]
 
-  def tryResolvedStatusId(name: BacklogStatusName): Int
+  def tryResolvedStatusId(name: BacklogStatusName): Id[BacklogStatus]
 
   def optResolvedResolutionId(name: String): Option[Long]
 
