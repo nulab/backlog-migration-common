@@ -14,6 +14,22 @@ trait BaseTableOps {
 }
 
 class BacklogStatusOps extends BaseTableOps {
+  implicit val read: Read[BacklogStatus] =
+    Read[(Int, String, Int, Option[String], Boolean)].map {
+      case (id, name, displayOrder, Some(color), is_custom) if is_custom =>
+        BacklogCustomStatus(Id.backlogStatusId(id), BacklogStatusName(name), displayOrder, color)
+      case (id, name, displayOrder, None, is_custom) if !is_custom =>
+        BacklogDefaultStatus(Id.backlogStatusId(id), BacklogStatusName(name), displayOrder)
+      case (id, name, _, optColor, isCustom) =>
+        throw new IllegalStateException(
+          s"Cannot find backlog status. id: $id, name: $name, optColor: $optColor, isCustom: $isCustom"
+        )
+    }
+
+  implicit val write: Write[BacklogStatus] =
+    Write[(Long, String, Int, Option[String], Boolean)].contramap { s =>
+      (s.id.value, s.name.trimmed, s.displayOrder, s.optColor, s.isCustomStatus)
+    }
 
   def store(status: BacklogStatus): Update0 =
     sql"""
@@ -32,18 +48,14 @@ class BacklogStatusOps extends BaseTableOps {
   def store(statuses: BacklogStatuses): ConnectionIO[Int] = {
     import cats.implicits._
 
-    implicit val write: Write[BacklogStatus] =
-      Write[(Long, String, Int, Option[String], Boolean)].contramap { s =>
-        (s.id.value, s.name.trimmed, s.displayOrder, s.optColor, s.isCustomStatus)
-      }
-
-    val sql = """
-      insert into backlog_statuses
-        (id, name, display_order, color, is_custom) 
-      values 
-        (?, ?, ?, ?, ?)
-    """
-    Update[BacklogStatus](sql).updateMany(statuses.values.toList)
+    Update[BacklogStatus](
+      """
+        insert into backlog_statuses
+          (id, name, display_order, color, is_custom) 
+        values 
+          (?, ?, ?, ?, ?)
+        """
+    ).updateMany(statuses.values.toList)
   }
 
   def find(id: Int): Query0[BacklogStatus] =
@@ -54,16 +66,10 @@ class BacklogStatusOps extends BaseTableOps {
         backlog_statuses
       where
         id = $id
-    """.query[(Int, String, Int, Option[String], Boolean)].map {
-      case (id, name, displayOrder, Some(color), is_custom) if is_custom =>
-        BacklogCustomStatus(Id.backlogStatusId(id), BacklogStatusName(name), displayOrder, color)
-      case (id, name, displayOrder, None, is_custom) if !is_custom =>
-        BacklogDefaultStatus(Id.backlogStatusId(id), BacklogStatusName(name), displayOrder)
-      case (id, name, _, optColor, isCustom) =>
-        throw new IllegalStateException(
-          s"Cannot find backlog status. id: $id, name: $name, optColor: $optColor, isCustom: $isCustom"
-        )
-    }
+    """.query[BacklogStatus]
+
+  def getAll(): Query0[BacklogStatus] =
+    sql"select * from backlog_statuses".query[BacklogStatus]
 
   def createTable(): Update0 =
     sql"""
