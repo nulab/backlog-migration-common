@@ -17,14 +17,14 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   // id
   class IdFormat[A]() extends RootJsonFormat[Id[A]] {
     override def read(json: JsValue): Id[A] = json match {
-      case JsNumber(idVal) => Id(idVal.toInt)
+      case JsNumber(idVal) => Id(idVal.toLong)
       case _ =>
         throw DeserializationException(s"Expected a js number got ${json.prettyPrint}")
     }
 
     override def write(obj: Id[A]): JsValue = JsNumber(obj.value)
   }
-  implicit val backlogStatusIdFormat = new IdFormat[BacklogStatus]
+  implicit val backlogStatusIdFormat: IdFormat[BacklogStatus] = new IdFormat[BacklogStatus]
 
   implicit val BacklogItemFormat           = jsonFormat2(BacklogItem)
   implicit val BacklogUserFormat           = jsonFormat6(BacklogUser)
@@ -67,12 +67,10 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
       JsString(obj.trimmed)
   }
 
-  implicit val BacklogDefaultStatusFormat = jsonFormat3(
-    BacklogDefaultStatus.apply
-  )
-  implicit val BacklogCustomStatusFormat = jsonFormat4(
-    BacklogCustomStatus.apply
-  )
+  implicit val BacklogDefaultStatusFormat: RootJsonFormat[BacklogDefaultStatus] =
+    jsonFormat(BacklogDefaultStatus.apply, "id", "name", "displayOrder")
+  implicit val BacklogCustomStatusFormat: RootJsonFormat[BacklogCustomStatus] =
+    jsonFormat(BacklogCustomStatus.apply, "id", "name", "displayOrder", "color")
 
   implicit object BacklogStatusFormat extends RootJsonFormat[BacklogStatus] {
     override def read(json: JsValue): BacklogStatus =
