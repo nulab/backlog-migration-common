@@ -461,27 +461,25 @@ class CommentServiceImpl @Inject() (
       }
     }
 
-  private[this] def setTextCustomField(
+  private def setTextCustomField(
       params: ImportUpdateIssueParams,
       changeLog: BacklogChangeLog,
       customFieldSetting: BacklogCustomFieldSetting
-  ) = {
+  ): Option[UpdateIssueParams] =
     for {
-      value <- changeLog.optNewValue
-      id    <- customFieldSetting.optId
-    } yield params.textCustomField(id, value)
-  }
+      id <- customFieldSetting.optId
+      optParam = changeLog.optNewValue.map(params.textCustomField(id, _))
+    } yield optParam.getOrElse(params.textCustomField(id, ""))
 
-  private[this] def setTextCustomFieldArea(
+  private def setTextCustomFieldArea(
       params: ImportUpdateIssueParams,
       changeLog: BacklogChangeLog,
       customFieldSetting: BacklogCustomFieldSetting
-  ) = {
+  ): Option[UpdateIssueParams] =
     for {
-      value <- changeLog.optNewValue
-      id    <- customFieldSetting.optId
-    } yield params.textAreaCustomField(id, value)
-  }
+      id <- customFieldSetting.optId
+      optParam = changeLog.optNewValue.map(params.textAreaCustomField(id, _))
+    } yield optParam.getOrElse(params.textAreaCustomField(id, ""))
 
   private[this] def setDateCustomField(
       params: ImportUpdateIssueParams,
