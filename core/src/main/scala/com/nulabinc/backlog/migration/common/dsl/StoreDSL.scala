@@ -9,5 +9,6 @@ trait StoreDSL[F[_]] {
   def findBacklogStatus(id: Int): F[Option[BacklogStatus]]
   def storeBacklogStatus(status: BacklogStatus): F[Unit]
   def storeBacklogStatus(statuses: BacklogStatuses): F[Unit]
+  def allSrcStatus[A](): F[Seq[A]]
   def createTable(): F[Unit]
 }

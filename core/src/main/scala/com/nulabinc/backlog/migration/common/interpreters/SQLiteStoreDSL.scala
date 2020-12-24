@@ -10,7 +10,7 @@ import doobie.util.transactor.Transactor
 import monix.eval.Task
 import monix.execution.Scheduler
 
-case class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler)
+abstract class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler)
     extends StoreDSL[Task] {
 
   private val xa: Transactor[Task] = Transactor.fromDriverManager[Task](
@@ -20,7 +20,7 @@ case class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler)
     ""
   )
 
-  private lazy val backlogStatusOps = new BacklogStatusOps
+  protected lazy val backlogStatusOps = new BacklogStatusOps
 
   def findBacklogStatus(id: Int): Task[Option[BacklogStatus]] =
     backlogStatusOps.find(id).option.transact(xa)
