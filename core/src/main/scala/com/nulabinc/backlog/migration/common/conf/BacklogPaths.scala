@@ -40,9 +40,6 @@ class BacklogPaths(
   def versionsJson: BetterFile =
     outputPath / "project" / projectKey / "versions.json"
 
-  def statusesJson: BetterFile =
-    outputPath / "project" / projectKey / "statuses.json"
-
   def wikiDirectoryPath: BetterFile =
     outputPath / "project" / projectKey / "wikis"
 
