@@ -21,6 +21,7 @@ object ConsoleMessages {
   lazy val empty: String      = Messages("common.empty")
   lazy val srcProduct: String = Messages("common.src")
   lazy val dstProduct: String = Messages("common.dst")
+  lazy val statuses: String   = Messages("common.statuses")
   lazy val confirm: String    = Messages("cli.confirm")
   lazy val converted: String  = Messages("message.converted")
 
@@ -43,7 +44,7 @@ object ConsoleMessages {
     Messages("message.executed", key, value)
 
   object Mappings {
-    lazy val statusItem: String   = Messages("common.statuses")
+    lazy val statusItem: String   = statuses
     lazy val priorityItem: String = Messages("common.priorities")
     lazy val userItem: String     = Messages("common.users")
 
