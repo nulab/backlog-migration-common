@@ -214,9 +214,29 @@ object ConsoleMessages {
   }
 
   object Imports {
-    val start: String =
+    lazy val start: String =
       s"""
           |${Messages("import.start")}
           |--------------------------------------------------""".stripMargin
+
+    lazy val finish: String =
+      s"""|--------------------------------------------------
+          |${Messages("import.finish")}""".stripMargin
+
+    object Errors {
+      lazy val suspend: String =
+        s"""|--------------------------------------------------
+            |${Messages("import.suspend")}""".stripMargin
+
+      def failed(projectKey: String, errorMessage: String): String =
+        Messages("import.error.failed.import", projectKey, errorMessage)
+
+      def limitProject(projectKey: String): String =
+        Messages("import.error.limit.project", projectKey)
+
+      def projectNotJoin(projectKey: String): String =
+        Messages("import.error.project.not.join", projectKey)
+
+    }
   }
 }
