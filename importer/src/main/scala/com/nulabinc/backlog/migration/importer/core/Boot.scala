@@ -8,6 +8,7 @@ import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StoreDSL}
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging}
+import com.nulabinc.backlog.migration.common.persistence.store.ReadQuery
 import com.nulabinc.backlog.migration.importer.modules.BacklogModule
 import com.nulabinc.backlog.migration.importer.service.ProjectImporter
 import monix.execution.Scheduler
@@ -18,11 +19,11 @@ import monix.eval.Task
  */
 object Boot extends Logging {
 
-  def execute[F[_]: Monad: ConsoleDSL: StoreDSL](
+  def execute[A, F[_]: Monad: ConsoleDSL: StoreDSL](
       apiConfig: BacklogApiConfiguration,
       fitIssueKey: Boolean,
       retryCount: Int
-  )(implicit s: Scheduler): F[Either[Throwable, Unit]] =
+  )(implicit s: Scheduler, query: ReadQuery[A]): F[Either[Throwable, Unit]] =
     try {
       val injector =
         Guice.createInjector(new BacklogModule(apiConfig))

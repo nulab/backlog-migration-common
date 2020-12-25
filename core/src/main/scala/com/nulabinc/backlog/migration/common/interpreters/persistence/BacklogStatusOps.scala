@@ -13,7 +13,7 @@ trait BaseTableOps {
   def createTable(): Update0
 }
 
-class BacklogStatusOps extends BaseTableOps {
+object BacklogStatusOps extends BaseTableOps {
   implicit val read: Read[BacklogStatus] =
     Read[(Int, String, Int, Option[String], Boolean)].map {
       case (id, name, displayOrder, Some(color), is_custom) if is_custom =>
