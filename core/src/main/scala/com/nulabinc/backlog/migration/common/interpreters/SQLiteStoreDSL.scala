@@ -1,19 +1,24 @@
 package com.nulabinc.backlog.migration.common.interpreters
 
-import java.nio.file.Path
+import com.nulabinc.backlog.migration.common.domain.exports.ExportedBacklogStatus
 
+import java.nio.file.Path
 import com.nulabinc.backlog.migration.common.domain.{BacklogStatus, BacklogStatuses}
 import com.nulabinc.backlog.migration.common.dsl.StoreDSL
 import com.nulabinc.backlog.migration.common.persistence.store.ReadQuery
-import com.nulabinc.backlog.migration.common.persistence.store.sqlite.ops.BacklogStatusOps
+import com.nulabinc.backlog.migration.common.persistence.store.sqlite.ops.{
+  BacklogStatusOps,
+  BaseTableOps,
+  ExportedStatusTableOps
+}
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import monix.eval.Task
 import monix.execution.Scheduler
 import doobie.util.query.Query0
+import com.nulabinc.backlog.migration.common.persistence.store.WriteQuery
 
-abstract class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler)
-    extends StoreDSL[Task] {
+class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler) extends StoreDSL[Task] {
 
   private val xa: Transactor[Task] = Transactor.fromDriverManager[Task](
     "org.sqlite.JDBC",
@@ -38,13 +43,22 @@ abstract class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler)
   def storeBacklogStatus(statuses: BacklogStatuses): Task[Unit] =
     BacklogStatusOps.store(statuses).transact(xa).map(_ => ())
 
-  def allSrcStatus[A]()(implicit query: ReadQuery[A]): Task[Seq[A]] =
+  def allSrcStatus: Task[Seq[ExportedBacklogStatus]] =
     Task.from(
-      query.read().to[Seq].transact(xa)
+      ExportedStatusTableOps.getAll.to[Seq].transact(xa)
     )
 
-  def createTable(): Task[Unit] =
+  def storeSrcStatus(status: ExportedBacklogStatus): Task[Unit] =
+    ExportedStatusTableOps.store(status).run.transact(xa).map(_ => ())
+
+  override def storeSrcStatus(statuses: Seq[ExportedBacklogStatus]): Task[Unit] =
+    Task.from(
+      ExportedStatusTableOps.store(statuses).transact(xa).map(_ => ())
+    )
+
+  def createTable: Task[Unit] =
     for {
       _ <- BacklogStatusOps.createTable().run.transact(xa)
+      _ <- ExportedStatusTableOps.createTable().run.transact(xa)
     } yield ()
 }

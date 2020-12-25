@@ -12,14 +12,12 @@ import com.nulabinc.backlog.migration.common.domain.exports.{
 }
 import com.nulabinc.backlog.migration.common.dsl.StoreDSL
 import com.nulabinc.backlog.migration.common.service.{PropertyResolver, _}
-import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging, ProgressBar}
+import com.nulabinc.backlog.migration.common.utils.{Logging, ProgressBar}
 import com.osinka.i18n.Messages
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.ansi
-import com.nulabinc.backlog.migration.common.domain.exports.ExportedBacklogStatus
 import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
 import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
-import com.nulabinc.backlog.migration.common.persistence.store.ReadQuery
 
 /**
  * @author uchida
@@ -44,7 +42,7 @@ private[importer] class ProjectImporter @Inject() (
   def execute[A, F[_]: Monad: ConsoleDSL: StoreDSL](
       fitIssueKey: Boolean,
       retryCount: Int
-  )(implicit query: ReadQuery[A]): F[Unit] = {
+  ): F[Unit] = {
     val project = BacklogUnmarshaller.project(backlogPaths)
     projectService.create(project) match {
       case Right(project) =>
@@ -94,7 +92,7 @@ private[importer] class ProjectImporter @Inject() (
     issuesImporter.execute(project, propertyResolver, fitIssueKey, retryCount)
   }
 
-  private def preExecute[A, F[_]: Monad: StoreDSL]()(implicit query: ReadQuery[A]): F[Unit] = {
+  private def preExecute[A, F[_]: Monad: StoreDSL](): F[Unit] = {
     val propertyResolver = buildPropertyResolver()
     importGroup(propertyResolver)
     importProjectUser(propertyResolver)
@@ -108,9 +106,7 @@ private[importer] class ProjectImporter @Inject() (
     } yield ()
   }
 
-  private[this] def postExecute[A, F[_]: Monad: StoreDSL]()(implicit
-      query: ReadQuery[A]
-  ): F[Unit] = {
+  private[this] def postExecute[A, F[_]: Monad: StoreDSL](): F[Unit] = {
     val propertyResolver = buildPropertyResolver()
 
     removeVersion(propertyResolver)
@@ -205,11 +201,11 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private def importStatuses[A, F[_]: Monad: StoreDSL]()(implicit query: ReadQuery[A]): F[Unit] = {
+  private def importStatuses[F[_]: Monad: StoreDSL](): F[Unit] = {
     val projectStatuses = statusService.allStatuses()
 
     for {
-      willExistDestinationStatuses <- StoreDSL[F].allSrcStatus[A]()
+      willExistDestinationStatuses <- StoreDSL[F].allSrcStatus
     } yield {
       // Import Statuses excluding default statuses
       val mustImportCustomStatuses = willExistDestinationStatuses
@@ -350,9 +346,9 @@ private[importer] class ProjectImporter @Inject() (
 
   private def removeStatus[A, F[_]: Monad: StoreDSL](
       propertyResolver: PropertyResolver
-  )(implicit query: ReadQuery[A]): F[Unit] =
+  ): F[Unit] =
     for {
-      exported <- StoreDSL[F].allSrcStatus[A]()
+      exported <- StoreDSL[F].allSrcStatus
     } yield {
       exported
         .flatMap {

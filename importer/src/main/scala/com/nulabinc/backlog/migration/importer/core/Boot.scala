@@ -19,11 +19,11 @@ import monix.eval.Task
  */
 object Boot extends Logging {
 
-  def execute[A, F[_]: Monad: ConsoleDSL: StoreDSL](
+  def execute[F[_]: Monad: ConsoleDSL: StoreDSL](
       apiConfig: BacklogApiConfiguration,
       fitIssueKey: Boolean,
       retryCount: Int
-  )(implicit s: Scheduler, query: ReadQuery[A]): F[Either[Throwable, Unit]] =
+  )(implicit s: Scheduler): F[Either[Throwable, Unit]] =
     try {
       val injector =
         Guice.createInjector(new BacklogModule(apiConfig))
