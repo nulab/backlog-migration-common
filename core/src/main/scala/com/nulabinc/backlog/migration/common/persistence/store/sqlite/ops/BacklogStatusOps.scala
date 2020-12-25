@@ -1,13 +1,14 @@
-package com.nulabinc.backlog.migration.common.interpreters.persistence
+package com.nulabinc.backlog.migration.common.persistence.store.sqlite.ops
 
-import doobie._
-import doobie.implicits._
 import com.nulabinc.backlog.migration.common.domain.BacklogStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogDefaultStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogCustomStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogStatusName
 import com.nulabinc.backlog.migration.common.domain.Id
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
+
+import doobie._
+import doobie.implicits._
 
 trait BaseTableOps {
   def createTable(): Update0

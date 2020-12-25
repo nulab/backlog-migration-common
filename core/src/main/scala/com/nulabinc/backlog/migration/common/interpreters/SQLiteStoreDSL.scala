@@ -4,8 +4,8 @@ import java.nio.file.Path
 
 import com.nulabinc.backlog.migration.common.domain.{BacklogStatus, BacklogStatuses}
 import com.nulabinc.backlog.migration.common.dsl.StoreDSL
-import com.nulabinc.backlog.migration.common.interpreters.persistence.BacklogStatusOps
 import com.nulabinc.backlog.migration.common.persistence.store.ReadQuery
+import com.nulabinc.backlog.migration.common.persistence.store.sqlite.ops.BacklogStatusOps
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import monix.eval.Task
