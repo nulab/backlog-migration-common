@@ -10,10 +10,6 @@ import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import doobie._
 import doobie.implicits._
 
-trait BaseTableOps {
-  def createTable(): Update0
-}
-
 object BacklogStatusOps extends BaseTableOps {
   implicit val read: Read[BacklogStatus] =
     Read[(Int, String, Int, Option[String], Boolean)].map {
