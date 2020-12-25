@@ -1,17 +1,21 @@
 package com.nulabinc.backlog.migration.common.interpreters
 
-import java.nio.file.Path
-
+import cats.implicits._
+import com.nulabinc.backlog.migration.common.domain.exports.ExportedBacklogStatus
 import com.nulabinc.backlog.migration.common.domain.{BacklogStatus, BacklogStatuses}
 import com.nulabinc.backlog.migration.common.dsl.StoreDSL
-import com.nulabinc.backlog.migration.common.interpreters.persistence.BacklogStatusOps
+import com.nulabinc.backlog.migration.common.persistence.store.sqlite.ops.{
+  BacklogStatusOps,
+  ExportedStatusTableOps
+}
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import monix.eval.Task
 import monix.execution.Scheduler
 
-case class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler)
-    extends StoreDSL[Task] {
+import java.nio.file.Path
+
+class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler) extends StoreDSL[Task] {
 
   private val xa: Transactor[Task] = Transactor.fromDriverManager[Task](
     "org.sqlite.JDBC",
@@ -20,26 +24,39 @@ case class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler)
     ""
   )
 
-  private lazy val backlogStatusOps = new BacklogStatusOps
-
   def findBacklogStatus(id: Int): Task[Option[BacklogStatus]] =
-    backlogStatusOps.find(id).option.transact(xa)
+    BacklogStatusOps.find(id).option.transact(xa)
 
   def allBacklogStatuses(): Task[BacklogStatuses] =
     Task
       .from(
-        backlogStatusOps.getAll().to[Seq].transact(xa)
+        BacklogStatusOps.getAll().to[Seq].transact(xa)
       )
       .map(BacklogStatuses)
 
   def storeBacklogStatus(status: BacklogStatus): Task[Unit] =
-    backlogStatusOps.store(status).run.transact(xa).map(_ => ())
+    BacklogStatusOps.store(status).run.transact(xa).map(_ => ())
 
   def storeBacklogStatus(statuses: BacklogStatuses): Task[Unit] =
-    backlogStatusOps.store(statuses).transact(xa).map(_ => ())
+    BacklogStatusOps.store(statuses).transact(xa).map(_ => ())
 
-  def createTable(): Task[Unit] =
-    for {
-      _ <- backlogStatusOps.createTable().run.transact(xa)
-    } yield ()
+  def allSrcStatus: Task[Seq[ExportedBacklogStatus]] =
+    Task.from(
+      ExportedStatusTableOps.getAll.to[Seq].transact(xa)
+    )
+
+  def storeSrcStatus(status: ExportedBacklogStatus): Task[Unit] =
+    ExportedStatusTableOps.store(status).transact(xa).map(_ => ())
+
+  def storeSrcStatus(statuses: Seq[ExportedBacklogStatus]): Task[Unit] =
+    Task.from(
+      ExportedStatusTableOps.store(statuses).transact(xa).map(_ => ())
+    )
+
+  def createTable: Task[Unit] =
+    (
+      BacklogStatusOps.createTable().run,
+      ExportedStatusTableOps.createTable().run
+    ).mapN(_ + _).transact(xa).map(_ => ())
+
 }

@@ -1,6 +1,8 @@
 package com.nulabinc.backlog.migration.importer.service
 
 import javax.inject.Inject
+import cats.Monad
+import cats.syntax.all._
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain._
@@ -8,11 +10,14 @@ import com.nulabinc.backlog.migration.common.domain.exports.{
   DeletedExportedBacklogStatus,
   ExistingExportedBacklogStatus
 }
+import com.nulabinc.backlog.migration.common.dsl.StoreDSL
 import com.nulabinc.backlog.migration.common.service.{PropertyResolver, _}
-import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging, ProgressBar}
+import com.nulabinc.backlog.migration.common.utils.{Logging, ProgressBar}
 import com.osinka.i18n.Messages
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.ansi
+import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
+import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 
 /**
  * @author uchida
@@ -34,43 +39,42 @@ private[importer] class ProjectImporter @Inject() (
     priorityService: PriorityService
 ) extends Logging {
 
-  def execute(fitIssueKey: Boolean, retryCount: Int): Unit = {
+  def execute[A, F[_]: Monad: ConsoleDSL: StoreDSL](
+      fitIssueKey: Boolean,
+      retryCount: Int
+  ): F[Unit] = {
     val project = BacklogUnmarshaller.project(backlogPaths)
     projectService.create(project) match {
       case Right(project) =>
-        preExecute()
-        contents(project, fitIssueKey, retryCount)
-        postExecute()
-
-        ConsoleOut.outStream.print(
-          ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
-        )
-        ConsoleOut.outStream.print(
-          ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
-        )
-        ConsoleOut.outStream.flush()
-
-        ConsoleOut.println(
-          s"""|--------------------------------------------------
-                               |${Messages("import.finish")}""".stripMargin
-        )
+        for {
+          _ <- preExecute()
+          _ = contents(project, fitIssueKey, retryCount)
+          _ <- postExecute()
+          _ <- ConsoleDSL[F].printStream(
+            ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
+          )
+          _ <- ConsoleDSL[F].printStream(
+            ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
+          )
+          _ <- ConsoleDSL[F].flush()
+          _ <- ConsoleDSL[F].println(ConsoleMessages.Imports.finish)
+        } yield ()
       case Left(e) =>
-        if (e.getMessage.contains("Project limit."))
-          ConsoleOut.error(Messages("import.error.limit.project", project.key))
-        else if (e.getMessage.contains("Duplicate entry"))
-          ConsoleOut.error(
-            Messages("import.error.project.not.join", project.key)
-          )
-        else {
-          logger.error(e.getMessage, e)
-          ConsoleOut.error(
-            Messages("import.error.failed.import", project.key, e.getMessage)
-          )
-        }
-        ConsoleOut.println(
-          s"""|--------------------------------------------------
-                               |${Messages("import.suspend")}""".stripMargin
-        )
+        import ConsoleMessages.Imports._
+
+        val message =
+          if (e.getMessage.contains("Project limit."))
+            Errors.limitProject(project.key)
+          else if (e.getMessage.contains("Duplicate entry"))
+            Errors.projectNotJoin(project.key)
+          else {
+            logger.error(e.getMessage, e)
+            Errors.failed(project.key, e.getMessage())
+          }
+        for {
+          _ <- ConsoleDSL[F].errorln(message)
+          _ <- ConsoleDSL[F].println(Errors.suspend)
+        } yield ()
     }
   }
 
@@ -88,7 +92,7 @@ private[importer] class ProjectImporter @Inject() (
     issuesImporter.execute(project, propertyResolver, fitIssueKey, retryCount)
   }
 
-  private[this] def preExecute(): Unit = {
+  private def preExecute[A, F[_]: Monad: StoreDSL](): F[Unit] = {
     val propertyResolver = buildPropertyResolver()
     importGroup(propertyResolver)
     importProjectUser(propertyResolver)
@@ -96,22 +100,28 @@ private[importer] class ProjectImporter @Inject() (
     importCategory()
     importIssueType()
     importCustomField()
-    importStatuses()
+
+    for {
+      _ <- importStatuses()
+    } yield ()
   }
 
-  private[this] def postExecute(): Unit = {
+  private[this] def postExecute[A, F[_]: Monad: StoreDSL](): F[Unit] = {
     val propertyResolver = buildPropertyResolver()
 
     removeVersion(propertyResolver)
     removeCategory(propertyResolver)
     removeCustomField(propertyResolver)
-    removeStatus(propertyResolver)
 
-    BacklogUnmarshaller.backlogCustomFieldSettings(backlogPaths).filter(!_.delete).foreach {
-      customFieldSetting =>
-        customFieldSettingService.update(
-          customFieldSettingService.setUpdateParams(propertyResolver)
-        )(customFieldSetting)
+    for {
+      _ <- removeStatus(propertyResolver)
+    } yield {
+      BacklogUnmarshaller.backlogCustomFieldSettings(backlogPaths).filter(!_.delete).foreach {
+        customFieldSetting =>
+          customFieldSettingService.update(
+            customFieldSettingService.setUpdateParams(propertyResolver)
+          )(customFieldSetting)
+      }
     }
   }
 
@@ -191,48 +201,53 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def importStatuses(): Unit = {
+  private def importStatuses[F[_]: Monad: StoreDSL](): F[Unit] = {
     val projectStatuses = statusService.allStatuses()
-    val willExistDestinationStatuses =
-      BacklogUnmarshaller.statuses(backlogPaths) // Status ids are old.
 
-    // Import Statuses excluding default statuses
-    val mustImportCustomStatuses = willExistDestinationStatuses
-      .filter {
-        case s: ExistingExportedBacklogStatus =>
-          projectStatuses.isCustomStatus(s.status) && projectStatuses.notExistByName(s.name)
-        case s: DeletedExportedBacklogStatus =>
-          projectStatuses.notExistByName(s.name)
-      }
-      .flatMap {
-        case backlogStatus: ExistingExportedBacklogStatus =>
-          backlogStatus.status match {
-            case _: BacklogDefaultStatus => None
-            case s: BacklogCustomStatus  => Some(s)
-          }
-        case s: DeletedExportedBacklogStatus =>
-          Some(BacklogCustomStatus.create(s.name))
-      }
-    val console = (ProgressBar.progress _)(
-      Messages("common.statuses"),
-      Messages("message.importing"),
-      Messages("message.imported")
-    )
+    for {
+      willExistDestinationStatuses <- StoreDSL[F].allSrcStatus
+    } yield {
+      // Import Statuses excluding default statuses
+      val mustImportCustomStatuses = willExistDestinationStatuses
+        .filter {
+          case s: ExistingExportedBacklogStatus =>
+            projectStatuses.isCustomStatus(s.status) && projectStatuses.notExistByName(s.name)
+          case s: DeletedExportedBacklogStatus =>
+            projectStatuses.notExistByName(s.name)
+        }
+        .flatMap {
+          case backlogStatus: ExistingExportedBacklogStatus =>
+            backlogStatus.status match {
+              case _: BacklogDefaultStatus => None
+              case s: BacklogCustomStatus  => Some(s)
+            }
+          case s: DeletedExportedBacklogStatus =>
+            Some(BacklogCustomStatus.create(s.name))
+        }
+      val console = (ProgressBar.progress _)(
+        Messages("common.statuses"),
+        Messages("message.importing"),
+        Messages("message.imported")
+      )
 
-    val importedCustomStatuses = mustImportCustomStatuses.zipWithIndex.map {
-      case (exportedStatus, index) =>
-        val added = statusService.add(exportedStatus)
-        console(index + 1, mustImportCustomStatuses.size)
-        added.copy(displayOrder =
-          exportedStatus.displayOrder
-        ) // Added display order is always 3999. Must update from old one.
+      val importedCustomStatuses = mustImportCustomStatuses.zipWithIndex.map {
+        case (exportedStatus, index) =>
+          val added = statusService.add(exportedStatus)
+          console(index + 1, mustImportCustomStatuses.size)
+          added.copy(displayOrder =
+            exportedStatus.displayOrder
+          ) // Added display order is always 3999. Must update from old one.
+      }
+
+      // Update display orders
+      val updatedAllDestinationStatusIds =
+        projectStatuses
+          .append(importedCustomStatuses)
+          .sortBy(_.displayOrder)
+          .map(_.id)
+
+      statusService.updateOrder(updatedAllDestinationStatusIds)
     }
-
-    // Update display orders
-    val updatedAllDestinationStatusIds =
-      projectStatuses.append(importedCustomStatuses).sortBy(_.displayOrder).map(_.id)
-
-    statusService.updateOrder(updatedAllDestinationStatusIds)
   }
 
   private[this] def importProjectUser(
@@ -329,25 +344,30 @@ private[importer] class ProjectImporter @Inject() (
         }
     }
 
-  private[this] def removeStatus(propertyResolver: PropertyResolver): Unit =
-    BacklogUnmarshaller
-      .statuses(backlogPaths)
-      .flatMap {
-        case s: DeletedExportedBacklogStatus  => Some(s.name)
-        case _: ExistingExportedBacklogStatus => None
-      }
-      .foreach { name =>
-        val statusId = propertyResolver.tryResolvedStatusId(name)
-
-        try {
-          statusService.remove(statusId)
-        } catch {
-          case ex: Throwable =>
-            logger.warn(
-              s"Remove status [${name.trimmed}] failed. ${ex.getMessage}"
-            )
+  private def removeStatus[A, F[_]: Monad: StoreDSL](
+      propertyResolver: PropertyResolver
+  ): F[Unit] =
+    for {
+      exported <- StoreDSL[F].allSrcStatus
+    } yield {
+      exported
+        .flatMap {
+          case s: DeletedExportedBacklogStatus  => Some(s.name)
+          case _: ExistingExportedBacklogStatus => None
         }
-      }
+        .foreach { name =>
+          val statusId = propertyResolver.tryResolvedStatusId(name)
+
+          try {
+            statusService.remove(statusId)
+          } catch {
+            case ex: Throwable =>
+              logger.warn(
+                s"Remove status [${name.trimmed}] failed. ${ex.getMessage}"
+              )
+          }
+        }
+    }
 
   private[this] def buildPropertyResolver(): PropertyResolver =
     new PropertyResolverImpl(

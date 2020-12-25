@@ -65,14 +65,6 @@ object BacklogUnmarshaller {
       })
       .getOrElse(Seq.empty[BacklogIssueType])
 
-  def statuses(backlogPaths: BacklogPaths): Seq[ExportedBacklogStatus] =
-    IOUtil
-      .input(backlogPaths.statusesJson)
-      .map { json =>
-        JsonParser(json).convertTo[Seq[ExportedBacklogStatus]]
-      }
-      .getOrElse(Seq())
-
   def issueCategories(backlogPaths: BacklogPaths): Seq[BacklogIssueCategory] =
     IOUtil
       .input(backlogPaths.issueCategoriesJson)

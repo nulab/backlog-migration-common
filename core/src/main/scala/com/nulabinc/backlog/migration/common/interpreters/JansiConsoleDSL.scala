@@ -34,6 +34,9 @@ case class JansiConsoleDSL() extends ConsoleDSL[Task] with Logging {
       outStream.flush()
     }
 
+  override def printStream(value: Ansi): Task[Unit] =
+    Task(outStream.print(value))
+
   override def boldln(
       value: String,
       space: Int,
@@ -56,4 +59,6 @@ case class JansiConsoleDSL() extends ConsoleDSL[Task] with Logging {
       scala.io.StdIn.readLine(message)
     }
 
+  override def flush(): Task[Unit] =
+    Task(outStream.flush())
 }

@@ -1,12 +1,14 @@
 package com.nulabinc.backlog.migration.importer.core
 
 import cats.Monad
+import cats.syntax.all._
 import com.google.inject.Guice
 import com.osinka.i18n.Messages
-import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
+import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StoreDSL}
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging}
+import com.nulabinc.backlog.migration.common.persistence.store.ReadQuery
 import com.nulabinc.backlog.migration.importer.modules.BacklogModule
 import com.nulabinc.backlog.migration.importer.service.ProjectImporter
 import monix.execution.Scheduler
@@ -17,23 +19,25 @@ import monix.eval.Task
  */
 object Boot extends Logging {
 
-  def execute(
+  def execute[F[_]: Monad: ConsoleDSL: StoreDSL](
       apiConfig: BacklogApiConfiguration,
       fitIssueKey: Boolean,
       retryCount: Int
-  )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit =
+  )(implicit s: Scheduler): F[Either[Throwable, Unit]] =
     try {
       val injector =
         Guice.createInjector(new BacklogModule(apiConfig))
-
-      consoleDSL.println(ConsoleMessages.Imports.start).runAsyncAndForget
-
       val projectImporter = injector.getInstance(classOf[ProjectImporter])
-      projectImporter.execute(fitIssueKey, retryCount)
+
+      for {
+        _ <- ConsoleDSL[F].println(ConsoleMessages.Imports.start)
+        _ <- projectImporter.execute(fitIssueKey, retryCount)
+      } yield Right(())
     } catch {
       case e: Throwable =>
-        consoleDSL.errorln(ConsoleMessages.cliUnknownError(e)).runAsyncAndForget
-        throw e
+        for {
+          _ <- ConsoleDSL[F].errorln(ConsoleMessages.cliUnknownError(e))
+        } yield Left(e)
     }
 
 }

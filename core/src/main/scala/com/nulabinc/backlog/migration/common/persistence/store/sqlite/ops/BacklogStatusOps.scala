@@ -1,7 +1,5 @@
-package com.nulabinc.backlog.migration.common.interpreters.persistence
+package com.nulabinc.backlog.migration.common.persistence.store.sqlite.ops
 
-import doobie._
-import doobie.implicits._
 import com.nulabinc.backlog.migration.common.domain.BacklogStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogDefaultStatus
 import com.nulabinc.backlog.migration.common.domain.BacklogCustomStatus
@@ -9,11 +7,10 @@ import com.nulabinc.backlog.migration.common.domain.BacklogStatusName
 import com.nulabinc.backlog.migration.common.domain.Id
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 
-trait BaseTableOps {
-  def createTable(): Update0
-}
+import doobie._
+import doobie.implicits._
 
-class BacklogStatusOps extends BaseTableOps {
+object BacklogStatusOps extends BaseTableOps {
   implicit val read: Read[BacklogStatus] =
     Read[(Int, String, Int, Option[String], Boolean)].map {
       case (id, name, displayOrder, Some(color), is_custom) if is_custom =>
