@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.interpreters
 
+import cats.implicits._
 import com.nulabinc.backlog.migration.common.domain.exports.ExportedBacklogStatus
 import com.nulabinc.backlog.migration.common.domain.{BacklogStatus, BacklogStatuses}
 import com.nulabinc.backlog.migration.common.dsl.StoreDSL
@@ -53,8 +54,9 @@ class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler) extends S
     )
 
   def createTable: Task[Unit] =
-    for {
-      _ <- BacklogStatusOps.createTable().run.transact(xa)
-      _ <- ExportedStatusTableOps.createTable().run.transact(xa)
-    } yield ()
+    (
+      BacklogStatusOps.createTable().run,
+      ExportedStatusTableOps.createTable().run
+    ).mapN(_ + _).transact(xa).map(_ => ())
+
 }
