@@ -46,9 +46,9 @@ class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler) extends S
     )
 
   def storeSrcStatus(status: ExportedBacklogStatus): Task[Unit] =
-    ExportedStatusTableOps.store(status).run.transact(xa).map(_ => ())
+    ExportedStatusTableOps.store(status).transact(xa).map(_ => ())
 
-  override def storeSrcStatus(statuses: Seq[ExportedBacklogStatus]): Task[Unit] =
+  def storeSrcStatus(statuses: Seq[ExportedBacklogStatus]): Task[Unit] =
     Task.from(
       ExportedStatusTableOps.store(statuses).transact(xa).map(_ => ())
     )

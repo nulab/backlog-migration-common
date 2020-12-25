@@ -59,9 +59,16 @@ class SQLiteStoreDSLSpec
   test("store exported status") {
     setup()
 
+    // insert
     dsl.storeSrcStatus(existing).runSyncUnsafe()
     dsl.storeSrcStatus(deleted).runSyncUnsafe()
     dsl.allSrcStatus.runSyncUnsafe() mustBe exportedStatuses
+
+    // update
+    val updated =
+      ExistingExportedBacklogStatus(customStatus.copy(name = BacklogStatusName("updated status")))
+    dsl.storeSrcStatus(updated).runSyncUnsafe()
+    dsl.allSrcStatus.runSyncUnsafe() mustBe Seq(updated, deleted)
   }
 
   test("store exported statuses") {

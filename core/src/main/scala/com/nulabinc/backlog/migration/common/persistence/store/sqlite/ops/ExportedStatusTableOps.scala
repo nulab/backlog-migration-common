@@ -42,42 +42,39 @@ object ExportedStatusTableOps extends BaseTableOps {
         (None, name.trimmed, None, None, true)
     }
 
-  def store(status: ExportedBacklogStatus): Update0 = {
-    val (optStatusId, name, optDisplayOrder, optColor, isCustom, isExists) = status match {
-      case ExistingExportedBacklogStatus(status: BacklogDefaultStatus) =>
-        (
-          Some(status.id),
-          status.name.trimmed,
-          Some(status.displayOrder),
-          status.optColor,
-          status.isCustomStatus,
-          true
-        )
-      case ExistingExportedBacklogStatus(status: BacklogCustomStatus) =>
-        (
-          Some(status.id),
-          status.name.trimmed,
-          Some(status.displayOrder),
-          Some(status.color),
-          status.isCustomStatus,
-          true
-        )
+  def store(status: ExportedBacklogStatus): ConnectionIO[Int] = {
+    import cats.implicits._
+
+    val (selectSql, name) = status match {
+      case ExistingExportedBacklogStatus(status) =>
+        (sql"select id from exported_statuses where status_id = ${status.id.value}", status.name)
       case DeletedExportedBacklogStatus(name) =>
-        (None, name.trimmed, None, None, true, false)
+        (sql"select id from exported_statuses where name = ${name.trimmed}", name)
     }
-    sql"""
-      insert into exported_statuses
-        (status_id, name, display_order, color, is_custom)
-      values 
-        ($optStatusId, $name, $optDisplayOrder, $optColor, $isCustom)
-      on conflict(id) 
-      do update set 
-        status_id = $optStatusId,
-        name = $name,
-        display_order = $optDisplayOrder,
-        color = $optColor,
-        is_custom = $isCustom
-    """.update
+
+    for {
+      optId <- selectSql.query[Long].option
+      result <- optId match {
+        case Some(id) =>
+          sql"""
+            update 
+              exported_statuses
+            set
+              name = ${name.trimmed}
+            where
+              id = $id
+          """.update.run
+        case None =>
+          Update[ExportedBacklogStatus](
+            """
+              insert into exported_statuses
+                (status_id, name, display_order, color, is_custom) 
+              values 
+                (?, ?, ?, ?, ?)
+            """
+          ).updateMany(List(status))
+      }
+    } yield result
   }
 
   def store(statuses: Seq[ExportedBacklogStatus]): ConnectionIO[Int] = {
