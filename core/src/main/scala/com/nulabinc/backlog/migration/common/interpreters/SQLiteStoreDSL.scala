@@ -1,22 +1,18 @@
 package com.nulabinc.backlog.migration.common.interpreters
 
 import com.nulabinc.backlog.migration.common.domain.exports.ExportedBacklogStatus
-
-import java.nio.file.Path
 import com.nulabinc.backlog.migration.common.domain.{BacklogStatus, BacklogStatuses}
 import com.nulabinc.backlog.migration.common.dsl.StoreDSL
-import com.nulabinc.backlog.migration.common.persistence.store.ReadQuery
 import com.nulabinc.backlog.migration.common.persistence.store.sqlite.ops.{
   BacklogStatusOps,
-  BaseTableOps,
   ExportedStatusTableOps
 }
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import monix.eval.Task
 import monix.execution.Scheduler
-import doobie.util.query.Query0
-import com.nulabinc.backlog.migration.common.persistence.store.WriteQuery
+
+import java.nio.file.Path
 
 class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler) extends StoreDSL[Task] {
 

@@ -59,9 +59,9 @@ object ExportedStatusTableOps extends BaseTableOps {
     Update[ExportedBacklogStatus](
       """
         insert into exported_statuses
-          (id, name, display_order, color, is_exists) 
+          (name, display_order, color, is_exists) 
         values 
-          (?, ?, ?, ?, ?)
+          (?, ?, ?, ?)
         """
     ).updateMany(statuses.toList)
   }
@@ -82,9 +82,9 @@ object ExportedStatusTableOps extends BaseTableOps {
   def createTable(): Update0 =
     sql"""
       create table exported_statuses (
-        id              int     not null primary key,
+        id              integer not null primary key autoincrement,
         name            text    not null,
-        display_order   int,
+        display_order   integer,
         color           text,
         is_exists       boolean not null
       )
