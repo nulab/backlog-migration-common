@@ -73,6 +73,10 @@ private[importer] class IssuesImporter @Inject() (
     BacklogUnmarshaller.issue(backlogPaths.issueJson(path)) match {
       case Some(issue: BacklogIssue) =>
         retry(ctx.retryCount, retryInterval, classOf[BacklogAPIException]) {
+          // BLGMIGRATION-936
+          createTemporaryIssues(issue, index, size)
+        }
+        retry(ctx.retryCount, retryInterval, classOf[BacklogAPIException]) {
           createIssue(issue, path, index, size)
         }
       case Some(comment: BacklogComment) =>
@@ -90,7 +94,6 @@ private[importer] class IssuesImporter @Inject() (
       size: Int
   )(implicit ctx: IssueContext): Unit = {
     val prevSuccessIssueId = ctx.optPrevIssueIndex
-    createTemporaryIssues(issue, index, size)
 
     if (issueService.exists(ctx.project.id, issue)) {
       ctx.excludeIssueIds += issue.id
