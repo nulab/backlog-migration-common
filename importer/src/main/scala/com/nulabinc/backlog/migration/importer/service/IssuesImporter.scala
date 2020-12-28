@@ -73,6 +73,10 @@ private[importer] class IssuesImporter @Inject() (
     BacklogUnmarshaller.issue(backlogPaths.issueJson(path)) match {
       case Some(issue: BacklogIssue) =>
         retry(ctx.retryCount, retryInterval, classOf[BacklogAPIException]) {
+          // BLGMIGRATION-936
+          createTemporaryIssues(issue, index, size)
+        }
+        retry(ctx.retryCount, retryInterval, classOf[BacklogAPIException]) {
           createIssue(issue, path, index, size)
         }
       case Some(comment: BacklogComment) =>
@@ -83,14 +87,13 @@ private[importer] class IssuesImporter @Inject() (
     console.count = console.count + 1
   }
 
-  private[this] def createIssue(
+  private def createIssue(
       issue: BacklogIssue,
       path: Path,
       index: Int,
       size: Int
   )(implicit ctx: IssueContext): Unit = {
     val prevSuccessIssueId = ctx.optPrevIssueIndex
-    createDummyIssues(issue, index, size)
 
     if (issueService.exists(ctx.project.id, issue)) {
       ctx.excludeIssueIds += issue.id
@@ -128,7 +131,7 @@ private[importer] class IssuesImporter @Inject() (
     }
   }
 
-  private[this] def createDummyIssues(
+  private def createTemporaryIssues(
       issue: BacklogIssue,
       index: Int,
       size: Int
@@ -143,12 +146,12 @@ private[importer] class IssuesImporter @Inject() (
     } yield {
       (prevIssueIndex + 1) until issueIndex
     }.foreach { dummyIndex =>
-      createDummyIssue(dummyIndex, index, size)
+      createTemporaryIssue(dummyIndex, index, size)
     }
     ctx.optPrevIssueIndex = optIssueIndex
   }
 
-  private[this] def createDummyIssue(dummyIndex: Int, index: Int, size: Int)(implicit
+  private def createTemporaryIssue(dummyIndex: Int, index: Int, size: Int)(implicit
       ctx: IssueContext
   ) = {
     val dummyIssue =
