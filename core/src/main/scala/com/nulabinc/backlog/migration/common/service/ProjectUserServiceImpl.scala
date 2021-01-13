@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+
 import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.UserWrites
@@ -8,6 +9,7 @@ import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, BacklogU
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.BacklogAPIException
 
+import java.lang.Thread.sleep
 import scala.jdk.CollectionConverters._
 
 /**
@@ -30,7 +32,10 @@ class ProjectUserServiceImpl @Inject() (implicit
     }
   }
 
-  override def add(userId: Long) =
+  override def add(userId: Long) = {
+    sleep(200)
     backlog.addProjectUser(projectKey.value, userId)
+  }
+
 
 }

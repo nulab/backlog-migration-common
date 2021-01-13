@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+
 import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.GroupWrites
@@ -8,6 +9,7 @@ import com.nulabinc.backlog.migration.common.domain.BacklogGroup
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option.CreateGroupParams
 
+import java.lang.Thread.sleep
 import scala.jdk.CollectionConverters._
 
 /**
@@ -35,6 +37,7 @@ class GroupServiceImpl @Inject() (implicit
     val memberIds = group.members.flatMap(_.optUserId).flatMap(propertyResolver.optResolvedUserId)
     val params    = new CreateGroupParams(group.name)
     params.members(memberIds.asJava)
+    sleep(200)
     backlog.createGroup(params)
   }
 
