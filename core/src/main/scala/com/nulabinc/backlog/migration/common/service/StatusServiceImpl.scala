@@ -53,7 +53,7 @@ class StatusServiceImpl @Inject() (
   override def updateOrder(ids: Seq[Id[BacklogStatus]]): Unit =
     Try {
       backlog.updateOrderOfStatus(
-        new UpdateOrderOfStatusParams(projectKey.value, ids.asJava)
+        new UpdateOrderOfStatusParams(projectKey.value, ids.map(_.value).asJava)
       )
     }.recover {
       case ex: BacklogAPIException if ex.getMessage.contains("Undefined resource") =>
@@ -64,7 +64,7 @@ class StatusServiceImpl @Inject() (
     }.getOrElse(())
 
   override def remove(id: Id[BacklogStatus]): Unit =
-    backlog.removeStatus(projectKey.value, id, 1) // Any status id is OK
+    backlog.removeStatus(projectKey.value, id.value, 1) // Any status id is OK
 
   private def defaultStatuses(): BacklogStatuses =
     BacklogStatuses(
