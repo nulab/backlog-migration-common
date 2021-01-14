@@ -55,7 +55,7 @@ class CustomFieldSettingServiceImpl @Inject() (implicit
   override def add(
       setAddParams: BacklogCustomFieldSetting => AddCustomFieldParams
   )(backlogCustomFieldSetting: BacklogCustomFieldSetting) = {
-    sleep(200)
+    sleep(500)
     addCustomFieldSetting(setAddParams(backlogCustomFieldSetting))
   }
 

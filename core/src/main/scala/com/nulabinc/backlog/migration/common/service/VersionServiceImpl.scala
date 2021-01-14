@@ -35,7 +35,7 @@ class VersionServiceImpl @Inject() (implicit
       params.releaseDueDate(releaseDueDate)
     }
     try {
-      sleep(200)
+      sleep(500)
       Some(Convert.toBacklog(backlog.addVersion(params)))
     } catch {
       case e: Throwable =>

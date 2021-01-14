@@ -33,7 +33,7 @@ class ProjectUserServiceImpl @Inject() (implicit
   }
 
   override def add(userId: Long) = {
-    sleep(200)
+    sleep(500)
     backlog.addProjectUser(projectKey.value, userId)
   }
 

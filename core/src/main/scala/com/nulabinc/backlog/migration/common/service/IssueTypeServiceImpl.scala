@@ -27,7 +27,7 @@ class IssueTypeServiceImpl @Inject() (implicit
     backlog.getIssueTypes(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
 
   override def add(issueType: BacklogIssueType): BacklogIssueType = {
-    sleep(200)
+    sleep(500)
     val params = new AddIssueTypeParams(
       projectKey.value,
       issueType.name,

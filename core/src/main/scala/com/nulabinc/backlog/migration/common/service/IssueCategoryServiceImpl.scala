@@ -28,7 +28,7 @@ class IssueCategoryServiceImpl @Inject() (implicit
   override def add(
       backlogIssueCategory: BacklogIssueCategory
   ): BacklogIssueCategory = {
-    sleep(200)
+    sleep(500)
     val params =
       new AddCategoryParams(projectKey.value, backlogIssueCategory.name)
     Convert.toBacklog(backlog.addCategory(params))
