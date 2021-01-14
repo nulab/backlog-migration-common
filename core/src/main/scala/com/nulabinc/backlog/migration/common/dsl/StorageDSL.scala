@@ -17,6 +17,8 @@ trait StorageDSL[F[_]] {
 
   def writeAppendFile(path: Path, stream: Observable[Array[Byte]]): F[Unit]
 
+  def createDirectory(path: Path): F[Boolean]
+
   def exists(path: Path): F[Boolean]
 
   def delete(path: Path): F[Unit]

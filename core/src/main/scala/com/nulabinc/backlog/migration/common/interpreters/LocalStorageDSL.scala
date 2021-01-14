@@ -12,6 +12,7 @@ import monix.reactive.Observable
 
 import scala.util.Try
 import scala.util.control.NonFatal
+import java.io.File
 
 case class LocalStorageDSL() extends StorageDSL[Task] {
 
@@ -49,8 +50,7 @@ case class LocalStorageDSL() extends StorageDSL[Task] {
     for {
       _ <- delete(path)
       dir = path.toAbsolutePath.toFile.getParentFile
-      dirExists <- exists(dir.toPath)
-      _ = if (dirExists) () else dir.mkdir()
+      _ <- createDirectory(dir.toPath())
       _ <- write(path, stream, StandardOpenOption.CREATE)
     } yield ()
 
@@ -59,6 +59,12 @@ case class LocalStorageDSL() extends StorageDSL[Task] {
       stream: Observable[Array[Byte]]
   ): Task[Unit] =
     write(path, stream, StandardOpenOption.APPEND)
+
+  override def createDirectory(path: Path): Task[Boolean] =
+    for {
+      exists <- exists(path)
+      result = if (exists) false else path.toFile().mkdir()
+    } yield result
 
   override def exists(path: Path): Task[Boolean] =
     Task {
