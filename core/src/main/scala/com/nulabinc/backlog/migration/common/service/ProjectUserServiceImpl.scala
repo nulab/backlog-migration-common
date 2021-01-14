@@ -37,5 +37,4 @@ class ProjectUserServiceImpl @Inject() (implicit
     backlog.addProjectUser(projectKey.value, userId)
   }
 
-
 }

@@ -6,7 +6,13 @@ import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.CustomFieldSettingWrites
-import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldDateProperty, BacklogCustomFieldMultipleProperty, BacklogCustomFieldNumericProperty, BacklogCustomFieldSetting, _}
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogCustomFieldDateProperty,
+  BacklogCustomFieldMultipleProperty,
+  BacklogCustomFieldNumericProperty,
+  BacklogCustomFieldSetting,
+  _
+}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option._
 import com.nulabinc.backlog4j.internal.json.customFields._
