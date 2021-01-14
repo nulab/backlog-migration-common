@@ -14,6 +14,7 @@ import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, IssueKeyUtil, Lo
 import com.nulabinc.backlog.migration.importer.core.RetryException
 import com.nulabinc.backlog4j.BacklogAPIException
 import com.osinka.i18n.Messages
+
 import javax.inject.Inject
 
 /**
@@ -72,11 +73,11 @@ private[importer] class IssuesImporter @Inject() (
   ): Unit = {
     BacklogUnmarshaller.issue(backlogPaths.issueJson(path)) match {
       case Some(issue: BacklogIssue) =>
-        retry(ctx.retryCount, retryInterval, classOf[BacklogAPIException]) {
+        retryBacklogAPIException(ctx.retryCount, retryInterval) {
           // BLGMIGRATION-936
           createTemporaryIssues(issue, index, size)
         }
-        retry(ctx.retryCount, retryInterval, classOf[BacklogAPIException]) {
+        retryBacklogAPIException(ctx.retryCount, retryInterval) {
           createIssue(issue, path, index, size)
         }
       case Some(comment: BacklogComment) =>
@@ -172,7 +173,7 @@ private[importer] class IssuesImporter @Inject() (
     def updateComment(remoteIssueId: Long): Unit = {
 
       val setUpdatedParam =
-        retry(ctx.retryCount, retryInterval, classOf[BacklogAPIException]) {
+        retryBacklogAPIException(ctx.retryCount, retryInterval) {
           commentService.setUpdateParam(
             remoteIssueId,
             ctx.propertyResolver,
@@ -182,7 +183,7 @@ private[importer] class IssuesImporter @Inject() (
         }
 
       try {
-        retry(ctx.retryCount, retryInterval, classOf[BacklogAPIException]) {
+        retryBacklogAPIException(ctx.retryCount, retryInterval) {
           commentService.update(setUpdatedParam)(comment) match {
             case Left(e)
                 if Option(e.getMessage)
@@ -197,17 +198,23 @@ private[importer] class IssuesImporter @Inject() (
         }
       } catch {
         case e: RetryException =>
-          logger.error(e.getMessage, e)
-          val issue = issueService.issueOfId(remoteIssueId)
-          console.error(
-            index + 1,
-            size,
-            s"${Messages("import.error.failed.comment", issue.optIssueKey.getOrElse(issue.id.toString), e.getMessage)}"
-          )
-          console.failed += 1
+          handleUpdateCommentError(e, remoteIssueId)
+        case e: BacklogAPIException =>
+          handleUpdateCommentError(e, remoteIssueId)
         case e: Throwable =>
           throw e
       }
+    }
+
+    def handleUpdateCommentError(e: Throwable, remoteIssueId: Long): Unit = {
+      logger.error(e.getMessage, e)
+      val issue = issueService.issueOfId(remoteIssueId)
+      console.error(
+        index + 1,
+        size,
+        s"${Messages("import.error.failed.comment", issue.optIssueKey.getOrElse(issue.id.toString), e.getMessage)}"
+      )
+      console.failed += 1
     }
 
     def deleteAttachment(remoteIssueId: Long) =

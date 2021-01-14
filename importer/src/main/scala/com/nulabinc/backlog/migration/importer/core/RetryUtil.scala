@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.importer.core
 
 import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging}
+import com.nulabinc.backlog4j.BacklogAPIException
 
 case class RetryException(throwables: List[Throwable]) extends Exception(throwables.toString())
 
@@ -36,6 +37,22 @@ object RetryUtil extends Logging {
       retryLimit,
       retryInterval,
       e => catchExceptionClasses.exists(_.isAssignableFrom(e.getClass))
+    )(f)
+
+  def retryBacklogAPIException[T](
+      retryLimit: Int,
+      retryInterval: Int
+  )(f: => T): T =
+    retry(
+      retryLimit = retryLimit,
+      retryInterval = retryInterval,
+      shouldCatch = e =>
+        e match {
+          case ex: BacklogAPIException =>
+            !ex.getMessage.contains("No comment content")
+          case _ =>
+            true
+        }
     )(f)
 
   def retry[T](
