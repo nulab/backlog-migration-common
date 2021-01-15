@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+
 import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
@@ -17,6 +18,7 @@ import com.nulabinc.backlog4j.api.option._
 import com.nulabinc.backlog4j.internal.json.customFields._
 import com.nulabinc.backlog4j.BacklogAPIException
 
+import java.lang.Thread.sleep
 import scala.jdk.CollectionConverters._
 
 /**
@@ -53,6 +55,7 @@ class CustomFieldSettingServiceImpl @Inject() (implicit
   override def add(
       setAddParams: BacklogCustomFieldSetting => AddCustomFieldParams
   )(backlogCustomFieldSetting: BacklogCustomFieldSetting) = {
+    sleep(500)
     addCustomFieldSetting(setAddParams(backlogCustomFieldSetting))
   }
 

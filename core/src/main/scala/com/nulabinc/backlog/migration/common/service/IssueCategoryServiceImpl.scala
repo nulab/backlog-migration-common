@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+
 import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.CategoryWrites
@@ -8,6 +9,7 @@ import com.nulabinc.backlog.migration.common.domain.{BacklogIssueCategory, Backl
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option.AddCategoryParams
 
+import java.lang.Thread.sleep
 import scala.jdk.CollectionConverters._
 
 /**
@@ -26,6 +28,7 @@ class IssueCategoryServiceImpl @Inject() (implicit
   override def add(
       backlogIssueCategory: BacklogIssueCategory
   ): BacklogIssueCategory = {
+    sleep(500)
     val params =
       new AddCategoryParams(projectKey.value, backlogIssueCategory.name)
     Convert.toBacklog(backlog.addCategory(params))
