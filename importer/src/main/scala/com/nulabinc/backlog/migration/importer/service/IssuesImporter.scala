@@ -1,6 +1,8 @@
 package com.nulabinc.backlog.migration.importer.service
 
 import better.files.{File => Path}
+import cats.Monad
+import cats.syntax.all._
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain.{
@@ -9,6 +11,7 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogIssue,
   BacklogProject
 }
+import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
 import com.nulabinc.backlog.migration.common.service._
 import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, IssueKeyUtil, Logging, _}
 import com.nulabinc.backlog.migration.importer.core.RetryException
@@ -33,25 +36,28 @@ private[importer] class IssuesImporter @Inject() (
   private[this] val console       = new IssueProgressBar()
   private[this] val retryInterval = 5000
 
-  def execute(
+  def execute[F[_]: Monad: ConsoleDSL](
       project: BacklogProject,
       propertyResolver: PropertyResolver,
       fitIssueKey: Boolean,
       retryCount: Int
-  ): Unit = {
+  ): F[Unit] = {
 
-    ConsoleOut.println("""
+    for {
+      _ <- ConsoleDSL[F].println("""
       """.stripMargin)
+    } yield {
+      console.totalSize = totalSize()
 
-    console.totalSize = totalSize()
-
-    implicit val context =
-      IssueContext(project, propertyResolver, fitIssueKey, retryCount)
-    val paths = IOUtil.directoryPaths(backlogPaths.issueDirectoryPath).sortWith(_.name < _.name)
-    paths.zipWithIndex.foreach {
-      case (path, index) =>
-        loadDateDirectory(path, index)
+      implicit val context =
+        IssueContext(project, propertyResolver, fitIssueKey, retryCount)
+      val paths = IOUtil.directoryPaths(backlogPaths.issueDirectoryPath).sortWith(_.name < _.name)
+      paths.zipWithIndex.foreach {
+        case (path, index) =>
+          loadDateDirectory(path, index)
+      }
     }
+
   }
 
   private[this] def loadDateDirectory(path: Path, index: Int)(implicit

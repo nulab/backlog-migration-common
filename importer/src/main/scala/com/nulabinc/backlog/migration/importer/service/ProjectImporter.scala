@@ -48,7 +48,7 @@ private[importer] class ProjectImporter @Inject() (
       case Right(project) =>
         for {
           _ <- preExecute()
-          _ = contents(project, fitIssueKey, retryCount)
+          _ <- contents(project, fitIssueKey, retryCount)
           _ <- postExecute()
           _ <- ConsoleDSL[F].printStream(
             ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
@@ -78,11 +78,11 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def contents(
+  private def contents[F[_]: Monad: ConsoleDSL](
       project: BacklogProject,
       fitIssueKey: Boolean,
       retryCount: Int
-  ) = {
+  ): F[Unit] = {
     val propertyResolver = buildPropertyResolver()
 
     //Wiki
