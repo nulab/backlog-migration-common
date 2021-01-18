@@ -22,7 +22,7 @@ import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 /**
  * @author uchida
  */
-private[importer] class ProjectImporter @Inject() (
+private[importer] class ProjectImporter[F[_]: Monad: ConsoleDSL: StoreDSL] @Inject() (
     backlogPaths: BacklogPaths,
     groupService: GroupService,
     projectService: ProjectService,
@@ -32,14 +32,14 @@ private[importer] class ProjectImporter @Inject() (
     issueCategoryService: IssueCategoryService,
     customFieldSettingService: CustomFieldSettingService,
     wikisImporter: WikisImporter,
-    issuesImporter: IssuesImporter,
+    issuesImporter: IssuesImporter[F],
     resolutionService: ResolutionService,
     userService: UserService,
     statusService: StatusService,
     priorityService: PriorityService
 ) extends Logging {
 
-  def execute[A, F[_]: Monad: ConsoleDSL: StoreDSL](
+  def execute[A](
       fitIssueKey: Boolean,
       retryCount: Int
   ): F[Unit] = {
@@ -78,7 +78,7 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private def contents[F[_]: Monad: ConsoleDSL](
+  private def contents(
       project: BacklogProject,
       fitIssueKey: Boolean,
       retryCount: Int
@@ -92,7 +92,7 @@ private[importer] class ProjectImporter @Inject() (
     issuesImporter.execute(project, propertyResolver, fitIssueKey, retryCount)
   }
 
-  private def preExecute[A, F[_]: Monad: StoreDSL](): F[Unit] = {
+  private def preExecute(): F[Unit] = {
     val propertyResolver = buildPropertyResolver()
     importGroup(propertyResolver)
     importProjectUser(propertyResolver)
@@ -106,7 +106,7 @@ private[importer] class ProjectImporter @Inject() (
     } yield ()
   }
 
-  private[this] def postExecute[A, F[_]: Monad: StoreDSL](): F[Unit] = {
+  private[this] def postExecute(): F[Unit] = {
     val propertyResolver = buildPropertyResolver()
 
     removeVersion(propertyResolver)
@@ -201,7 +201,7 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private def importStatuses[F[_]: Monad: StoreDSL](): F[Unit] = {
+  private def importStatuses(): F[Unit] = {
     val projectStatuses = statusService.allStatuses()
 
     for {
@@ -344,7 +344,7 @@ private[importer] class ProjectImporter @Inject() (
         }
     }
 
-  private def removeStatus[A, F[_]: Monad: StoreDSL](
+  private def removeStatus(
       propertyResolver: PropertyResolver
   ): F[Unit] =
     for {

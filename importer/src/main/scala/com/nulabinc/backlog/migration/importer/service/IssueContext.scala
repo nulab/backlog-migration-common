@@ -5,11 +5,12 @@ import com.nulabinc.backlog.migration.common.service.PropertyResolver
 import com.nulabinc.backlog.migration.common.utils.Logging
 
 import scala.collection.mutable
+import cats.Monad
 
 /**
  * @author uchida
  */
-private[importer] case class IssueContext(
+private[importer] case class IssueContext[F[_]: Monad](
     project: BacklogProject,
     propertyResolver: PropertyResolver,
     fitIssueKey: Boolean,

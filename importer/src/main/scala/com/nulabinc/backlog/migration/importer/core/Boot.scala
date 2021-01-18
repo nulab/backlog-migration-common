@@ -27,7 +27,7 @@ object Boot extends Logging {
     try {
       val injector =
         Guice.createInjector(new BacklogModule(apiConfig))
-      val projectImporter = injector.getInstance(classOf[ProjectImporter])
+      val projectImporter = injector.getInstance(classOf[ProjectImporter[F]])
 
       for {
         _ <- ConsoleDSL[F].println(ConsoleMessages.Imports.start)

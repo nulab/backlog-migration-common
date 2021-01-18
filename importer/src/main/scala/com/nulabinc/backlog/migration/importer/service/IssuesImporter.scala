@@ -23,7 +23,7 @@ import javax.inject.Inject
 /**
  * @author uchida
  */
-private[importer] class IssuesImporter @Inject() (
+private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
     backlogPaths: BacklogPaths,
     sharedFileService: SharedFileService,
     issueService: IssueService,
@@ -36,7 +36,7 @@ private[importer] class IssuesImporter @Inject() (
   private[this] val console       = new IssueProgressBar()
   private[this] val retryInterval = 5000
 
-  def execute[F[_]: Monad: ConsoleDSL](
+  def execute(
       project: BacklogProject,
       propertyResolver: PropertyResolver,
       fitIssueKey: Boolean,
@@ -45,12 +45,12 @@ private[importer] class IssuesImporter @Inject() (
 
     for {
       _ <- ConsoleDSL[F].println("""
-      """.stripMargin)
+      :""".stripMargin)
     } yield {
       console.totalSize = totalSize()
 
       implicit val context =
-        IssueContext(project, propertyResolver, fitIssueKey, retryCount)
+        IssueContext[F](project, propertyResolver, fitIssueKey, retryCount)
       val paths = IOUtil.directoryPaths(backlogPaths.issueDirectoryPath).sortWith(_.name < _.name)
       paths.zipWithIndex.foreach {
         case (path, index) =>
@@ -61,7 +61,7 @@ private[importer] class IssuesImporter @Inject() (
   }
 
   private[this] def loadDateDirectory(path: Path, index: Int)(implicit
-      ctx: IssueContext
+      ctx: IssueContext[F]
   ): Unit = {
     val jsonDirs =
       path.list.filter(_.isDirectory).toSeq.sortWith(compareIssueJsons)
@@ -75,7 +75,7 @@ private[importer] class IssuesImporter @Inject() (
   }
 
   private[this] def loadJson(path: Path, index: Int, size: Int)(implicit
-      ctx: IssueContext
+      ctx: IssueContext[F]
   ): Unit = {
     BacklogUnmarshaller.issue(backlogPaths.issueJson(path)) match {
       case Some(issue: BacklogIssue) =>
@@ -99,7 +99,7 @@ private[importer] class IssuesImporter @Inject() (
       path: Path,
       index: Int,
       size: Int
-  )(implicit ctx: IssueContext): Unit = {
+  )(implicit ctx: IssueContext[F]): Unit = {
     val prevSuccessIssueId = ctx.optPrevIssueIndex
 
     if (issueService.exists(ctx.project.id, issue)) {
@@ -142,8 +142,8 @@ private[importer] class IssuesImporter @Inject() (
       issue: BacklogIssue,
       index: Int,
       size: Int
-  )(implicit ctx: IssueContext): Unit = {
-    val optIssueIndex  = issue.optIssueKey.map(IssueKeyUtil.findIssueIndex)
+  )(implicit ctx: IssueContext[F]): Unit = {
+    val optIssueIndex  = issue.findIssueIndex
     val prevIssueIndex = ctx.optPrevIssueIndex.getOrElse(0)
 
     for {
@@ -159,7 +159,7 @@ private[importer] class IssuesImporter @Inject() (
   }
 
   private def createTemporaryIssue(dummyIndex: Int, index: Int, size: Int)(implicit
-      ctx: IssueContext
+      ctx: IssueContext[F]
   ) = {
     val dummyIssue =
       issueService.createDummy(ctx.project.id, ctx.propertyResolver)
@@ -174,7 +174,7 @@ private[importer] class IssuesImporter @Inject() (
       path: Path,
       index: Int,
       size: Int
-  )(implicit ctx: IssueContext) = {
+  )(implicit ctx: IssueContext[F]) = {
 
     def updateComment(remoteIssueId: Long): Unit = {
 
