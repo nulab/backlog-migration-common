@@ -81,7 +81,7 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
       case Some(issue: BacklogIssue) =>
         retryBacklogAPIException(ctx.retryCount, retryInterval) {
           // BLGMIGRATION-936
-          createTemporaryIssues(issue, index, size)
+          createTemporaryIssues(issue)
         }
         retryBacklogAPIException(ctx.retryCount, retryInterval) {
           createIssue(issue, path, index, size)
@@ -138,11 +138,7 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
     }
   }
 
-  private def createTemporaryIssues(
-      issue: BacklogIssue,
-      index: Int,
-      size: Int
-  )(implicit ctx: IssueContext[F]): Unit = {
+  private def createTemporaryIssues(issue: BacklogIssue)(implicit ctx: IssueContext[F]): Unit = {
     val optIssueIndex  = issue.findIssueIndex
     val prevIssueIndex = ctx.optPrevIssueIndex.getOrElse(0)
 
@@ -153,14 +149,12 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
     } yield {
       (prevIssueIndex + 1) until issueIndex
     }.foreach { dummyIndex =>
-      createTemporaryIssue(dummyIndex, index, size)
+      createTemporaryIssue(dummyIndex)
     }
     ctx.optPrevIssueIndex = optIssueIndex
   }
 
-  private def createTemporaryIssue(dummyIndex: Int, index: Int, size: Int)(implicit
-      ctx: IssueContext[F]
-  ) = {
+  private def createTemporaryIssue(dummyIndex: Int)(implicit ctx: IssueContext[F]) = {
     val dummyIssue =
       issueService.createDummy(ctx.project.id, ctx.propertyResolver)
     issueService.delete(dummyIssue.getId)
