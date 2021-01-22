@@ -60,3 +60,8 @@ class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler) extends S
     ).mapN(_ + _).transact(xa).map(_ => ())
 
 }
+
+object SQLiteStoreDSL {
+  def apply(dbPath: Path)(implicit s: Scheduler): SQLiteStoreDSL =
+    new SQLiteStoreDSL(dbPath)
+}
