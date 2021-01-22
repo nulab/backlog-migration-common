@@ -8,14 +8,15 @@ import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.modules.DefaultModule
 import com.nulabinc.backlog.migration.common.service.CommentServiceImpl
 import com.nulabinc.backlog.migration.{SimpleFixture, TestModule, TestPropertyResolver}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.jdk.CollectionConverters._
 
 /**
  * @author uchida
  */
-class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
+class CommentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixture {
 
   def commentService() = {
     Guice
