@@ -17,7 +17,7 @@ import java.nio.file.Path
 
 class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler) extends StoreDSL[Task] {
 
-  private val xa: Transactor[Task] = Transactor.fromDriverManager[Task](
+  protected val xa: Transactor[Task] = Transactor.fromDriverManager[Task](
     "org.sqlite.JDBC",
     s"jdbc:sqlite:${dbPath.toAbsolutePath}",
     "",
