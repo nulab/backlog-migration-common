@@ -5,18 +5,21 @@ import cats.Monad
 import cats.syntax.all._
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
+import com.nulabinc.backlog.migration.common.domain.imports.ImportedIssueKeys
 import com.nulabinc.backlog.migration.common.domain.{
   BacklogAttachment,
   BacklogComment,
   BacklogIssue,
   BacklogProject
 }
-import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
+import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StoreDSL}
 import com.nulabinc.backlog.migration.common.service._
-import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, IssueKeyUtil, Logging, _}
+import com.nulabinc.backlog.migration.common.utils.{Logging, _}
 import com.nulabinc.backlog.migration.importer.core.RetryException
 import com.nulabinc.backlog4j.BacklogAPIException
 import com.osinka.i18n.Messages
+import monix.eval.Task
+import monix.execution.Scheduler
 
 import javax.inject.Inject
 
@@ -29,7 +32,8 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
     issueService: IssueService,
     commentService: CommentService,
     attachmentService: AttachmentService
-) extends Logging {
+)(implicit s: Scheduler, storeDSL: StoreDSL[Task])
+    extends Logging {
 
   import com.nulabinc.backlog.migration.importer.core.RetryUtil._
 
@@ -130,6 +134,16 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
         case Right(remoteIssue) =>
           sharedFileService.linkIssueSharedFile(remoteIssue.id, issue)
           ctx.addIssueId(issue, remoteIssue)
+          storeDSL
+            .storeImportedIssueKeys(
+              ImportedIssueKeys(
+                srcIssueId = issue.id,
+                optSrcIssueIndex = issue.findIssueIndex.map(_.toLong),
+                dstIssueId = remoteIssue.id,
+                optDstIssueIndex = remoteIssue.findIssueIndex.map(_.toLong)
+              )
+            )
+            .runSyncUnsafe()
         case _ =>
           ctx.optPrevIssueIndex = prevSuccessIssueId
           console.failed += 1

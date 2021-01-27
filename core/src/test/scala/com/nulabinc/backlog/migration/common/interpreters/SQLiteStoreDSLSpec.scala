@@ -9,6 +9,7 @@ import monix.execution.Scheduler
 import org.scalatest._
 
 import java.nio.file.Paths
+import com.nulabinc.backlog.migration.common.domain.imports.ImportedIssueKeys
 
 trait TestFixture {
   implicit val sc: Scheduler = monix.execution.Scheduler.global
@@ -76,5 +77,17 @@ class SQLiteStoreDSLSpec
 
     dsl.storeSrcStatus(exportedStatuses).runSyncUnsafe()
     dsl.allSrcStatus.runSyncUnsafe().length mustBe 2
+  }
+
+  val imported1 = ImportedIssueKeys(1, Some(1), 100, Some(100))
+  val imported2 = ImportedIssueKeys(2, Some(2), 101, Some(101))
+
+  test("store imported issue keys") {
+    setup()
+
+    dsl.storeImportedIssueKeys(imported1).runSyncUnsafe() mustBe ()
+    dsl.storeImportedIssueKeys(imported2).runSyncUnsafe() mustBe ()
+
+    dsl.getLatestImportedIssueKeys().runSyncUnsafe() mustBe imported2
   }
 }
