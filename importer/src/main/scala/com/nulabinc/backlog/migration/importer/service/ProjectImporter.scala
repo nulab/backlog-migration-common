@@ -18,31 +18,36 @@ import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.ansi
 import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
 import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
+import monix.eval.Task
+import monix.execution.Scheduler
 
 /**
  * @author uchida
  */
-private[importer] class ProjectImporter[F[_]: Monad: ConsoleDSL: StoreDSL] @Inject() (
+private[importer] class ProjectImporter @Inject() (
+    attachmentService: AttachmentService,
     backlogPaths: BacklogPaths,
+    commentService: CommentService,
     groupService: GroupService,
     projectService: ProjectService,
     versionService: VersionService,
     projectUserService: ProjectUserService,
+    issueService: IssueService,
     issueTypeService: IssueTypeService,
     issueCategoryService: IssueCategoryService,
     customFieldSettingService: CustomFieldSettingService,
     wikisImporter: WikisImporter,
-    issuesImporter: IssuesImporter[F],
     resolutionService: ResolutionService,
     userService: UserService,
+    sharedFileService: SharedFileService,
     statusService: StatusService,
     priorityService: PriorityService
 ) extends Logging {
 
-  def execute[A](
+  def execute[A, F[_]: Monad: ConsoleDSL: StoreDSL](
       fitIssueKey: Boolean,
       retryCount: Int
-  ): F[Unit] = {
+  )(implicit s: Scheduler, storeDSL: StoreDSL[Task]): F[Unit] = {
     val project = BacklogUnmarshaller.project(backlogPaths)
     projectService.create(project) match {
       case Right(project) =>
@@ -78,11 +83,18 @@ private[importer] class ProjectImporter[F[_]: Monad: ConsoleDSL: StoreDSL] @Inje
     }
   }
 
-  private def contents(
+  private def contents[F[_]: Monad: ConsoleDSL: StoreDSL](
       project: BacklogProject,
       fitIssueKey: Boolean,
       retryCount: Int
-  ): F[Unit] = {
+  )(implicit s: Scheduler, storeDSL: StoreDSL[Task]): F[Unit] = {
+    val issuesImporter = new IssuesImporter[F](
+      backlogPaths = backlogPaths,
+      sharedFileService = sharedFileService,
+      issueService = issueService,
+      commentService = commentService,
+      attachmentService = attachmentService
+    )
     val propertyResolver = buildPropertyResolver()
 
     //Wiki
@@ -92,7 +104,7 @@ private[importer] class ProjectImporter[F[_]: Monad: ConsoleDSL: StoreDSL] @Inje
     issuesImporter.execute(project, propertyResolver, fitIssueKey, retryCount)
   }
 
-  private def preExecute(): F[Unit] = {
+  private def preExecute[F[_]: Monad: ConsoleDSL: StoreDSL](): F[Unit] = {
     val propertyResolver = buildPropertyResolver()
     importGroup(propertyResolver)
     importProjectUser(propertyResolver)
@@ -106,7 +118,7 @@ private[importer] class ProjectImporter[F[_]: Monad: ConsoleDSL: StoreDSL] @Inje
     } yield ()
   }
 
-  private[this] def postExecute(): F[Unit] = {
+  private def postExecute[F[_]: Monad: ConsoleDSL: StoreDSL](): F[Unit] = {
     val propertyResolver = buildPropertyResolver()
 
     removeVersion(propertyResolver)
@@ -201,7 +213,7 @@ private[importer] class ProjectImporter[F[_]: Monad: ConsoleDSL: StoreDSL] @Inje
     }
   }
 
-  private def importStatuses(): F[Unit] = {
+  private def importStatuses[F[_]: Monad: ConsoleDSL: StoreDSL](): F[Unit] = {
     val projectStatuses = statusService.allStatuses()
 
     for {
@@ -344,7 +356,7 @@ private[importer] class ProjectImporter[F[_]: Monad: ConsoleDSL: StoreDSL] @Inje
         }
     }
 
-  private def removeStatus(
+  private def removeStatus[F[_]: Monad: ConsoleDSL: StoreDSL](
       propertyResolver: PropertyResolver
   ): F[Unit] =
     for {

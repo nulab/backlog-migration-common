@@ -21,19 +21,16 @@ import com.osinka.i18n.Messages
 import monix.eval.Task
 import monix.execution.Scheduler
 
-import javax.inject.Inject
-
 /**
  * @author uchida
  */
-private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
+private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
     backlogPaths: BacklogPaths,
     sharedFileService: SharedFileService,
     issueService: IssueService,
     commentService: CommentService,
     attachmentService: AttachmentService
-)(implicit s: Scheduler, storeDSL: StoreDSL[Task])
-    extends Logging {
+) extends Logging {
 
   import com.nulabinc.backlog.migration.importer.core.RetryUtil._
 
@@ -45,7 +42,7 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
       propertyResolver: PropertyResolver,
       fitIssueKey: Boolean,
       retryCount: Int
-  ): F[Unit] = {
+  )(implicit s: Scheduler, storeDSL: StoreDSL[Task]): F[Unit] = {
 
     for {
       _ <- ConsoleDSL[F].println("""
@@ -56,16 +53,17 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
       implicit val context =
         IssueContext[F](project, propertyResolver, fitIssueKey, retryCount)
       val paths = IOUtil.directoryPaths(backlogPaths.issueDirectoryPath).sortWith(_.name < _.name)
-      paths.zipWithIndex.foreach {
-        case (path, index) =>
-          loadDateDirectory(path, index)
+      paths.foreach { path =>
+        loadDateDirectory(path)
       }
     }
 
   }
 
-  private[this] def loadDateDirectory(path: Path, index: Int)(implicit
-      ctx: IssueContext[F]
+  private[this] def loadDateDirectory(path: Path)(implicit
+      ctx: IssueContext[F],
+      s: Scheduler,
+      storeDSL: StoreDSL[Task]
   ): Unit = {
     val jsonDirs =
       path.list.filter(_.isDirectory).toSeq.sortWith(compareIssueJsons)
@@ -79,7 +77,9 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
   }
 
   private[this] def loadJson(path: Path, index: Int, size: Int)(implicit
-      ctx: IssueContext[F]
+      ctx: IssueContext[F],
+      s: Scheduler,
+      storeDSL: StoreDSL[Task]
   ): Unit = {
     BacklogUnmarshaller.issue(backlogPaths.issueJson(path)) match {
       case Some(issue: BacklogIssue) =>
@@ -103,7 +103,7 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
       path: Path,
       index: Int,
       size: Int
-  )(implicit ctx: IssueContext[F]): Unit = {
+  )(implicit ctx: IssueContext[F], s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
     val prevSuccessIssueId = ctx.optPrevIssueIndex
 
     if (issueService.exists(ctx.project.id, issue)) {
@@ -152,7 +152,9 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
     }
   }
 
-  private def createTemporaryIssues(issue: BacklogIssue)(implicit ctx: IssueContext[F]): Unit = {
+  private def createTemporaryIssues(
+      issue: BacklogIssue
+  )(implicit ctx: IssueContext[F], s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
     val optIssueIndex  = issue.findIssueIndex
     val prevIssueIndex = ctx.optPrevIssueIndex.getOrElse(0)
 
@@ -163,18 +165,33 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL] @Inject() (
     } yield {
       (prevIssueIndex + 1) until issueIndex
     }.foreach { dummyIndex =>
-      createTemporaryIssue(dummyIndex)
+      createTemporaryIssue(issue, dummyIndex)
     }
     ctx.optPrevIssueIndex = optIssueIndex
   }
 
-  private def createTemporaryIssue(dummyIndex: Int)(implicit ctx: IssueContext[F]) = {
-    val dummyIssue =
+  private def createTemporaryIssue(
+      issue: BacklogIssue,
+      dummyIndex: Int
+  )(implicit ctx: IssueContext[F], s: Scheduler, storeDSL: StoreDSL[Task]) = {
+    val temporaryIssue =
       issueService.createDummy(ctx.project.id, ctx.propertyResolver)
-    issueService.delete(dummyIssue.getId)
+    storeDSL
+      .storeImportedIssueKeys(
+        ImportedIssueKeys(
+          srcIssueId = issue.id,
+          optSrcIssueIndex = issue.findIssueIndex.map(_.toLong),
+          dstIssueId = temporaryIssue.getId(),
+          optDstIssueIndex =
+            BacklogIssue.findIssueIndex(Some(temporaryIssue.getIssueKey())).map(_.toLong)
+        )
+      )
+      .runSyncUnsafe()
+    issueService.delete(temporaryIssue.getId)
     logger.warn(
       s"${Messages("import.issue.create_dummy", s"${ctx.project.key}-${dummyIndex}")}"
     )
+
   }
 
   private[this] def createComment(
