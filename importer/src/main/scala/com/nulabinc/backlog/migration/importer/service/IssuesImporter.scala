@@ -83,10 +83,7 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
   ): Unit = {
     BacklogUnmarshaller.issue(backlogPaths.issueJson(path)) match {
       case Some(issue: BacklogIssue) =>
-        retryBacklogAPIException(ctx.retryCount, retryInterval) {
-          // BLGMIGRATION-936
-          createTemporaryIssues(project, issue)
-        }
+        createTemporaryIssues(project, issue)
         retryBacklogAPIException(ctx.retryCount, retryInterval) {
           createIssue(project, issue, path, index, size)
         }
@@ -178,8 +175,10 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
       issue: BacklogIssue,
       dummyIndex: Int
   )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]) = {
-    val temporaryIssue =
+    val temporaryIssue = retryBacklogAPIException(ctx.retryCount, retryInterval) {
       issueService.createDummy(project.id, ctx.propertyResolver)
+    }
+
     storeDSL
       .storeImportedIssueKeys(
         ImportedIssueKeys(
@@ -190,7 +189,10 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
         )
       )
       .runSyncUnsafe()
-    issueService.delete(temporaryIssue.getId)
+
+    retryBacklogAPIException(ctx.retryCount, retryInterval) {
+      issueService.delete(temporaryIssue.getId)
+    }
     logger.warn(
       s"${Messages("import.issue.create_dummy", s"${project.key}-${dummyIndex}")}"
     )
