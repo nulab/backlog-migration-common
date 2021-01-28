@@ -98,7 +98,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   }
 
   // Issue
-  implicit val BacklogIssueFormat = jsonFormat22(BacklogIssue)
+  implicit val BacklogIssueFormat = jsonFormat22(BacklogIssue.apply _)
 
   implicit object BacklogEventObjectFormat extends RootJsonFormat[BacklogEvent] {
     def write(eventObject: BacklogEvent) =

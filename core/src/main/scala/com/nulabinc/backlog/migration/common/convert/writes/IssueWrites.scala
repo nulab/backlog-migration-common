@@ -23,7 +23,7 @@ private[common] class IssueWrites @Inject() (
     BacklogIssue(
       eventType = "issue",
       id = issue.getId,
-      optIssueKey = Some(issue.getIssueKey),
+      issueKey = issue.getIssueKey,
       summary = BacklogIssueSummary(
         value = StringUtil.toSafeString(issue.getSummary),
         original = StringUtil.toSafeString(issue.getSummary)

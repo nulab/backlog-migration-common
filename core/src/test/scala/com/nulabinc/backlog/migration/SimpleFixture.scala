@@ -56,7 +56,7 @@ trait SimpleFixture {
   val projectId                      = 11
   val issueId1                       = 12
   val issueId2                       = 13
-  val optIssueKey                    = Some("TEST-13")
+  val issueKey                       = "TEST-13"
   val summary                        = "summary"
   val optParentIssueId: Option[Long] = Some(issueId2)
   val description                    = "description"
@@ -618,7 +618,7 @@ trait SimpleFixture {
   val issue1 = BacklogIssue(
     eventType = "issue",
     id = issueId1,
-    optIssueKey = optIssueKey,
+    issueKey = issueKey,
     summary = BacklogIssueSummary(value = summary, original = summary),
     optParentIssueId = optParentIssueId,
     description = description,

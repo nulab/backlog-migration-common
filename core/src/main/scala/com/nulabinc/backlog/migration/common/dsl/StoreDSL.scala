@@ -1,9 +1,8 @@
 package com.nulabinc.backlog.migration.common.dsl
 
-import com.nulabinc.backlog.migration.common.domain.BacklogStatus
-import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
+import com.nulabinc.backlog.migration.common.domain.{BacklogStatus, BacklogStatuses}
 import com.nulabinc.backlog.migration.common.domain.exports.ExportedBacklogStatus
-import com.nulabinc.backlog.migration.common.persistence.store.{ReadQuery, WriteQuery}
+import com.nulabinc.backlog.migration.common.domain.imports.ImportedIssueKeys
 import simulacrum.typeclass
 
 @typeclass
@@ -14,4 +13,7 @@ trait StoreDSL[F[_]] {
   def allSrcStatus: F[Seq[ExportedBacklogStatus]]
   def storeSrcStatus(status: ExportedBacklogStatus): F[Unit]
   def storeSrcStatus(statuses: Seq[ExportedBacklogStatus]): F[Unit]
+  def storeImportedIssueKeys(importedIssueKeys: ImportedIssueKeys): F[Unit]
+  def getLatestImportedIssueKeys(): F[ImportedIssueKeys]
+  def findBySrcIssueIdLatest(srcIssueId: Long): F[Option[ImportedIssueKeys]]
 }

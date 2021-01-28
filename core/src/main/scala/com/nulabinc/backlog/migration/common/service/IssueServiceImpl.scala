@@ -175,17 +175,17 @@ class IssueServiceImpl @Inject() (implicit
       setCreateParam: BacklogIssue => ImportIssueParams
   )(backlogIssue: BacklogIssue): Either[Throwable, BacklogIssue] = {
     logger.debug(
-      s"[Start Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.optIssueKey}]----------------------------"
+      s"[Start Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.issueKey}]----------------------------"
     )
     val result = createIssue(setCreateParam(backlogIssue))
     result match {
       case Right(_) =>
         logger.debug(
-          s"[Success Finish Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.optIssueKey}]----------------------------"
+          s"[Success Finish Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.issueKey}]----------------------------"
         )
       case Left(_) =>
         logger.debug(
-          s"[Fail Finish Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.optIssueKey}]----------------------------"
+          s"[Fail Finish Create Issue]:issueId[${backlogIssue.id}] issueKey[${backlogIssue.issueKey}]----------------------------"
         )
     }
     result
@@ -247,7 +247,7 @@ class IssueServiceImpl @Inject() (implicit
         sb.append(backlogIssue.description).append("\n")
         sb.append(Messages("common.parent_issue"))
           .append(":")
-          .append(parentIssue.optIssueKey.getOrElse(""))
+          .append(parentIssue.issueKey)
         params.description(sb.toString())
       case Some(parentIssue) if parentIssue.optParentIssueId.isEmpty =>
         params.parentIssueId(parentIssue.id) //parent id

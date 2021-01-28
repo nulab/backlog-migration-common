@@ -1,12 +1,14 @@
 package com.nulabinc.backlog.migration.common.interpreters
 
 import cats.implicits._
-import com.nulabinc.backlog.migration.common.domain.exports.ExportedBacklogStatus
 import com.nulabinc.backlog.migration.common.domain.{BacklogStatus, BacklogStatuses}
+import com.nulabinc.backlog.migration.common.domain.exports.ExportedBacklogStatus
+import com.nulabinc.backlog.migration.common.domain.imports.ImportedIssueKeys
 import com.nulabinc.backlog.migration.common.dsl.StoreDSL
 import com.nulabinc.backlog.migration.common.persistence.store.sqlite.ops.{
   BacklogStatusOps,
-  ExportedStatusTableOps
+  ExportedStatusTableOps,
+  ImportedIssueKeysOps
 }
 import doobie.implicits._
 import doobie.util.transactor.Transactor
@@ -53,11 +55,21 @@ class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler) extends S
       ExportedStatusTableOps.store(statuses).transact(xa).map(_ => ())
     )
 
+  def storeImportedIssueKeys(importedIssueKeys: ImportedIssueKeys): Task[Unit] =
+    ImportedIssueKeysOps.store(importedIssueKeys).run.transact(xa).map(_ => ())
+
+  def getLatestImportedIssueKeys(): Task[ImportedIssueKeys] =
+    ImportedIssueKeysOps.findLatest().option.transact(xa).map(_.getOrElse(ImportedIssueKeys.empty))
+
+  def findBySrcIssueIdLatest(srcIssueId: Long): Task[Option[ImportedIssueKeys]] =
+    ImportedIssueKeysOps.findBySrcIssueIdLatest(srcIssueId).option.transact(xa)
+
   def createTable: Task[Unit] =
     (
       BacklogStatusOps.createTable().run,
-      ExportedStatusTableOps.createTable().run
-    ).mapN(_ + _).transact(xa).map(_ => ())
+      ExportedStatusTableOps.createTable().run,
+      ImportedIssueKeysOps.createTable().run
+    ).mapN(_ + _ + _).transact(xa).map(_ => ())
 
 }
 
