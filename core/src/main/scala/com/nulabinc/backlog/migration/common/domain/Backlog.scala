@@ -125,7 +125,7 @@ trait BacklogEvent
 case class BacklogIssue(
     eventType: String,
     id: Long,
-    optIssueKey: Option[String],
+    issueKey: String,
     summary: BacklogIssueSummary,
     optParentIssueId: Option[Long],
     description: String,
@@ -146,19 +146,22 @@ case class BacklogIssue(
     notifiedUsers: Seq[BacklogUser],
     operation: BacklogOperation
 ) extends BacklogEvent {
-  def findIssueIndex: Option[Int] = BacklogIssue.findIssueIndex(optIssueKey)
+  def findIssueIndex: Int = BacklogIssue.getIssueIndex(issueKey)
 }
 
 object BacklogIssue {
-  def findIssueIndex(optIssueKey: Option[String]): Option[Int] = {
+  def findIssueIndex(optIssueKey: Option[String]): Option[Int] =
+    optIssueKey.map(getIssueIndex)
+
+  def getIssueIndex(issueKey: String): Int = {
     import scala.util.matching.Regex
 
-    optIssueKey.map { issueKey =>
-      val pattern: Regex      = """^[0-9A-Z_]+-(\d+)$""".r
-      val pattern(issueIndex) = issueKey
-      issueIndex.toInt
-    }
+    val pattern: Regex      = """^[0-9A-Z_]+-(\d+)$""".r
+    val pattern(issueIndex) = issueKey
+
+    issueIndex.toInt
   }
+
 }
 
 case class BacklogComment(

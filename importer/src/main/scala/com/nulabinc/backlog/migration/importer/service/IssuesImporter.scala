@@ -51,17 +51,17 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
       console.totalSize = totalSize()
 
       implicit val context =
-        IssueContext[F](project, propertyResolver, fitIssueKey, retryCount)
+        IssueContext(propertyResolver, fitIssueKey, retryCount)
       val paths = IOUtil.directoryPaths(backlogPaths.issueDirectoryPath).sortWith(_.name < _.name)
       paths.foreach { path =>
-        loadDateDirectory(path)
+        loadDateDirectory(project, path)
       }
     }
 
   }
 
-  private[this] def loadDateDirectory(path: Path)(implicit
-      ctx: IssueContext[F],
+  private[this] def loadDateDirectory(project: BacklogProject, path: Path)(implicit
+      ctx: IssueContext,
       s: Scheduler,
       storeDSL: StoreDSL[Task]
   ): Unit = {
@@ -72,12 +72,12 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
 
     jsonDirs.zipWithIndex.foreach {
       case (jsonDir, index) =>
-        loadJson(jsonDir, index, jsonDirs.size)
+        loadJson(project, jsonDir, index, jsonDirs.size)
     }
   }
 
-  private[this] def loadJson(path: Path, index: Int, size: Int)(implicit
-      ctx: IssueContext[F],
+  private[this] def loadJson(project: BacklogProject, path: Path, index: Int, size: Int)(implicit
+      ctx: IssueContext,
       s: Scheduler,
       storeDSL: StoreDSL[Task]
   ): Unit = {
@@ -85,10 +85,10 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
       case Some(issue: BacklogIssue) =>
         retryBacklogAPIException(ctx.retryCount, retryInterval) {
           // BLGMIGRATION-936
-          createTemporaryIssues(issue)
+          createTemporaryIssues(project, issue)
         }
         retryBacklogAPIException(ctx.retryCount, retryInterval) {
-          createIssue(issue, path, index, size)
+          createIssue(project, issue, path, index, size)
         }
       case Some(comment: BacklogComment) =>
         createComment(comment, path, index, size)
@@ -99,32 +99,38 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
   }
 
   private def createIssue(
+      project: BacklogProject,
       issue: BacklogIssue,
       path: Path,
       index: Int,
       size: Int
-  )(implicit ctx: IssueContext[F], s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
-    val prevSuccessIssueId = ctx.optPrevIssueIndex
-
-    if (issueService.exists(ctx.project.id, issue)) {
+  )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
+    if (issueService.exists(project.id, issue)) {
       ctx.excludeIssueIds += issue.id
       for {
-        remoteIssue <- issueService.optIssueOfParams(ctx.project.id, issue)
+        remoteIssue <- issueService.optIssueOfParams(project.id, issue)
       } yield {
-        ctx.addIssueId(issue, remoteIssue)
+        storeDSL.storeImportedIssueKeys(
+          ImportedIssueKeys(
+            issue.id,
+            issue.findIssueIndex,
+            remoteIssue.id,
+            remoteIssue.findIssueIndex
+          )
+        )
       }
       console.warning(
         index + 1,
         size,
         Messages(
           "import.issue.already_exists",
-          issue.optIssueKey.getOrElse(issue.id.toString)
+          issue.issueKey
         )
       )
     } else {
       issueService.create(
         issueService.setCreateParam(
-          ctx.project.id,
+          project.id,
           ctx.propertyResolver,
           ctx.toRemoteIssueId,
           postAttachment(path, index, size),
@@ -138,14 +144,13 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
             .storeImportedIssueKeys(
               ImportedIssueKeys(
                 srcIssueId = issue.id,
-                optSrcIssueIndex = issue.findIssueIndex.map(_.toLong),
+                srcIssueIndex = issue.findIssueIndex,
                 dstIssueId = remoteIssue.id,
-                optDstIssueIndex = remoteIssue.findIssueIndex.map(_.toLong)
+                dstIssueIndex = remoteIssue.findIssueIndex
               )
             )
             .runSyncUnsafe()
         case _ =>
-          ctx.optPrevIssueIndex = prevSuccessIssueId
           console.failed += 1
       }
       console.progress(index + 1, size)
@@ -153,43 +158,41 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
   }
 
   private def createTemporaryIssues(
+      project: BacklogProject,
       issue: BacklogIssue
-  )(implicit ctx: IssueContext[F], s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
-    val optIssueIndex  = issue.findIssueIndex
-    val prevIssueIndex = ctx.optPrevIssueIndex.getOrElse(0)
+  )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
+    val issueIndex = issue.findIssueIndex
+    val prev       = storeDSL.getLatestImportedIssueKeys().runSyncUnsafe().srcIssueIndex
 
-    for {
-      issueIndex <- optIssueIndex
-      if (prevIssueIndex + 1) != issueIndex
-      if ctx.fitIssueKey
-    } yield {
-      (prevIssueIndex + 1) until issueIndex
-    }.foreach { dummyIndex =>
-      createTemporaryIssue(issue, dummyIndex)
+    if (ctx.fitIssueKey && (prev + 1) != issueIndex) {
+      val seq = (prev + 1) until issueIndex
+
+      seq.foreach { idx =>
+        createTemporaryIssue(project, issue, idx)
+      }
     }
-    ctx.optPrevIssueIndex = optIssueIndex
   }
 
   private def createTemporaryIssue(
+      project: BacklogProject,
       issue: BacklogIssue,
       dummyIndex: Int
-  )(implicit ctx: IssueContext[F], s: Scheduler, storeDSL: StoreDSL[Task]) = {
+  )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]) = {
     val temporaryIssue =
-      issueService.createDummy(ctx.project.id, ctx.propertyResolver)
+      issueService.createDummy(project.id, ctx.propertyResolver)
     storeDSL
       .storeImportedIssueKeys(
         ImportedIssueKeys(
           srcIssueId = issue.id,
-          optSrcIssueIndex = issue.findIssueIndex.map(_.toLong),
+          srcIssueIndex = issue.findIssueIndex,
           dstIssueId = temporaryIssue.getId(),
-          optDstIssueIndex =
-            BacklogIssue.findIssueIndex(Some(temporaryIssue.getIssueKey())).map(_.toLong)
+          dstIssueIndex = BacklogIssue.getIssueIndex(temporaryIssue.getIssueKey())
         )
       )
       .runSyncUnsafe()
     issueService.delete(temporaryIssue.getId)
     logger.warn(
-      s"${Messages("import.issue.create_dummy", s"${ctx.project.key}-${dummyIndex}")}"
+      s"${Messages("import.issue.create_dummy", s"${project.key}-${dummyIndex}")}"
     )
 
   }
@@ -199,7 +202,7 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
       path: Path,
       index: Int,
       size: Int
-  )(implicit ctx: IssueContext[F]) = {
+  )(implicit ctx: IssueContext) = {
 
     def updateComment(remoteIssueId: Long): Unit = {
 
@@ -243,7 +246,7 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
       console.error(
         index + 1,
         size,
-        s"${Messages("import.error.failed.comment", issue.optIssueKey.getOrElse(issue.id.toString), e.getMessage)}"
+        s"${Messages("import.error.failed.comment", issue.issueKey, e.getMessage)}"
       )
       console.failed += 1
     }

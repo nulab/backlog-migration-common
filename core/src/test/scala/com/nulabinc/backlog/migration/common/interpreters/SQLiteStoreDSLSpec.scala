@@ -79,8 +79,8 @@ class SQLiteStoreDSLSpec
     dsl.allSrcStatus.runSyncUnsafe().length mustBe 2
   }
 
-  val imported1 = ImportedIssueKeys(1, Some(1), 100, Some(100))
-  val imported2 = ImportedIssueKeys(2, Some(2), 101, Some(101))
+  val imported1 = ImportedIssueKeys(1111, 1, 100, 100)
+  val imported2 = ImportedIssueKeys(2222, 2, 101, 101)
 
   test("store imported issue keys") {
     setup()
