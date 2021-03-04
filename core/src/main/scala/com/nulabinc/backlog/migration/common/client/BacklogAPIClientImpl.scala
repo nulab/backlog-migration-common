@@ -4,10 +4,12 @@ import com.nulabinc.backlog.migration.common.client.params._
 import com.nulabinc.backlog.migration.common.conf.BacklogConfiguration
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.conf.BacklogConfigure
-import com.nulabinc.backlog4j.http.{BacklogHttpClient, BacklogHttpClientImpl}
+import com.nulabinc.backlog4j.http.{BacklogHttpClient, BacklogHttpClientImpl, NameValuePair}
+
+import scala.jdk.CollectionConverters._
 
 object BacklogAPIClientImpl extends BacklogConfiguration {
-  def client: BacklogHttpClient = {
+  def create: BacklogHttpClient = {
     val client = new BacklogHttpClientImpl()
     client.setUserAgent(
       s"backlog4j/${backlog4jVersion}-$productName/$productVersion"
@@ -16,19 +18,31 @@ object BacklogAPIClientImpl extends BacklogConfiguration {
   }
 }
 
-class BacklogAPIClientImpl(configure: BacklogConfigure)
-    extends BacklogClientImpl(configure, BacklogAPIClientImpl.client)
+case class IAAH(value: String) extends AnyVal
+
+object IAAH {
+  val empty: IAAH = IAAH("")
+}
+
+class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
+    extends BacklogClientImpl(configure, BacklogAPIClientImpl.create)
     with BacklogAPIClient {
 
   private val client =
-    new BacklogClientImpl(configure, BacklogAPIClientImpl.client) {
+    new BacklogClientImpl(configure, BacklogAPIClientImpl.create) {
+      val headers = Seq(
+        new NameValuePair("iaah", iaah.value)
+      ).asJava
+
       def importIssue(params: ImportIssueParams): Issue =
-        factory.importIssue(post(buildEndpoint("issues/import"), params))
+        factory.importIssue(post(buildEndpoint("issues/import"), params.getParamList, headers))
+
       def importUpdateIssue(params: ImportUpdateIssueParams): Issue =
         factory.createIssue(
           patch(
             buildEndpoint("issues/" + params.getIssueIdOrKeyString + "/import"),
-            params
+            params.getParamList,
+            headers
           )
         )
       def importDeleteAttachment(
@@ -45,7 +59,7 @@ class BacklogAPIClientImpl(configure: BacklogConfigure)
           )
         )
       def importWiki(params: ImportWikiParams): Wiki =
-        factory.importWiki(post(buildEndpoint("wikis/import"), params))
+        factory.importWiki(post(buildEndpoint("wikis/import"), params.getParamList, headers))
     }
 
   override def importIssue(params: ImportIssueParams): Issue =

@@ -1,7 +1,7 @@
 package com.nulabinc.backlog.migration.common.modules
 
 import com.google.inject.AbstractModule
-import com.nulabinc.backlog.migration.common.client.{BacklogAPIClient, BacklogAPIClientImpl}
+import com.nulabinc.backlog.migration.common.client.{BacklogAPIClient, BacklogAPIClientImpl, IAAH}
 import com.nulabinc.backlog.migration.common.conf.{BacklogApiConfiguration, BacklogPaths}
 import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, PropertyValue}
 import com.nulabinc.backlog.migration.common.service._
@@ -15,7 +15,7 @@ import scala.jdk.CollectionConverters._
  */
 class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
 
-  protected val backlog: BacklogAPIClient = createBacklogAPIClient()
+  protected val backlog: BacklogAPIClient = createBacklogAPIClient(apiConfig.iaah)
 
   override def configure(): Unit = {
     //base
@@ -45,11 +45,11 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
     bind(classOf[AttachmentService]).to(classOf[AttachmentServiceImpl])
   }
 
-  private[this] def createBacklogAPIClient(): BacklogAPIClient = {
+  private[this] def createBacklogAPIClient(iaah: IAAH): BacklogAPIClient = {
     val backlogPackageConfigure = new BacklogPackageConfigure(apiConfig.url)
     val configure               = backlogPackageConfigure.apiKey(apiConfig.key)
 
-    new BacklogAPIClientImpl(configure)
+    new BacklogAPIClientImpl(configure, iaah)
   }
 
   private[this] def createPropertyValue(): PropertyValue = {
