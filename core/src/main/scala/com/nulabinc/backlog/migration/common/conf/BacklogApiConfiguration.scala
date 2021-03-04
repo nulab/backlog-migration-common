@@ -9,7 +9,7 @@ case class BacklogApiConfiguration(
     key: String,
     projectKey: String,
     backlogOutputPath: Path = Paths.get("./backlog"),
-    override val iaah: IAAH
+    iaah: IAAH
 ) extends BacklogConfiguration {
   val isNAISpace: Boolean = url.contains(NaiSpaceDomain)
 }
