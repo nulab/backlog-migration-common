@@ -28,10 +28,6 @@ trait BacklogConfiguration {
 
   val backlog4jVersion = internal.getString("application.backlog4jVersion")
 
-  private val iaahStr: String = internal.getString("iaah")
-
-  val iaah: IAAH = IAAH(iaahStr)
-
   val exportLimitAtOnce = {
     try {
       external.getInt("application.export-limit-at-once")
