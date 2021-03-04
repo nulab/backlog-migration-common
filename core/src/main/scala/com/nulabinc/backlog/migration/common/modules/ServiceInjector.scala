@@ -17,7 +17,7 @@ object ServiceInjector {
       override def configure(): Unit = {
         val backlogPackageConfigure = new BacklogPackageConfigure(apiConfig.url)
         val configure               = backlogPackageConfigure.apiKey(apiConfig.key)
-        val backlog                 = new BacklogAPIClientImpl(configure)
+        val backlog                 = new BacklogAPIClientImpl(configure, apiConfig.iaah)
 
         bind(classOf[BacklogProjectKey]).toInstance(BacklogProjectKey(apiConfig.projectKey))
         bind(classOf[BacklogAPIClient]).toInstance(backlog)

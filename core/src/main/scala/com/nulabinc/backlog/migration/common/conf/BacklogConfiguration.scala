@@ -2,6 +2,7 @@ package com.nulabinc.backlog.migration.common.conf
 
 import java.io.File
 
+import com.nulabinc.backlog.migration.common.client.IAAH
 import com.typesafe.config.{ConfigException, ConfigFactory}
 
 /**
@@ -26,6 +27,10 @@ trait BacklogConfiguration {
   val productVersion = internal.getString("application.version")
 
   val backlog4jVersion = internal.getString("application.backlog4jVersion")
+
+  private val iaahStr: String = internal.getString("iaah")
+
+  val iaah: IAAH = IAAH(iaahStr)
 
   val exportLimitAtOnce = {
     try {

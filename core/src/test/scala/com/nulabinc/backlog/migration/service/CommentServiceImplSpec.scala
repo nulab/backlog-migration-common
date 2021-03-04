@@ -2,6 +2,7 @@ package com.nulabinc.backlog.migration.service
 
 import com.google.inject.Guice
 import com.google.inject.util.Modules
+import com.nulabinc.backlog.migration.common.client.IAAH
 import com.nulabinc.backlog.migration.common.client.params.ImportUpdateIssueParams
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.modules.DefaultModule
@@ -22,7 +23,7 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
         Modules
           .`override`(
             new DefaultModule(
-              BacklogApiConfiguration("url", "key", "projectKey")
+              BacklogApiConfiguration("url", "key", "projectKey", iaah = IAAH.empty)
             )
           )
           .`with`(new TestModule())
