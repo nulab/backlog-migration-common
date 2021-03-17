@@ -2,6 +2,8 @@ package com.nulabinc.backlog.migration.common.service
 
 import com.nulabinc.backlog.migration.common.client.params.ImportUpdateIssueParams
 import com.nulabinc.backlog.migration.common.domain.BacklogComment
+import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
+import cats.Monad
 
 /**
  * @author uchida
@@ -14,7 +16,7 @@ trait CommentService {
       backlogComment: BacklogComment
   ): Either[Throwable, BacklogComment]
 
-  def setUpdateParam(
+  def setUpdateParam[F[_]: Monad: ConsoleDSL](
       issueId: Long,
       propertyResolver: PropertyResolver,
       toRemoteIssueId: Long => Option[Long],

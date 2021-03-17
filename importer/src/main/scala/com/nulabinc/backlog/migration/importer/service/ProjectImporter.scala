@@ -44,10 +44,10 @@ private[importer] class ProjectImporter @Inject() (
     priorityService: PriorityService
 ) extends Logging {
 
-  def execute[A, F[_]: Monad: ConsoleDSL: StoreDSL](
+  def execute[A](
       fitIssueKey: Boolean,
       retryCount: Int
-  )(implicit s: Scheduler, storeDSL: StoreDSL[Task]): F[Unit] = {
+  )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
     val project = BacklogUnmarshaller.project(backlogPaths)
     projectService.create(project) match {
       case Right(project) =>
@@ -55,14 +55,14 @@ private[importer] class ProjectImporter @Inject() (
           _ <- preExecute()
           _ <- contents(project, fitIssueKey, retryCount)
           _ <- postExecute()
-          _ <- ConsoleDSL[F].printStream(
+          _ <- ConsoleDSL[Task].printStream(
             ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
           )
-          _ <- ConsoleDSL[F].printStream(
+          _ <- ConsoleDSL[Task].printStream(
             ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
           )
-          _ <- ConsoleDSL[F].flush()
-          _ <- ConsoleDSL[F].println(ConsoleMessages.Imports.finish)
+          _ <- ConsoleDSL[Task].flush()
+          _ <- ConsoleDSL[Task].println(ConsoleMessages.Imports.finish)
         } yield ()
       case Left(e) =>
         import ConsoleMessages.Imports._
@@ -77,18 +77,18 @@ private[importer] class ProjectImporter @Inject() (
             Errors.failed(project.key, e.getMessage())
           }
         for {
-          _ <- ConsoleDSL[F].errorln(message)
-          _ <- ConsoleDSL[F].println(Errors.suspend)
+          _ <- ConsoleDSL[Task].errorln(message)
+          _ <- ConsoleDSL[Task].println(Errors.suspend)
         } yield ()
     }
   }
 
-  private def contents[F[_]: Monad: ConsoleDSL: StoreDSL](
+  private def contents(
       project: BacklogProject,
       fitIssueKey: Boolean,
       retryCount: Int
-  )(implicit s: Scheduler, storeDSL: StoreDSL[Task]): F[Unit] = {
-    val issuesImporter = new IssuesImporter[F](
+  )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
+    val issuesImporter = new IssuesImporter(
       backlogPaths = backlogPaths,
       sharedFileService = sharedFileService,
       issueService = issueService,
@@ -104,7 +104,10 @@ private[importer] class ProjectImporter @Inject() (
     issuesImporter.execute(project, propertyResolver, fitIssueKey, retryCount)
   }
 
-  private def preExecute[F[_]: Monad: ConsoleDSL: StoreDSL](): F[Unit] = {
+  private def preExecute()(implicit
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
+  ): Task[Unit] = {
     val propertyResolver = buildPropertyResolver()
     importGroup(propertyResolver)
     importProjectUser(propertyResolver)
@@ -118,7 +121,10 @@ private[importer] class ProjectImporter @Inject() (
     } yield ()
   }
 
-  private def postExecute[F[_]: Monad: ConsoleDSL: StoreDSL](): F[Unit] = {
+  private def postExecute()(implicit
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
+  ): Task[Unit] = {
     val propertyResolver = buildPropertyResolver()
 
     removeVersion(propertyResolver)
@@ -213,11 +219,14 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private def importStatuses[F[_]: Monad: ConsoleDSL: StoreDSL](): F[Unit] = {
+  private def importStatuses()(implicit
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
+  ): Task[Unit] = {
     val projectStatuses = statusService.allStatuses()
 
     for {
-      willExistDestinationStatuses <- StoreDSL[F].allSrcStatus
+      willExistDestinationStatuses <- StoreDSL[Task].allSrcStatus
     } yield {
       // Import Statuses excluding default statuses
       val mustImportCustomStatuses = willExistDestinationStatuses
@@ -356,11 +365,11 @@ private[importer] class ProjectImporter @Inject() (
         }
     }
 
-  private def removeStatus[F[_]: Monad: ConsoleDSL: StoreDSL](
+  private def removeStatus(
       propertyResolver: PropertyResolver
-  ): F[Unit] =
+  )(implicit storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] =
     for {
-      exported <- StoreDSL[F].allSrcStatus
+      exported <- StoreDSL[Task].allSrcStatus
     } yield {
       exported
         .flatMap {

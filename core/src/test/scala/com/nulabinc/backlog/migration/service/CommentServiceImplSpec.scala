@@ -5,17 +5,23 @@ import com.google.inject.util.Modules
 import com.nulabinc.backlog.migration.common.client.IAAH
 import com.nulabinc.backlog.migration.common.client.params.ImportUpdateIssueParams
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
+import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
+import com.nulabinc.backlog.migration.common.interpreters.JansiConsoleDSL
 import com.nulabinc.backlog.migration.common.modules.DefaultModule
 import com.nulabinc.backlog.migration.common.service.CommentServiceImpl
 import com.nulabinc.backlog.migration.{SimpleFixture, TestModule, TestPropertyResolver}
-import org.scalatest.{FlatSpec, Matchers}
+import monix.eval.Task
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.jdk.CollectionConverters._
 
 /**
  * @author uchida
  */
-class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
+class CommentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixture {
+
+  implicit val consoleDSL: ConsoleDSL[Task] = JansiConsoleDSL()
 
   def commentService() = {
     Guice
@@ -36,7 +42,7 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
     val toRemoteIssueId  = (localIssueId: Long) => Some(1): Option[Long]
     val postAttachment   = (fileName: String) => None: Option[Long]
 
-    val params = commentService().setUpdateParam(
+    val params = commentService().setUpdateParam[Task](
       issueId1,
       propertyResolver,
       toRemoteIssueId,
@@ -100,7 +106,7 @@ class CommentServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
     val toRemoteIssueId  = (localIssueId: Long) => Some(1): Option[Long]
     val postAttachment   = (fileName: String) => None: Option[Long]
 
-    val params = commentService().setUpdateParam(
+    val params = commentService().setUpdateParam[Task](
       issueId1,
       propertyResolver,
       toRemoteIssueId,
