@@ -1,13 +1,10 @@
 package com.nulabinc.backlog.migration.common.services
 
-import org.fusesource.jansi.Ansi
-import org.scalatest.flatspec.AsyncFlatSpec
-import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
-import com.nulabinc.backlog.migration.common.dsl.HttpDSL
-import com.nulabinc.backlog.migration.common.dsl.{HttpError, HttpQuery}
+import com.nulabinc.backlog.migration.common.dsl.{HttpDSL, HttpQuery}
 import com.nulabinc.backlog.migration.common.services.BacklogReleaseCheckService
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
+import org.scalatest.flatspec.AsyncFlatSpec
 
 class BacklogReleaseCheckServiceSpec extends AsyncFlatSpec {
   implicit val httpDSL = TestBacklogHttpDSL()

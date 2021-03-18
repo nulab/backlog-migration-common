@@ -10,15 +10,14 @@ import com.nulabinc.backlog.migration.common.codec.{StatusMappingDecoder, Status
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
-import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.errors.{
   MappingFileError,
   MappingFileNotFound,
   MappingValidationError,
   ValidationError
 }
+import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.validators.MappingValidatorNec
-import org.apache.commons.csv.CSVRecord
 
 private case class MergedStatusMapping[A](
     mergeList: Seq[StatusMapping[A]],

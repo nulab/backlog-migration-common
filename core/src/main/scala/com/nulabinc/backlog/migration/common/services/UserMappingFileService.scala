@@ -6,9 +6,8 @@ import cats.Foldable.ops._
 import cats.Monad
 import cats.Monad.ops._
 import cats.data.Validated.{Invalid, Valid}
-import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.codec.{UserMappingDecoder, UserMappingEncoder}
-import com.nulabinc.backlog.migration.common.formatters.Formatter
+import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.domain.BacklogUser
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StorageDSL}
@@ -18,8 +17,8 @@ import com.nulabinc.backlog.migration.common.errors.{
   MappingValidationError,
   ValidationError
 }
+import com.nulabinc.backlog.migration.common.formatters.Formatter
 import com.nulabinc.backlog.migration.common.validators.MappingValidatorNec
-import org.apache.commons.csv.CSVRecord
 
 private case class MergedUserMapping[A](
     mergeList: Seq[UserMapping[A]],

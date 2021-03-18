@@ -11,8 +11,7 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogStatusName,
   Id
 }
-import com.nulabinc.backlog.migration.common.service.IssueService
-import com.nulabinc.backlog.migration.common.service.PropertyResolver
+import com.nulabinc.backlog.migration.common.service.{IssueService, PropertyResolver}
 import com.nulabinc.backlog4j.Issue
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
 import com.nulabinc.backlog4j.api.option.{GetIssuesCountParams, GetIssuesParams}

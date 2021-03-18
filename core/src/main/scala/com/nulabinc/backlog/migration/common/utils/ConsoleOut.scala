@@ -17,9 +17,11 @@ object ConsoleOut extends Logging {
   def error(value: String, space: Int = 0): Unit =
     println(value, space, RED)
 
+  @deprecated("ConsoleDSL[F].success")
   def success(value: String, space: Int = 0): Unit =
     println(value, space, GREEN)
 
+  @deprecated("ConsoleDSL[F].warning")
   def warning(value: String, space: Int = 0): Unit =
     println(value, space, YELLOW)
 
@@ -46,6 +48,7 @@ object ConsoleOut extends Logging {
     outStream
   }
 
+  @deprecated("ConsoleDSL[F].overwrite")
   def bold(value: String, color: Ansi.Color = BLACK): String = {
     if (color == BLACK) {
       ansi().bold().a(value).reset().toString
@@ -62,6 +65,7 @@ object ConsoleOut extends Logging {
     outStream
   }
 
+  @deprecated("ConsoleDSL[F].overwrite")
   def overwrite(value: String, space: Int = 0) = {
     logger.info(value)
 

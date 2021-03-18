@@ -1,5 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
+import javax.inject.Inject
+
 import cats.{Applicative, Monad}
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.client.params._
@@ -9,13 +11,12 @@ import com.nulabinc.backlog.migration.common.convert.writes.{CommentWrites, Issu
 import com.nulabinc.backlog.migration.common.domain.IssueTags.SourceIssue
 import com.nulabinc.backlog.migration.common.domain._
 import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
-import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging, StringUtil}
+import com.nulabinc.backlog.migration.common.utils.{Logging, StringUtil}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option.{QueryParams, UpdateIssueParams}
 
-import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 
 /**

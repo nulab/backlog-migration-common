@@ -11,8 +11,8 @@ import com.nulabinc.backlog.migration.common.modules.DefaultModule
 import com.nulabinc.backlog.migration.common.service.CommentServiceImpl
 import com.nulabinc.backlog.migration.{SimpleFixture, TestModule, TestPropertyResolver}
 import monix.eval.Task
-import org.scalatest.matchers.should.Matchers
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.jdk.CollectionConverters._
 

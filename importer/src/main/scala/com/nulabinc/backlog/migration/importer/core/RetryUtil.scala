@@ -1,7 +1,10 @@
 package com.nulabinc.backlog.migration.importer.core
 
-import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging}
+import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
+import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.BacklogAPIException
+import monix.eval.Task
+import monix.execution.Scheduler
 
 case class RetryException(throwables: List[Throwable]) extends Exception(throwables.toString())
 
@@ -12,27 +15,33 @@ object RetryUtil extends Logging {
 
   import scala.util.control.Exception.allCatch
 
-  def retry[T](retryLimit: Int)(f: => T): T =
+  def retry[T](retryLimit: Int)(f: => T)(implicit consoleDSL: ConsoleDSL[Task], s: Scheduler): T =
     retry(retryLimit, 0, classOf[Throwable])(f)
 
-  def retry[T](retryLimit: Int, retryInterval: Int)(f: => T): T =
+  def retry[T](retryLimit: Int, retryInterval: Int)(
+      f: => T
+  )(implicit consoleDSL: ConsoleDSL[Task], s: Scheduler): T =
     retry(retryLimit, retryInterval, classOf[Throwable])(f)
 
-  def retry[T](retryLimit: Int, catchExceptionClasses: Class[_]*)(f: => T): T =
+  def retry[T](retryLimit: Int, catchExceptionClasses: Class[_]*)(
+      f: => T
+  )(implicit consoleDSL: ConsoleDSL[Task], s: Scheduler): T =
     retry(
       retryLimit,
       0,
       e => catchExceptionClasses.exists(_.isAssignableFrom(e.getClass))
     )(f)
 
-  def retry[T](retryLimit: Int, shouldCatch: Throwable => Boolean)(f: => T): T =
+  def retry[T](retryLimit: Int, shouldCatch: Throwable => Boolean)(
+      f: => T
+  )(implicit consoleDSL: ConsoleDSL[Task], s: Scheduler): T =
     retry(retryLimit, 0, shouldCatch)(f)
 
   def retry[T](
       retryLimit: Int,
       retryInterval: Int,
       catchExceptionClasses: Class[_]*
-  )(f: => T): T =
+  )(f: => T)(implicit consoleDSL: ConsoleDSL[Task], s: Scheduler): T =
     retry(
       retryLimit,
       retryInterval,
@@ -42,7 +51,7 @@ object RetryUtil extends Logging {
   def retryBacklogAPIException[T](
       retryLimit: Int,
       retryInterval: Int
-  )(f: => T): T =
+  )(f: => T)(implicit consoleDSL: ConsoleDSL[Task], s: Scheduler): T =
     retry(
       retryLimit = retryLimit,
       retryInterval = retryInterval,
@@ -59,7 +68,7 @@ object RetryUtil extends Logging {
       retryLimit: Int,
       retryInterval: Int,
       shouldCatch: Throwable => Boolean
-  )(f: => T): T = {
+  )(f: => T)(implicit consoleDSL: ConsoleDSL[Task], s: Scheduler): T = {
     @annotation.tailrec
     def retry0(errors: List[Throwable], f: => T): T = {
       allCatch.either(f) match {
@@ -69,7 +78,7 @@ object RetryUtil extends Logging {
             if (retryLimit > 0) {
               val message =
                 s"(${errors.size + 1} / $retryLimit) Retrying... ${e.getMessage}"
-              ConsoleOut.warning(message)
+              ConsoleDSL[Task].warning(message).runSyncUnsafe()
             }
             if (errors.size < retryLimit - 1) {
               Thread.sleep(retryInterval)

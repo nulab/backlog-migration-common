@@ -1,8 +1,7 @@
 package com.nulabinc.backlog.migration.importer.service
 
 import javax.inject.Inject
-import cats.Monad
-import cats.syntax.all._
+
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain._
@@ -10,16 +9,15 @@ import com.nulabinc.backlog.migration.common.domain.exports.{
   DeletedExportedBacklogStatus,
   ExistingExportedBacklogStatus
 }
-import com.nulabinc.backlog.migration.common.dsl.StoreDSL
+import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StoreDSL}
+import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 import com.nulabinc.backlog.migration.common.service.{PropertyResolver, _}
 import com.nulabinc.backlog.migration.common.utils.{Logging, ProgressBar}
 import com.osinka.i18n.Messages
-import org.fusesource.jansi.Ansi
-import org.fusesource.jansi.Ansi.ansi
-import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
-import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 import monix.eval.Task
 import monix.execution.Scheduler
+import org.fusesource.jansi.Ansi
+import org.fusesource.jansi.Ansi.ansi
 
 /**
  * @author uchida
@@ -105,6 +103,7 @@ private[importer] class ProjectImporter @Inject() (
   }
 
   private def preExecute()(implicit
+      s: Scheduler,
       storeDSL: StoreDSL[Task],
       consoleDSL: ConsoleDSL[Task]
   ): Task[Unit] = {
@@ -143,7 +142,9 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def importGroup(propertyResolver: PropertyResolver): Unit = {
+  private def importGroup(
+      propertyResolver: PropertyResolver
+  )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val groups = groupService.allGroups()
     def exists(group: BacklogGroup): Boolean = {
       groups.exists(_.name == group.name)
@@ -162,7 +163,7 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def importVersion(): Unit = {
+  private def importVersion()(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val versions = versionService.allVersions()
     def exists(version: BacklogVersion): Boolean = {
       versions.exists(_.name == version.name)
@@ -181,7 +182,7 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def importCategory(): Unit = {
+  private def importCategory()(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val categories = issueCategoryService.allIssueCategories()
     def exists(issueCategory: BacklogIssueCategory): Boolean = {
       categories.exists(_.name == issueCategory.name)
@@ -200,7 +201,7 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def importIssueType(): Unit = {
+  private def importIssueType()(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val issueTypes = issueTypeService.allIssueTypes()
     def exists(issueType: BacklogIssueType): Boolean = {
       issueTypes.exists(_.name == issueType.name)
@@ -220,6 +221,7 @@ private[importer] class ProjectImporter @Inject() (
   }
 
   private def importStatuses()(implicit
+      s: Scheduler,
       storeDSL: StoreDSL[Task],
       consoleDSL: ConsoleDSL[Task]
   ): Task[Unit] = {
@@ -271,9 +273,9 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def importProjectUser(
+  private def importProjectUser(
       propertyResolver: PropertyResolver
-  ): Unit = {
+  )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val projectUsers = BacklogUnmarshaller.projectUsers(backlogPaths)
     val console = (ProgressBar.progress _)(
       Messages("common.project_user"),
@@ -290,7 +292,7 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def importCustomField(): Unit = {
+  private def importCustomField()(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val customFieldSettings = customFieldSettingService.allCustomFieldSettings()
     val backlogCustomFields = customFieldSettings.filterNotExist(
       BacklogUnmarshaller.backlogCustomFieldSettings(backlogPaths)
