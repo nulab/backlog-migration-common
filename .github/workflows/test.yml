@@ -43,7 +43,7 @@ jobs:
             ${{ runner.os }}-sbt-cache-
 
       - name: Check format
-        run: sbt checkAll > result.txt && cat result.txt | grep -e `\[warn\]` > warnings.txt 
+        run: sbt checkAll > result.txt && grep -E '\[warn\]' result.txt > warnings.txt 
 
       - name: Run tests
         run: sbt test
