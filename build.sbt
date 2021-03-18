@@ -2,6 +2,8 @@ addCommandAlias("fix", "all compile:scalafix; test:scalafix")
 addCommandAlias("fixCheck", "; compile:scalafix --check; test:scalafix --check")
 addCommandAlias("format", "; scalafmt; test:scalafmt; scalafmtSbt")
 addCommandAlias("formatCheck", "; scalafmtCheck; test:scalafmtCheck; scalafmtSbtCheck")
+addCommandAlias("fixAll", "fix; format")
+addCommandAlias("checkAll", "fixCheck; formatCheck")
 
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.5.0"
 

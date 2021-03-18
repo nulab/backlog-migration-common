@@ -43,10 +43,16 @@ jobs:
             ${{ runner.os }}-sbt-cache-
 
       - name: Check format
-        run: sbt 'compile:scalafix --check; test:scalafix --check; scalafmtCheckAll'
+        run: sbt checkAll > result.txt && cat result.txt | grep -e `\[warn\]` > warnings.txt 
 
       - name: Run tests
         run: sbt test
+
+      - name: Upload warnings.txt
+        uses: actions/upload-artifact@master
+        with:
+          name: warnings
+          path: warnings.txt
 
   notify:
     runs-on: ubuntu-latest
