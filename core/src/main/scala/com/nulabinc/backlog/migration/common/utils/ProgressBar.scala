@@ -4,6 +4,9 @@ import ConsoleOut.outStream
 import com.osinka.i18n.Messages
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.ansi
+import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
+import monix.eval.Task
+import monix.execution.Scheduler
 
 /**
  * @author uchida
@@ -14,7 +17,7 @@ object ProgressBar extends Logging {
       name: String,
       progressMessage: String,
       completeMessage: String
-  ) = {
+  )(implicit consoleDSL: ConsoleDSL[Task], s: Scheduler) = {
     var initFlag = true
     (index: Int, total: Int) => {
       val message =
@@ -30,7 +33,7 @@ object ProgressBar extends Logging {
         )
         outStream.flush()
         outStream.println(
-          s" ${progressBar(index, total)}${ConsoleOut.bold(message)}"
+          s" ${progressBar(index, total)}${ConsoleDSL[Task].bold(message).runSyncUnsafe()}"
         )
       }
     }

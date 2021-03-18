@@ -159,7 +159,12 @@ private[importer] class IssuesImporter(
   private def createTemporaryIssues(
       project: BacklogProject,
       issue: BacklogIssue
-  )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
+  )(implicit
+      ctx: IssueContext,
+      s: Scheduler,
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
+  ): Unit = {
     val issueIndex = issue.findIssueIndex
     val prev       = storeDSL.getLatestImportedIssueKeys().runSyncUnsafe().srcIssueIndex
 
@@ -176,7 +181,12 @@ private[importer] class IssuesImporter(
       project: BacklogProject,
       issue: BacklogIssue,
       dummyIndex: Int
-  )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]) = {
+  )(implicit
+      ctx: IssueContext,
+      s: Scheduler,
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
+  ) = {
     val temporaryIssue = retryBacklogAPIException(ctx.retryCount, retryInterval) {
       issueService.createDummy(project.id, ctx.propertyResolver)
     }
@@ -206,7 +216,7 @@ private[importer] class IssuesImporter(
       path: Path,
       index: Int,
       size: Int
-  )(implicit ctx: IssueContext, consoleDSL: ConsoleDSL[Task]) = {
+  )(implicit ctx: IssueContext, consoleDSL: ConsoleDSL[Task], s: Scheduler) = {
 
     def updateComment(remoteIssueId: Long): Unit = {
 
