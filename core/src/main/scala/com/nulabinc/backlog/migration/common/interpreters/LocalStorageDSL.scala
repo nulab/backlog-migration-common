@@ -2,8 +2,7 @@ package com.nulabinc.backlog.migration.common.interpreters
 
 import java.io.{ByteArrayInputStream, InputStream}
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path, StandardOpenOption}
-import java.nio.file.FileVisitOption
+import java.nio.file.{FileVisitOption, Files, Path, StandardOpenOption}
 import java.util.Comparator
 
 import com.nulabinc.backlog.migration.common.dsl.StorageDSL
@@ -12,7 +11,6 @@ import monix.reactive.Observable
 
 import scala.util.Try
 import scala.util.control.NonFatal
-import java.io.File
 
 case class LocalStorageDSL() extends StorageDSL[Task] {
 

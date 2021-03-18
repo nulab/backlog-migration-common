@@ -1,9 +1,8 @@
 package com.nulabinc.backlog.migration.importer.core
 
-import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging}
-import com.nulabinc.backlog4j.BacklogAPIException
-import cats.Monad
 import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
+import com.nulabinc.backlog.migration.common.utils.Logging
+import com.nulabinc.backlog4j.BacklogAPIException
 import monix.eval.Task
 import monix.execution.Scheduler
 

@@ -3,7 +3,6 @@ package com.nulabinc.backlog.migration.common.interpreters
 import java.io.PrintStream
 
 import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
-import com.nulabinc.backlog.migration.common.utils.ConsoleOut.bold
 import com.nulabinc.backlog.migration.common.utils.Logging
 import monix.eval.Task
 import org.fusesource.jansi.Ansi

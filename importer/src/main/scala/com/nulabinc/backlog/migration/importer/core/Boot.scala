@@ -1,7 +1,5 @@
 package com.nulabinc.backlog.migration.importer.core
 
-import cats.Monad
-import cats.syntax.all._
 import com.google.inject.Guice
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StoreDSL}

@@ -1,7 +1,6 @@
 package com.nulabinc.backlog.migration.importer.service
 
 import better.files.{File => Path}
-import cats.Monad
 import cats.syntax.all._
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller

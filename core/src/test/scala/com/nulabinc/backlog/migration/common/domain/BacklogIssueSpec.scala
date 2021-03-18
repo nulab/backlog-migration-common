@@ -1,6 +1,5 @@
 package com.nulabinc.backlog.migration.common.domain
 
-import org.scalatest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class BacklogIssueSpec extends AnyFlatSpec {

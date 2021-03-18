@@ -1,10 +1,10 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
+import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.client.params.ImportWikiParams
-import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.WikiWrites

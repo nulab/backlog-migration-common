@@ -1,8 +1,7 @@
 package com.nulabinc.backlog.migration.importer.service
 
 import javax.inject.Inject
-import cats.Monad
-import cats.syntax.all._
+
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain._
@@ -10,16 +9,15 @@ import com.nulabinc.backlog.migration.common.domain.exports.{
   DeletedExportedBacklogStatus,
   ExistingExportedBacklogStatus
 }
-import com.nulabinc.backlog.migration.common.dsl.StoreDSL
+import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StoreDSL}
+import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 import com.nulabinc.backlog.migration.common.service.{PropertyResolver, _}
 import com.nulabinc.backlog.migration.common.utils.{Logging, ProgressBar}
 import com.osinka.i18n.Messages
-import org.fusesource.jansi.Ansi
-import org.fusesource.jansi.Ansi.ansi
-import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
-import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 import monix.eval.Task
 import monix.execution.Scheduler
+import org.fusesource.jansi.Ansi
+import org.fusesource.jansi.Ansi.ansi
 
 /**
  * @author uchida

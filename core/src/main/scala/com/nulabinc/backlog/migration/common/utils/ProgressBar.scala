@@ -1,12 +1,12 @@
 package com.nulabinc.backlog.migration.common.utils
 
-import ConsoleOut.outStream
-import com.osinka.i18n.Messages
-import org.fusesource.jansi.Ansi
-import org.fusesource.jansi.Ansi.ansi
 import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
+import com.nulabinc.backlog.migration.common.utils.ConsoleOut.outStream
+import com.osinka.i18n.Messages
 import monix.eval.Task
 import monix.execution.Scheduler
+import org.fusesource.jansi.Ansi
+import org.fusesource.jansi.Ansi.ansi
 
 /**
  * @author uchida

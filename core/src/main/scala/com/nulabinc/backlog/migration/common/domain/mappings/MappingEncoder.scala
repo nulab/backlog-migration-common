@@ -2,16 +2,11 @@ package com.nulabinc.backlog.migration.common.domain.mappings
 
 import java.nio.charset.{Charset, StandardCharsets}
 
+import com.nulabinc.backlog.migration.common.codec.{Encoder, PriorityMappingEncoder, StatusMappingEncoder, UserMappingEncoder}
 import com.nulabinc.backlog.migration.common.domain.{
   BacklogStatusName,
   BacklogStatuses,
   BacklogUser
-}
-import com.nulabinc.backlog.migration.common.codec.Encoder
-import com.nulabinc.backlog.migration.common.codec.{
-  PriorityMappingEncoder,
-  StatusMappingEncoder,
-  UserMappingEncoder
 }
 import com.nulabinc.backlog4j.Priority
 import monix.reactive.Observable

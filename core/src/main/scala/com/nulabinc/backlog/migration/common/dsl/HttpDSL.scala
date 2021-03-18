@@ -1,6 +1,5 @@
 package com.nulabinc.backlog.migration.common.dsl
 
-import spray.json.JsonFormat
 import simulacrum.typeclass
 
 @typeclass

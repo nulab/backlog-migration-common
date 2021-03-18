@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
+import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.client.params.{
@@ -17,7 +18,6 @@ import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option._
 import com.osinka.i18n.Messages
 import io.lemonlabs.uri._
-import javax.inject.Inject
 
 import scala.jdk.CollectionConverters._
 

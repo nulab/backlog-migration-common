@@ -1,15 +1,15 @@
 package com.nulabinc.backlog.migration.common.interpreters
 
+import java.nio.file.Paths
+
 import com.nulabinc.backlog.migration.common.domain._
 import com.nulabinc.backlog.migration.common.domain.exports.{
   DeletedExportedBacklogStatus,
   ExistingExportedBacklogStatus
 }
+import com.nulabinc.backlog.migration.common.domain.imports.ImportedIssueKeys
 import monix.execution.Scheduler
 import org.scalatest._
-
-import java.nio.file.Paths
-import com.nulabinc.backlog.migration.common.domain.imports.ImportedIssueKeys
 
 trait TestFixture {
   implicit val sc: Scheduler = monix.execution.Scheduler.global

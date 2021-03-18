@@ -3,8 +3,6 @@ package com.nulabinc.backlog.migration.importer.service
 import javax.inject.Inject
 
 import better.files.{File => Path}
-import cats.{Applicative, Monad}
-import cats.syntax.all._
 import com.nulabinc.backlog.migration.common.conf.{BacklogConstantValue, BacklogPaths}
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain.{BacklogAttachment, BacklogWiki}
@@ -15,7 +13,7 @@ import com.nulabinc.backlog.migration.common.service.{
   SharedFileService,
   WikiService
 }
-import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, IOUtil, Logging, ProgressBar}
+import com.nulabinc.backlog.migration.common.utils.{IOUtil, Logging, ProgressBar}
 import com.osinka.i18n.Messages
 import monix.eval.Task
 import monix.execution.Scheduler
@@ -102,7 +100,6 @@ private[importer] class WikisImporter @Inject() (
       wikiDir: Path,
       wiki: BacklogWiki
   )(implicit consoleDSL: ConsoleDSL[Task]): Task[Seq[BacklogAttachment]] = {
-    import com.nulabinc.backlog.migration.common.shared.syntax._
     wiki.attachments
       .flatMap(attachment => toPath(attachment, wikiDir))
       .foldLeft(Task(Seq.empty[BacklogAttachment])) { (acc, path) =>
