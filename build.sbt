@@ -1,13 +1,17 @@
+ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.5.0"
+
 lazy val commonSettings = Seq(
   organization := "com.nulabinc",
   version := "0.3.5-SNAPSHOT",
   scalaVersion := "2.13.5",
   scalacOptions ++= List(
+    "-feature",
     "-unchecked",
     "-deprecation",
     "-language:higherKinds",
     "-language:implicitConversions",
-    "-Ymacro-annotations"
+    "-Ymacro-annotations",
+    "-Ywarn-unused"
   ),
   libraryDependencies ++= {
     val catsVersion     = "2.1.0"
@@ -45,7 +49,11 @@ lazy val commonSettings = Seq(
       "org.scalatest"        %% "scalatest"        % "3.1.0"       % Test,
       "org.tpolecat"         %% "doobie-scalatest" % doobieVersion % "test"
     )
-  }
+  },
+  // scalafix
+  addCompilerPlugin(scalafixSemanticdb),
+  semanticdbEnabled := true,
+  semanticdbVersion := scalafixSemanticdb.revision
 )
 
 lazy val core = (project in file("core")).settings(commonSettings)
