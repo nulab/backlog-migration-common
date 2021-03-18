@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -44,15 +43,13 @@ jobs:
             ${{ runner.os }}-sbt-cache-
 
       - name: Check format
-        run: sbt scalafmtCheckAll
+        run: sbt 'compile:scalafix --check; test:scalafix --check; scalafmtCheckAll'
 
       - name: Run tests
         run: sbt test
 
   notify:
-
     runs-on: ubuntu-latest
-
     needs: build
 
     steps:
