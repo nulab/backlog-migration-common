@@ -1,7 +1,5 @@
 package com.nulabinc.backlog.migration.common.utils
 
-
-
 /**
  * @author uchida
  */

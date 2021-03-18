@@ -8,7 +8,12 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogStatuses,
   BacklogUser
 }
-import com.nulabinc.backlog.migration.common.errors.{DestinationItemNotFound, MappingValueIsEmpty, MappingValueIsNotSpecified, ValidationError}
+import com.nulabinc.backlog.migration.common.errors.{
+  DestinationItemNotFound,
+  MappingValueIsEmpty,
+  MappingValueIsNotSpecified,
+  ValidationError
+}
 import com.nulabinc.backlog4j.Priority
 
 sealed trait MappingValidatorNec {

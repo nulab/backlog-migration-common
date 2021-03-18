@@ -1,6 +1,13 @@
 package com.nulabinc.backlog.migration.common.persistence.store.sqlite.ops
 
-import com.nulabinc.backlog.migration.common.domain.{BacklogCustomStatus, BacklogDefaultStatus, BacklogStatus, BacklogStatusName, BacklogStatuses, Id}
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogCustomStatus,
+  BacklogDefaultStatus,
+  BacklogStatus,
+  BacklogStatusName,
+  BacklogStatuses,
+  Id
+}
 import doobie._
 import doobie.implicits._
 
