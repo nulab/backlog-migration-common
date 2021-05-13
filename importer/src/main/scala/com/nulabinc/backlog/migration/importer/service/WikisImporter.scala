@@ -6,14 +6,17 @@ import better.files.{File => Path}
 import com.nulabinc.backlog.migration.common.conf.{BacklogConstantValue, BacklogPaths}
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain.{BacklogAttachment, BacklogWiki}
+import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
 import com.nulabinc.backlog.migration.common.service.{
   AttachmentService,
   PropertyResolver,
   SharedFileService,
   WikiService
 }
-import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, IOUtil, Logging, ProgressBar}
+import com.nulabinc.backlog.migration.common.utils.{IOUtil, Logging, ProgressBar}
 import com.osinka.i18n.Messages
+import monix.eval.Task
+import monix.execution.Scheduler
 
 /**
  * @author uchida
@@ -25,7 +28,10 @@ private[importer] class WikisImporter @Inject() (
     attachmentService: AttachmentService
 ) extends Logging {
 
-  def execute(projectId: Long, propertyResolver: PropertyResolver) = {
+  def execute(projectId: Long, propertyResolver: PropertyResolver)(implicit
+      s: Scheduler,
+      consoleDSL: ConsoleDSL[Task]
+  ) = {
     val paths    = IOUtil.directoryPaths(backlogPaths.wikiDirectoryPath)
     val allWikis = wikiService.allWikis()
 
@@ -53,7 +59,7 @@ private[importer] class WikisImporter @Inject() (
         for {
           wiki    <- unmarshal(wikiDir)
           created <- create(projectId, propertyResolver, wiki)
-        } yield postCreate(created.id, wikiDir, wiki)
+        } yield postCreate(created.id, wikiDir, wiki).runSyncUnsafe()
         console(index + 1, wikiDirs.size)
     }
   }
@@ -69,42 +75,50 @@ private[importer] class WikisImporter @Inject() (
       Some(wikiService.create(projectId, wiki, propertyResolver))
   }
 
-  private[this] def postCreate(
+  private def postCreate(
       createdId: Long,
       wikiDir: Path,
       wiki: BacklogWiki
-  ) = {
-    wikiService.addAttachment(createdId, postAttachments(wikiDir, wiki)) match {
-      case Right(_) =>
-      case Left(e) =>
-        ConsoleOut.error(
-          Messages("import.error.wiki.attachment", wiki.name, e.getMessage)
+  )(implicit consoleDSL: ConsoleDSL[Task]): Task[Unit] =
+    for {
+      attachments <- postAttachments(wikiDir, wiki)
+      _ <- wikiService
+        .addAttachment(createdId, attachments)
+        .fold(
+          e =>
+            ConsoleDSL[Task].errorln(
+              Messages("import.error.wiki.attachment", wiki.name, e.getMessage)
+            ),
+          _ => {
+            sharedFileService.linkWikiSharedFile(createdId, wiki)
+            Task.unit
+          }
         )
-    }
-    sharedFileService.linkWikiSharedFile(createdId, wiki)
-  }
+    } yield ()
 
-  private[this] def postAttachments(
+  private def postAttachments(
       wikiDir: Path,
       wiki: BacklogWiki
-  ): Seq[BacklogAttachment] = {
-    val paths =
-      wiki.attachments.flatMap(attachment => toPath(attachment, wikiDir))
-    paths.flatMap { path =>
-      attachmentService.postAttachment(path.pathAsString) match {
-        case Right(attachment) => Some(attachment)
-        case Left(e) =>
-          if (e.getMessage.contains("The size of attached file is too large."))
-            ConsoleOut.error(
-              Messages("import.error.attachment.too_large", path.name)
-            )
-          else
-            ConsoleOut.error(
-              Messages("import.error.issue.attachment", path.name, e.getMessage)
-            )
-          None
+  )(implicit consoleDSL: ConsoleDSL[Task]): Task[Seq[BacklogAttachment]] = {
+    wiki.attachments
+      .flatMap(attachment => toPath(attachment, wikiDir))
+      .foldLeft(Task(Seq.empty[BacklogAttachment])) { (acc, path) =>
+        attachmentService.postAttachment(path.pathAsString) match {
+          case Right(attachment) =>
+            acc.map(attachments => attachments :+ attachment)
+          case Left(e) =>
+            val task =
+              if (e.getMessage.contains("The size of attached file is too large."))
+                ConsoleDSL[Task].errorln(
+                  Messages("import.error.attachment.too_large", path.name)
+                )
+              else
+                ConsoleDSL[Task].errorln(
+                  Messages("import.error.issue.attachment", path.name, e.getMessage)
+                )
+            task.flatMap(_ => acc)
+        }
       }
-    }
   }
 
   private[this] def toPath(

@@ -5,8 +5,8 @@ import com.nulabinc.backlog.migration.common.client.{BacklogAPIClient, BacklogAP
 import com.nulabinc.backlog.migration.common.conf.{BacklogApiConfiguration, BacklogPaths}
 import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, PropertyValue}
 import com.nulabinc.backlog.migration.common.service._
-import com.nulabinc.backlog4j.conf.BacklogPackageConfigure
 import com.nulabinc.backlog4j.IssueType
+import com.nulabinc.backlog4j.conf.BacklogPackageConfigure
 
 import scala.jdk.CollectionConverters._
 

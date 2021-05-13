@@ -2,7 +2,6 @@ package com.nulabinc.backlog.migration.common.conf
 
 import java.io.File
 
-import com.nulabinc.backlog.migration.common.client.IAAH
 import com.typesafe.config.{ConfigException, ConfigFactory}
 
 /**

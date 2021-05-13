@@ -1,8 +1,8 @@
 package com.nulabinc.backlog.migration.common.dsl
 
-import com.nulabinc.backlog.migration.common.domain.{BacklogStatus, BacklogStatuses}
 import com.nulabinc.backlog.migration.common.domain.exports.ExportedBacklogStatus
 import com.nulabinc.backlog.migration.common.domain.imports.ImportedIssueKeys
+import com.nulabinc.backlog.migration.common.domain.{BacklogStatus, BacklogStatuses}
 import simulacrum.typeclass
 
 @typeclass

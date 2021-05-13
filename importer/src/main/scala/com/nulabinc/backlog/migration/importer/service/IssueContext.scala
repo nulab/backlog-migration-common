@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration.importer.service
 
-import com.nulabinc.backlog.migration.common.domain.{BacklogIssue, BacklogProject}
+import com.nulabinc.backlog.migration.common.domain.BacklogIssue
 import com.nulabinc.backlog.migration.common.service.PropertyResolver
 import com.nulabinc.backlog.migration.common.utils.Logging
 

@@ -1,7 +1,6 @@
 package com.nulabinc.backlog.migration.importer.service
 
 import better.files.{File => Path}
-import cats.Monad
 import cats.syntax.all._
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
@@ -24,7 +23,7 @@ import monix.execution.Scheduler
 /**
  * @author uchida
  */
-private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
+private[importer] class IssuesImporter(
     backlogPaths: BacklogPaths,
     sharedFileService: SharedFileService,
     issueService: IssueService,
@@ -42,10 +41,10 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
       propertyResolver: PropertyResolver,
       fitIssueKey: Boolean,
       retryCount: Int
-  )(implicit s: Scheduler, storeDSL: StoreDSL[Task]): F[Unit] = {
+  )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
 
     for {
-      _ <- ConsoleDSL[F].println("""
+      _ <- ConsoleDSL[Task].println("""
       :""".stripMargin)
     } yield {
       console.totalSize = totalSize()
@@ -63,7 +62,8 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
   private[this] def loadDateDirectory(project: BacklogProject, path: Path)(implicit
       ctx: IssueContext,
       s: Scheduler,
-      storeDSL: StoreDSL[Task]
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
   ): Unit = {
     val jsonDirs =
       path.list.filter(_.isDirectory).toSeq.sortWith(compareIssueJsons)
@@ -79,7 +79,8 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
   private[this] def loadJson(project: BacklogProject, path: Path, index: Int, size: Int)(implicit
       ctx: IssueContext,
       s: Scheduler,
-      storeDSL: StoreDSL[Task]
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
   ): Unit = {
     BacklogUnmarshaller.issue(backlogPaths.issueJson(path)) match {
       case Some(issue: BacklogIssue) =>
@@ -157,7 +158,12 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
   private def createTemporaryIssues(
       project: BacklogProject,
       issue: BacklogIssue
-  )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
+  )(implicit
+      ctx: IssueContext,
+      s: Scheduler,
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
+  ): Unit = {
     val issueIndex = issue.findIssueIndex
     val prev       = storeDSL.getLatestImportedIssueKeys().runSyncUnsafe().srcIssueIndex
 
@@ -174,7 +180,12 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
       project: BacklogProject,
       issue: BacklogIssue,
       dummyIndex: Int
-  )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]) = {
+  )(implicit
+      ctx: IssueContext,
+      s: Scheduler,
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
+  ) = {
     val temporaryIssue = retryBacklogAPIException(ctx.retryCount, retryInterval) {
       issueService.createDummy(project.id, ctx.propertyResolver)
     }
@@ -204,13 +215,13 @@ private[importer] class IssuesImporter[F[_]: Monad: ConsoleDSL](
       path: Path,
       index: Int,
       size: Int
-  )(implicit ctx: IssueContext) = {
+  )(implicit ctx: IssueContext, consoleDSL: ConsoleDSL[Task], s: Scheduler) = {
 
     def updateComment(remoteIssueId: Long): Unit = {
 
       val setUpdatedParam =
         retryBacklogAPIException(ctx.retryCount, retryInterval) {
-          commentService.setUpdateParam(
+          commentService.setUpdateParam[Task](
             remoteIssueId,
             ctx.propertyResolver,
             ctx.toRemoteIssueId,

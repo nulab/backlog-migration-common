@@ -1,8 +1,7 @@
 package com.nulabinc.backlog.migration.importer.service
 
 import javax.inject.Inject
-import cats.Monad
-import cats.syntax.all._
+
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain._
@@ -10,17 +9,16 @@ import com.nulabinc.backlog.migration.common.domain.exports.{
   DeletedExportedBacklogStatus,
   ExistingExportedBacklogStatus
 }
-import com.nulabinc.backlog.migration.common.dsl.StoreDSL
+import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StoreDSL}
+import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 import com.nulabinc.backlog.migration.common.service.{PropertyResolver, _}
 import com.nulabinc.backlog.migration.common.utils.{Logging, ProgressBar}
-import com.osinka.i18n.Messages
-import org.fusesource.jansi.Ansi
-import org.fusesource.jansi.Ansi.ansi
-import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
-import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 import com.nulabinc.backlog4j.BacklogAPIException
+import com.osinka.i18n.Messages
 import monix.eval.Task
 import monix.execution.Scheduler
+import org.fusesource.jansi.Ansi
+import org.fusesource.jansi.Ansi.ansi
 
 import scala.util.Try
 
@@ -47,10 +45,10 @@ private[importer] class ProjectImporter @Inject() (
     priorityService: PriorityService
 ) extends Logging {
 
-  def execute[A, F[_]: Monad: ConsoleDSL: StoreDSL](
+  def execute[A](
       fitIssueKey: Boolean,
       retryCount: Int
-  )(implicit s: Scheduler, storeDSL: StoreDSL[Task]): F[Unit] = {
+  )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
     val project = BacklogUnmarshaller.project(backlogPaths)
     projectService.create(project) match {
       case Right(project) =>
@@ -58,14 +56,14 @@ private[importer] class ProjectImporter @Inject() (
           _ <- preExecute()
           _ <- contents(project, fitIssueKey, retryCount)
           _ <- postExecute()
-          _ <- ConsoleDSL[F].printStream(
+          _ <- ConsoleDSL[Task].printStream(
             ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
           )
-          _ <- ConsoleDSL[F].printStream(
+          _ <- ConsoleDSL[Task].printStream(
             ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
           )
-          _ <- ConsoleDSL[F].flush()
-          _ <- ConsoleDSL[F].println(ConsoleMessages.Imports.finish)
+          _ <- ConsoleDSL[Task].flush()
+          _ <- ConsoleDSL[Task].println(ConsoleMessages.Imports.finish)
         } yield ()
       case Left(e) =>
         import ConsoleMessages.Imports._
@@ -80,18 +78,18 @@ private[importer] class ProjectImporter @Inject() (
             Errors.failed(project.key, e.getMessage())
           }
         for {
-          _ <- ConsoleDSL[F].errorln(message)
-          _ <- ConsoleDSL[F].println(Errors.suspend)
+          _ <- ConsoleDSL[Task].errorln(message)
+          _ <- ConsoleDSL[Task].println(Errors.suspend)
         } yield ()
     }
   }
 
-  private def contents[F[_]: Monad: ConsoleDSL: StoreDSL](
+  private def contents(
       project: BacklogProject,
       fitIssueKey: Boolean,
       retryCount: Int
-  )(implicit s: Scheduler, storeDSL: StoreDSL[Task]): F[Unit] = {
-    val issuesImporter = new IssuesImporter[F](
+  )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
+    val issuesImporter = new IssuesImporter(
       backlogPaths = backlogPaths,
       sharedFileService = sharedFileService,
       issueService = issueService,
@@ -107,7 +105,11 @@ private[importer] class ProjectImporter @Inject() (
     issuesImporter.execute(project, propertyResolver, fitIssueKey, retryCount)
   }
 
-  private def preExecute[F[_]: Monad: ConsoleDSL: StoreDSL](): F[Unit] = {
+  private def preExecute()(implicit
+      s: Scheduler,
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
+  ): Task[Unit] = {
     val propertyResolver = buildPropertyResolver()
     importGroup(propertyResolver)
     importProjectUser(propertyResolver)
@@ -121,7 +123,10 @@ private[importer] class ProjectImporter @Inject() (
     } yield ()
   }
 
-  private def postExecute[F[_]: Monad: ConsoleDSL: StoreDSL](): F[Unit] = {
+  private def postExecute()(implicit
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
+  ): Task[Unit] = {
     val propertyResolver = buildPropertyResolver()
 
     removeVersion(propertyResolver)
@@ -140,7 +145,9 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def importGroup(propertyResolver: PropertyResolver): Unit = {
+  private def importGroup(
+      propertyResolver: PropertyResolver
+  )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val groups = groupService.allGroups()
 
     def exists(group: BacklogGroup): Boolean =
@@ -167,7 +174,7 @@ private[importer] class ProjectImporter @Inject() (
     }.get
   }
 
-  private[this] def importVersion(): Unit = {
+  private def importVersion()(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val versions = versionService.allVersions()
     def exists(version: BacklogVersion): Boolean = {
       versions.exists(_.name == version.name)
@@ -186,7 +193,7 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def importCategory(): Unit = {
+  private def importCategory()(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val categories = issueCategoryService.allIssueCategories()
     def exists(issueCategory: BacklogIssueCategory): Boolean = {
       categories.exists(_.name == issueCategory.name)
@@ -205,7 +212,7 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def importIssueType(): Unit = {
+  private def importIssueType()(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val issueTypes = issueTypeService.allIssueTypes()
     def exists(issueType: BacklogIssueType): Boolean = {
       issueTypes.exists(_.name == issueType.name)
@@ -224,11 +231,15 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private def importStatuses[F[_]: Monad: ConsoleDSL: StoreDSL](): F[Unit] = {
+  private def importStatuses()(implicit
+      s: Scheduler,
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
+  ): Task[Unit] = {
     val projectStatuses = statusService.allStatuses()
 
     for {
-      willExistDestinationStatuses <- StoreDSL[F].allSrcStatus
+      willExistDestinationStatuses <- StoreDSL[Task].allSrcStatus
     } yield {
       // Import Statuses excluding default statuses
       val mustImportCustomStatuses = willExistDestinationStatuses
@@ -273,9 +284,9 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def importProjectUser(
+  private def importProjectUser(
       propertyResolver: PropertyResolver
-  ): Unit = {
+  )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val projectUsers = BacklogUnmarshaller.projectUsers(backlogPaths)
     val console = (ProgressBar.progress _)(
       Messages("common.project_user"),
@@ -292,7 +303,7 @@ private[importer] class ProjectImporter @Inject() (
     }
   }
 
-  private[this] def importCustomField(): Unit = {
+  private def importCustomField()(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val customFieldSettings = customFieldSettingService.allCustomFieldSettings()
     val backlogCustomFields = customFieldSettings.filterNotExist(
       BacklogUnmarshaller.backlogCustomFieldSettings(backlogPaths)
@@ -367,11 +378,11 @@ private[importer] class ProjectImporter @Inject() (
         }
     }
 
-  private def removeStatus[F[_]: Monad: ConsoleDSL: StoreDSL](
+  private def removeStatus(
       propertyResolver: PropertyResolver
-  ): F[Unit] =
+  )(implicit storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] =
     for {
-      exported <- StoreDSL[F].allSrcStatus
+      exported <- StoreDSL[Task].allSrcStatus
     } yield {
       exported
         .flatMap {

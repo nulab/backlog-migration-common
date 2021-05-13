@@ -1,5 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
+import javax.inject.Inject
+
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.domain.{
   BacklogCustomStatus,
@@ -12,7 +14,6 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.BacklogAPIException
 import com.nulabinc.backlog4j.Project.CustomStatusColor
 import com.nulabinc.backlog4j.api.option.{AddStatusParams, UpdateOrderOfStatusParams}
-import javax.inject.Inject
 
 import scala.jdk.CollectionConverters._
 import scala.util.Try

@@ -10,7 +10,6 @@ import com.nulabinc.backlog.migration.common.domain.{
 }
 import com.nulabinc.backlog.migration.common.errors.{
   DestinationItemNotFound,
-  InvalidItemValue,
   MappingValueIsEmpty,
   MappingValueIsNotSpecified,
   ValidationError

@@ -1,5 +1,8 @@
 package com.nulabinc.backlog.migration.common.service
 
+import javax.inject.Inject
+
+import cats.{Applicative, Monad}
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.client.params._
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
@@ -7,12 +10,12 @@ import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.{CommentWrites, IssueWrites}
 import com.nulabinc.backlog.migration.common.domain.IssueTags.SourceIssue
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.utils.{ConsoleOut, Logging, StringUtil}
+import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
+import com.nulabinc.backlog.migration.common.utils.{Logging, StringUtil}
 import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option.{QueryParams, UpdateIssueParams}
-import javax.inject.Inject
 
 import scala.jdk.CollectionConverters._
 
@@ -81,7 +84,7 @@ class CommentServiceImpl @Inject() (
     }
   }
 
-  override def setUpdateParam(
+  override def setUpdateParam[F[_]: Monad: ConsoleDSL](
       issueId: Long,
       propertyResolver: PropertyResolver,
       toRemoteIssueId: (Long) => Option[Long],
@@ -154,7 +157,7 @@ class CommentServiceImpl @Inject() (
     }
   }
 
-  private[this] def setChangeLog(
+  private def setChangeLog[F[_]: Monad: ConsoleDSL](
       changeLog: BacklogChangeLog,
       params: ImportUpdateIssueParams,
       toRemoteIssueId: (Long) => Option[Long],
@@ -424,7 +427,7 @@ class CommentServiceImpl @Inject() (
       id       <- postAttachment(fileName)
     } yield params.attachmentIds(Seq(Long.box(id)).asJava)
 
-  private[this] def setCustomField(
+  private def setCustomField[F[_]: Monad: ConsoleDSL](
       params: ImportUpdateIssueParams,
       changeLog: BacklogChangeLog,
       propertyResolver: PropertyResolver,
@@ -558,7 +561,7 @@ class CommentServiceImpl @Inject() (
       case _ =>
     }
 
-  private[this] def setSingleListCustomField(
+  private def setSingleListCustomField[F[_]: Monad: ConsoleDSL](
       params: ImportUpdateIssueParams,
       changeLog: BacklogChangeLog,
       customFieldSetting: BacklogCustomFieldSetting
@@ -571,28 +574,27 @@ class CommentServiceImpl @Inject() (
             .flatMap(_.optId)
             .map { itemId =>
               params.singleListCustomField(id, itemId)
-              ()
+              Applicative[F].pure(())
             }
             .getOrElse {
-              ConsoleOut.error(
+              ConsoleDSL[F].errorln(
                 s"Cannot find a custom status item. Item name: $value"
               )
-              ()
             }
           ()
         case _ =>
           params.emptySingleListCustomField(id)
-          ()
+          Applicative[F].pure(())
       }
     }
 
-  private[this] def setMultipleListCustomField(
+  private def setMultipleListCustomField[F[_]: Monad: ConsoleDSL](
       params: ImportUpdateIssueParams,
       changeLog: BacklogChangeLog,
       customFieldSetting: BacklogCustomFieldSetting,
       optSrcIssueId: Option[Id[SourceIssue]],
       optCreated: Option[String]
-  ): Unit =
+  ): F[Unit] =
     (
       changeLog.optNewValue,
       customFieldSetting.property,
@@ -609,26 +611,27 @@ class CommentServiceImpl @Inject() (
         val itemIds     = listItems.flatMap(findItem(property)).flatMap(_.optId)
 
         // BLGMIGRATION-868
-        newValues.diff(listItems).filter(_.nonEmpty).foreach { missingValue =>
+        val consoleResult = newValues.diff(listItems).filter(_.nonEmpty).map { missingValue =>
           val srcIssueIdStr = optSrcIssueId.map(_.value).getOrElse("")
           val createdStr    = optCreated.getOrElse("")
-          ConsoleOut.error(
+          ConsoleDSL[F].errorln(
             s"Cannot find custom field value. Maybe it was renamed. Name: $missingValue Source issue id: $srcIssueIdStr Created: $createdStr"
           )
         }
 
         params.multipleListCustomField(id, itemIds.map(Long.box).asJava)
         params.customFieldOtherValue(id, stringItems.mkString(","))
-        ()
+        Applicative[F].pure(())
       case (None, _: BacklogCustomFieldMultipleProperty, Some(id)) =>
         params.multipleListCustomField(
           id,
           List.empty[Long].map(Long.box).asJava
         )
         params.customFieldOtherValue(id, "")
-        ()
+        Applicative[F].pure(())
       case _ =>
         logger.warn("Unknown pattern of multiple list")
+        Applicative[F].pure(())
     }
 
   private[this] def findItem(

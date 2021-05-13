@@ -9,14 +9,15 @@ import com.nulabinc.backlog.migration.common.service.IssueServiceImpl
 import com.nulabinc.backlog.migration.{SimpleFixture, TestPropertyResolver}
 import com.nulabinc.backlog4j.Issue.PriorityType
 import com.nulabinc.backlog4j.api.option.{GetIssuesCountParams, GetIssuesParams}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.jdk.CollectionConverters._
 
 /**
  * @author uchida
  */
-class IssueServiceImplSpec extends FlatSpec with Matchers with SimpleFixture {
+class IssueServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixture {
 
   def issueService() = {
     Guice

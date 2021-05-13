@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -44,20 +43,34 @@ jobs:
             ${{ runner.os }}-sbt-cache-
 
       - name: Check format
-        run: sbt scalafmtCheckAll
+        run: |
+          mkdir -p dist
+          sbt -no-colors checkAll > dist/result.txt
 
       - name: Run tests
         run: sbt test
 
-  notify:
+      - name: Upload sbt result
+        uses: actions/upload-artifact@master
+        with:
+          name: sbt-result
+          path: dist
 
+  notify-success:
     runs-on: ubuntu-latest
-
     needs: build
 
     steps:
+      # - uses: actions/download-artifact@v2
+      #   with:
+      #     name: sbt-result
+      #     path: dist
+
+      # - run: echo ::set-output name=lines::$(grep "warn" dist/result.txt)
+      #   id: warnings
+      #   shell: bash
+
       - name: Notify to Typetalk if success
-        if: success()
         uses: shomatan/typetalk-action@master
         env:
           TYPETALK_TOKEN: ${{ secrets.TYPETALK_TOKEN }}
@@ -65,8 +78,13 @@ jobs:
           topic-id: 54145
           message: ":tada: Backlog migration common job success :smile:\n${{ github.event.repository.url }}/actions/runs/${{ github.run_id }}"
 
+  notify-failure:
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: build
+
+    steps:
       - name: Notify to Typetalk if fail
-        if: failure()
         uses: shomatan/typetalk-action@master
         env:
           TYPETALK_TOKEN: ${{ secrets.TYPETALK_TOKEN }}
@@ -74,8 +92,13 @@ jobs:
           topic-id: 54145
           message: ":rage: Backlog migration common job failed\n${{ github.event.repository.url }}/actions/runs/${{ github.run_id }}"
 
+  notify-cancel:
+    runs-on: ubuntu-latest
+    if: cancelled()
+    needs: build
+
+    steps:
       - name: Notify to Typetalk if cancelled
-        if: cancelled()
         uses: shomatan/typetalk-action@master
         env:
           TYPETALK_TOKEN: ${{ secrets.TYPETALK_TOKEN }}
