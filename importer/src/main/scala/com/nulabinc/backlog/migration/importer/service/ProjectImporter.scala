@@ -13,11 +13,14 @@ import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StoreDSL}
 import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
 import com.nulabinc.backlog.migration.common.service.{PropertyResolver, _}
 import com.nulabinc.backlog.migration.common.utils.{Logging, ProgressBar}
+import com.nulabinc.backlog4j.BacklogAPIException
 import com.osinka.i18n.Messages
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.ansi
+
+import scala.util.Try
 
 /**
  * @author uchida
@@ -146,9 +149,10 @@ private[importer] class ProjectImporter @Inject() (
       propertyResolver: PropertyResolver
   )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
     val groups = groupService.allGroups()
-    def exists(group: BacklogGroup): Boolean = {
+
+    def exists(group: BacklogGroup): Boolean =
       groups.exists(_.name == group.name)
-    }
+
     val backlogGroups =
       BacklogUnmarshaller.groups(backlogPaths).filterNot(exists)
     val console = (ProgressBar.progress _)(
@@ -156,11 +160,18 @@ private[importer] class ProjectImporter @Inject() (
       Messages("message.importing"),
       Messages("message.imported")
     )
-    backlogGroups.zipWithIndex.foreach {
-      case (backlogGroup, index) =>
-        groupService.create(backlogGroup, propertyResolver)
-        console(index + 1, backlogGroups.size)
-    }
+
+    // BLGMIGRATION-956
+    Try {
+      backlogGroups.zipWithIndex.foreach {
+        case (backlogGroup, index) =>
+          groupService.create(backlogGroup, propertyResolver)
+          console(index + 1, backlogGroups.size)
+      }
+    }.recover {
+      case _: BacklogAPIException =>
+        logger.warn("Importing groups failed.")
+    }.get
   }
 
   private def importVersion()(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit = {
