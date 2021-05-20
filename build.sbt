@@ -9,7 +9,7 @@ ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports"
 
 lazy val commonSettings = Seq(
   organization := "com.nulabinc",
-  version := "0.3.5-SNAPSHOT",
+  version := "0.3.5",
   scalaVersion := "2.13.5",
   scalacOptions ++= List(
     "-feature",
