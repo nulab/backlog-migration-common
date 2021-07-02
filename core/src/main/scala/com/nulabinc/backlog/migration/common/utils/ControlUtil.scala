@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.common.utils
 import java.net.HttpURLConnection
 
+import scala.language.reflectiveCalls
 import scala.util.control.Exception.ignoring
 
 object ControlUtil {
