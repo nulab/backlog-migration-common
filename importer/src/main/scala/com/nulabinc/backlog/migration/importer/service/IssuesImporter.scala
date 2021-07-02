@@ -305,40 +305,39 @@ private[importer] class IssuesImporter(
   }
 
   private[this] val postAttachment = (path: Path, index: Int, size: Int) => {
-    fileName: String =>
-      {
-        val files = backlogPaths.issueAttachmentDirectoryPath(path).list
-        files.find(file => file.name == fileName) match {
-          case Some(filePath) =>
-            attachmentService.postAttachment(filePath.pathAsString) match {
-              case Right(attachment) => attachment.optId
-              case Left(e) =>
-                if (
-                  e.getMessage.indexOf(
-                    "The size of attached file is too large."
-                  ) >= 0
+    fileName: String => {
+      val files = backlogPaths.issueAttachmentDirectoryPath(path).list
+      files.find(file => file.name == fileName) match {
+        case Some(filePath) =>
+          attachmentService.postAttachment(filePath.pathAsString) match {
+            case Right(attachment) => attachment.optId
+            case Left(e) =>
+              if (
+                e.getMessage.indexOf(
+                  "The size of attached file is too large."
+                ) >= 0
+              )
+                console.error(
+                  index + 1,
+                  size,
+                  Messages("import.error.attachment.too_large", filePath.name)
                 )
-                  console.error(
-                    index + 1,
-                    size,
-                    Messages("import.error.attachment.too_large", filePath.name)
+              else
+                console.error(
+                  index + 1,
+                  size,
+                  Messages(
+                    "import.error.issue.attachment",
+                    filePath.name,
+                    e.getMessage
                   )
-                else
-                  console.error(
-                    index + 1,
-                    size,
-                    Messages(
-                      "import.error.issue.attachment",
-                      filePath.name,
-                      e.getMessage
-                    )
-                  )
-                None
-            }
-          case _ => None
+                )
+              None
+          }
+        case _ => None
 
-        }
-      }: Option[Long]
+      }
+    }
   }
 
   private[this] def compareIssueJsons(path1: Path, path2: Path): Boolean = {
