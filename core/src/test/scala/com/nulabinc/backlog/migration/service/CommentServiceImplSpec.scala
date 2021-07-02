@@ -39,8 +39,8 @@ class CommentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtur
 
   "setUpdateParam" should "return the valid params" in {
     val propertyResolver = new TestPropertyResolver()
-    val toRemoteIssueId  = (localIssueId: Long) => Some(1): Option[Long]
-    val postAttachment   = (fileName: String) => None: Option[Long]
+    val toRemoteIssueId  = (_: Long) => Some(1): Option[Long]
+    val postAttachment   = (_: String) => None: Option[Long]
 
     val params = commentService().setUpdateParam[Task](
       issueId1,
@@ -91,10 +91,10 @@ class CommentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtur
 
     getValue(params, s"customField_${singleListCustomFieldId}").map(_.toInt) should be(item1.optId)
     getValues(params, s"customField_${multipleListCustomFieldId}")
-      .map(_.toInt) should contain theSameElementsAs (Seq(
+      .map(_.toInt) should contain theSameElementsAs Seq(
       item1.optId,
       item2.optId
-    ).flatten.map(_.toInt))
+    ).flatten.map(_.toInt)
     getValues(params, s"customField_${checkBoxCustomFieldId}").map(
       _.toInt
     ) should contain theSameElementsAs (Seq(item1.optId, item2.optId).flatten.map(_.toInt))

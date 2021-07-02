@@ -206,7 +206,7 @@ class CommentServiceImpl @Inject() (
       case BacklogConstantValue.ChangeLog.MILESTONE =>
         setMilestone(params, changeLog, propertyResolver)
       case BacklogConstantValue.ChangeLog.STATUS =>
-        setStatus(params, changeLog, propertyResolver, optCurrentIssue)
+        setStatus(params, changeLog, propertyResolver)
       case BacklogConstantValue.ChangeLog.ASSIGNER =>
         setAssignee(params, changeLog, propertyResolver)
       case BacklogConstantValue.ChangeLog.ISSUE_TYPE =>
@@ -313,8 +313,7 @@ class CommentServiceImpl @Inject() (
   private[this] def setStatus(
       params: ImportUpdateIssueParams,
       changeLog: BacklogChangeLog,
-      propertyResolver: PropertyResolver,
-      optCurrentIssue: Option[Issue]
+      propertyResolver: PropertyResolver
   ): Unit =
     changeLog.optNewValue.foreach { newValue =>
       params.statusId(
