@@ -29,9 +29,8 @@ class AkkaHttpDSL()(implicit
     }
     .getOrElse(ConnectionPoolSettings(actorSystem))
 
-  private val http             = Http()
-  private val timeout          = 10.seconds
-  private val maxRedirectCount = 20
+  private val http    = Http()
+  private val timeout = 10.seconds
   private val reqHeaders: Seq[HttpHeader] = Seq(
     headers.`User-Agent`("backlog-migration"),
     headers.`Accept-Charset`(HttpCharsets.`UTF-8`)

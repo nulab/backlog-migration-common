@@ -55,7 +55,7 @@ object UserMappingFileService {
           for {
             records <- StorageDSL[F].read(mappingFilePath, MappingFileService.readLine)
             mappings = MappingDecoder.user(records)
-            result   = merge(mappings, srcItems, dstApiConfiguration.isNAISpace)
+            result   = merge(mappings, srcItems)
             _ <-
               if (result.addedList.nonEmpty)
                 for {
@@ -71,7 +71,7 @@ object UserMappingFileService {
                 ConsoleDSL[F].println(MappingMessages.userMappingNoChanges)
           } yield ()
         } else {
-          val result = merge(Seq(), srcItems, dstApiConfiguration.isNAISpace)
+          val result = merge(Seq(), srcItems)
           for {
             _ <- StorageDSL[F].writeNewFile(
               mappingFilePath,
@@ -163,8 +163,7 @@ object UserMappingFileService {
    */
   private def merge[A](
       mappings: Seq[UserMapping[A]],
-      srcItems: Seq[A],
-      isNAISpace: Boolean
+      srcItems: Seq[A]
   ): MergedUserMapping[A] =
     srcItems.foldLeft(MergedUserMapping.empty[A]) { (acc, item) =>
       mappings.find(_.src == item) match {

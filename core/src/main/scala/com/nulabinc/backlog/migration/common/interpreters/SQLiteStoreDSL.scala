@@ -15,9 +15,8 @@ import com.nulabinc.backlog.migration.common.persistence.store.sqlite.ops.{
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import monix.eval.Task
-import monix.execution.Scheduler
 
-class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler) extends StoreDSL[Task] {
+class SQLiteStoreDSL(private val dbPath: Path) extends StoreDSL[Task] {
 
   protected val xa: Transactor[Task] = Transactor.fromDriverManager[Task](
     "org.sqlite.JDBC",
@@ -74,6 +73,6 @@ class SQLiteStoreDSL(private val dbPath: Path)(implicit sc: Scheduler) extends S
 }
 
 object SQLiteStoreDSL {
-  def apply(dbPath: Path)(implicit s: Scheduler): SQLiteStoreDSL =
+  def apply(dbPath: Path): SQLiteStoreDSL =
     new SQLiteStoreDSL(dbPath)
 }
