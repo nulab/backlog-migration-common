@@ -120,10 +120,7 @@ private[importer] class ProjectImporter @Inject() (
     } yield ()
   }
 
-  private def postExecute()(implicit
-      storeDSL: StoreDSL[Task],
-      consoleDSL: ConsoleDSL[Task]
-  ): Task[Unit] = {
+  private def postExecute()(implicit storeDSL: StoreDSL[Task]): Task[Unit] = {
     val propertyResolver = buildPropertyResolver()
 
     removeVersion(propertyResolver)
@@ -369,7 +366,7 @@ private[importer] class ProjectImporter @Inject() (
 
   private def removeStatus(
       propertyResolver: PropertyResolver
-  )(implicit storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] =
+  )(implicit storeDSL: StoreDSL[Task]): Task[Unit] =
     for {
       exported <- StoreDSL[Task].allSrcStatus
     } yield {

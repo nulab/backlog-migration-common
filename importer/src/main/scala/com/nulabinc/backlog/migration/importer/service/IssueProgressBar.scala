@@ -25,17 +25,16 @@ private[importer] class IssueProgressBar() extends Logging {
   private[this] def timerFunc() = {
     var tempTime: Long         = System.currentTimeMillis()
     var totalElapsedTime: Long = 0
-    () =>
-      {
-        val elapsedTime: Long = System.currentTimeMillis() - tempTime
-        totalElapsedTime = totalElapsedTime + elapsedTime
-        val average: Float = totalElapsedTime.toFloat / count.toFloat
-        tempTime = System.currentTimeMillis()
-        val remaining           = totalSize - count
-        val remainingTime: Long = (remaining * average).toLong
+    () => {
+      val elapsedTime: Long = System.currentTimeMillis() - tempTime
+      totalElapsedTime = totalElapsedTime + elapsedTime
+      val average: Float = totalElapsedTime.toFloat / count.toFloat
+      tempTime = System.currentTimeMillis()
+      val remaining           = totalSize - count
+      val remainingTime: Long = (remaining * average).toLong
 
-        DateUtil.timeFormat(new Date(remainingTime))
-      }: String
+      DateUtil.timeFormat(new Date(remainingTime))
+    }
   }
 
   def warning(indexOfDate: Int, totalOfDate: Int, value: String) = {
