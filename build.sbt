@@ -43,7 +43,7 @@ lazy val commonSettings = Seq(
       "io.lemonlabs"         %% "scala-uri"        % "2.0.0",
       "com.github.pathikrit" %% "better-files"     % "3.8.0",
       "com.chuusai"          %% "shapeless"        % "2.3.3",
-      "org.apache.commons"    % "commons-csv"      % "1.5",
+      "org.apache.commons"    % "commons-csv"      % "1.8",
       "org.scalatest"        %% "scalatest"        % "3.1.0"       % Test,
       "org.tpolecat"         %% "doobie-scalatest" % doobieVersion % "test"
     )
