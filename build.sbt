@@ -33,7 +33,7 @@ lazy val commonSettings = Seq(
       "org.xerial"            % "sqlite-jdbc"      % "3.32.3.2",
       "com.nulab-inc"         % "backlog4j"        % "2.4.2",
       "com.github.mpilquist" %% "simulacrum"       % "0.19.0",
-      "org.fusesource.jansi"  % "jansi"            % "1.17",
+      "org.fusesource.jansi"  % "jansi"            % "1.18",
       "com.osinka.i18n"      %% "scala-i18n"       % "1.0.3",
       "ch.qos.logback"        % "logback-classic"  % "1.2.3",
       "com.typesafe"          % "config"           % "1.3.3",
