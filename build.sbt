@@ -37,7 +37,7 @@ lazy val commonSettings = Seq(
       "com.osinka.i18n"      %% "scala-i18n"       % "1.0.3",
       "ch.qos.logback"        % "logback-classic"  % "1.2.3",
       "com.typesafe"          % "config"           % "1.3.3",
-      "com.google.inject"     % "guice"            % "4.2.2",
+      "com.google.inject"     % "guice"            % "4.2.3",
       "io.spray"             %% "spray-json"       % "1.3.5",
       "net.codingwell"       %% "scala-guice"      % "4.2.6",
       "io.lemonlabs"         %% "scala-uri"        % "2.0.0",
