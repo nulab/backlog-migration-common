@@ -48,9 +48,9 @@ case class JansiConsoleDSL() extends ConsoleDSL[Task] with Logging {
       space: Int,
       color: Ansi.Color
   ): Task[Unit] =
-    Task.eval {
+    bold(value, color).map { boldStr =>
       logger.info(value)
-      outStream.println((" " * space) + bold(value, color))
+      outStream.println((" " * space) + boldStr)
       outStream.flush()
     }
 
