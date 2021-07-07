@@ -42,7 +42,7 @@ class CommentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtur
     val toRemoteIssueId  = (_: Long) => Some(1): Option[Long]
     val postAttachment   = (_: String) => None: Option[Long]
 
-    val params = commentService().setUpdateParam[Task](
+    val params = commentService().setUpdateParam(
       issueId1,
       propertyResolver,
       toRemoteIssueId,
@@ -103,10 +103,10 @@ class CommentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtur
 
   "setUpdateParam(Reset)" should "return the valid params" in {
     val propertyResolver = new TestPropertyResolver()
-    val toRemoteIssueId  = (localIssueId: Long) => Some(1): Option[Long]
-    val postAttachment   = (fileName: String) => None: Option[Long]
+    val toRemoteIssueId  = (_: Long) => Some(1): Option[Long]
+    val postAttachment   = (_: String) => None: Option[Long]
 
-    val params = commentService().setUpdateParam[Task](
+    val params = commentService().setUpdateParam(
       issueId1,
       propertyResolver,
       toRemoteIssueId,
