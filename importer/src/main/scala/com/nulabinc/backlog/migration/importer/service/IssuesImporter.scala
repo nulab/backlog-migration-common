@@ -221,7 +221,7 @@ private[importer] class IssuesImporter(
 
       val setUpdatedParam =
         retryBacklogAPIException(ctx.retryCount, retryInterval) {
-          commentService.setUpdateParam[Task](
+          commentService.setUpdateParam(
             remoteIssueId,
             ctx.propertyResolver,
             ctx.toRemoteIssueId,

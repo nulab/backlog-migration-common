@@ -58,4 +58,13 @@ object syntax {
     def lift[E]: EitherT[F, E, Unit] =
       EitherT(value.map(Right(_)))
   }
+
+  implicit class SeqOps[F[_]: Monad, A](values: Seq[F[A]]) {
+    def sequence: F[Seq[A]] =
+      values.foldLeft(Applicative[F].pure(Seq.empty[A])) { (itemsF, acc) =>
+        acc.flatMap { item =>
+          itemsF.map(items => item +: items)
+        }
+      }
+  }
 }

@@ -7,6 +7,7 @@ import com.nulabinc.backlog4j.conf.BacklogConfigure
 import com.nulabinc.backlog4j.http.{BacklogHttpClient, BacklogHttpClientImpl, NameValuePair}
 
 import scala.jdk.CollectionConverters._
+import scala.language.reflectiveCalls
 
 object BacklogAPIClientImpl extends BacklogConfiguration {
   def create: BacklogHttpClient = {

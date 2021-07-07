@@ -17,7 +17,7 @@ case class LocalStorageDSL() extends StorageDSL[Task] {
   private val charset = StandardCharsets.UTF_8
 
   override def read[A](path: Path, f: InputStream => A): Task[A] =
-    Task.deferAction { implicit scheduler =>
+    Task.defer {
       Task.eval {
         val is = Files.newInputStream(path)
         Try(f(is))

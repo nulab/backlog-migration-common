@@ -62,8 +62,11 @@ object ConsoleMessages {
     def statusMappingCreated(filePath: Path): String =
       mappingFileCreated(statusItem, filePath)
 
-    def mappingFileNotFound(path: Path): String =
-      mappingFileNotFound(statusItem, path)
+    def mappingFileNotFound(): String =
+      s"""
+         |--------------------------------------------------
+         |${Messages("cli.invalid_setup")}
+       """.stripMargin
 
     def priorityMappingMerged[A](
         filePath: Path,
@@ -166,11 +169,6 @@ object ConsoleMessages {
          |[${filePath.toAbsolutePath}]
          |--------------------------------------------------""".stripMargin
 
-    private def mappingFileNotFound(itemName: String, path: Path): String =
-      s"""
-         |--------------------------------------------------
-         |${Messages("cli.invalid_setup")}
-       """.stripMargin
   }
 
   object Validations {

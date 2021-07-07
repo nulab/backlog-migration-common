@@ -10,11 +10,9 @@ import akka.http.scaladsl.{ClientTransport, Http}
 import com.nulabinc.backlog.migration.common.dsl.{HttpDSL, HttpQuery, RequestError, ServerDown}
 import monix.eval.Task
 import org.slf4j.LoggerFactory
-import spray.json._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.reflect.ClassTag
 import scala.util.control.NonFatal
 import scala.util.{Failure, Try}
 
@@ -31,9 +29,8 @@ class AkkaHttpDSL()(implicit
     }
     .getOrElse(ConnectionPoolSettings(actorSystem))
 
-  private val http             = Http()
-  private val timeout          = 10.seconds
-  private val maxRedirectCount = 20
+  private val http    = Http()
+  private val timeout = 10.seconds
   private val reqHeaders: Seq[HttpHeader] = Seq(
     headers.`User-Agent`("backlog-migration"),
     headers.`Accept-Charset`(HttpCharsets.`UTF-8`)
@@ -72,44 +69,6 @@ class AkkaHttpDSL()(implicit
       } else {
         logger.info(s"Response data is $data")
         Right(data)
-      }
-    }
-  }
-
-  private def parseJson[A](response: String, format: JsonFormat[A])(implicit
-      classTag: ClassTag[A]
-  ): A = {
-    try {
-      response.parseJson.convertTo[A](format)
-    } catch {
-      case NonFatal(ex) =>
-        logger.error(s"Failed to parse json error: ${ex.getMessage}")
-        logger.error(s"Stacktrace:")
-        ex.printStackTrace()
-        logger.error(s"Got from server $response")
-        logger.error(s"Expected to format of $classTag")
-        logger.error(s"This is probably a bug, please contact the maintainer of the library")
-        throw ex
-    }
-  }
-
-  private def followRedirect(req: HttpRequest, count: Int = 0): Task[HttpResponse] = {
-    logger.info(s"Following redirection $req")
-    Task.deferFuture(http.singleRequest(req, settings = settings)).flatMap { resp =>
-      resp.status match {
-        case StatusCodes.MovedPermanently | StatusCodes.Found | StatusCodes.SeeOther =>
-          resp
-            .header[headers.Location]
-            .map { loc =>
-              resp.entity.discardBytes()
-              val locUri = loc.uri
-              val newUri = locUri
-              val newReq = req.withUri(newUri).withHeaders(reqHeaders)
-              if (count < maxRedirectCount) followRedirect(newReq, count + 1)
-              else Task.deferFuture(http.singleRequest(newReq))
-            }
-            .getOrElse(throw new RuntimeException(s"location not found on 302 for ${req.uri}"))
-        case _ => Task(resp)
       }
     }
   }

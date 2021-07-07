@@ -1,12 +1,16 @@
 package com.nulabinc.backlog.migration.common.modules
 
-import com.google.inject.AbstractModule
+import com.google.inject.{AbstractModule, TypeLiteral}
 import com.nulabinc.backlog.migration.common.client.{BacklogAPIClient, BacklogAPIClientImpl, IAAH}
 import com.nulabinc.backlog.migration.common.conf.{BacklogApiConfiguration, BacklogPaths}
 import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, PropertyValue}
+import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
+import com.nulabinc.backlog.migration.common.interpreters.JansiConsoleDSL
 import com.nulabinc.backlog.migration.common.service._
 import com.nulabinc.backlog4j.IssueType
 import com.nulabinc.backlog4j.conf.BacklogPackageConfigure
+import monix.eval.Task
+import monix.execution.Scheduler
 
 import scala.jdk.CollectionConverters._
 
@@ -43,6 +47,10 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
     bind(classOf[PriorityService]).to(classOf[PriorityServiceImpl])
     bind(classOf[SpaceService]).to(classOf[SpaceServiceImpl])
     bind(classOf[AttachmentService]).to(classOf[AttachmentServiceImpl])
+
+    // DSL
+    bind(classOf[Scheduler]).toInstance(monix.execution.Scheduler.Implicits.global)
+    bind(new TypeLiteral[ConsoleDSL[Task]]() {}).toInstance(new JansiConsoleDSL)
   }
 
   private[this] def createBacklogAPIClient(iaah: IAAH): BacklogAPIClient = {
