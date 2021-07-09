@@ -1,7 +1,6 @@
 package com.nulabinc.backlog.migration.service
 
 import com.google.inject.Guice
-import com.nulabinc.backlog.migration.common.client.IAAH
 import com.nulabinc.backlog.migration.common.client.params.ImportIssueParams
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.modules.DefaultModule
@@ -22,7 +21,7 @@ class IssueServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixture 
   def issueService() = {
     Guice
       .createInjector(
-        new DefaultModule(BacklogApiConfiguration("url", "key", "projectKey", iaah = IAAH.empty))
+        new DefaultModule(BacklogApiConfiguration("url", "key", "projectKey"))
       )
       .getInstance(classOf[IssueServiceImpl])
   }

@@ -2,7 +2,6 @@ package com.nulabinc.backlog.migration.service
 
 import com.google.inject.Guice
 import com.google.inject.util.Modules
-import com.nulabinc.backlog.migration.common.client.IAAH
 import com.nulabinc.backlog.migration.common.client.params.ImportUpdateIssueParams
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
@@ -29,7 +28,7 @@ class CommentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtur
         Modules
           .`override`(
             new DefaultModule(
-              BacklogApiConfiguration("url", "key", "projectKey", iaah = IAAH.empty)
+              BacklogApiConfiguration("url", "key", "projectKey")
             )
           )
           .`with`(new TestModule())
