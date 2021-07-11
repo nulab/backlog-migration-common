@@ -1,6 +1,6 @@
 lazy val commonSettings = Seq(
   organization := "com.nulabinc",
-  version := "0.3.7-SNAPSHOT",
+  version := "0.4.0",
   scalaVersion := "2.13.6",
   scalacOptions ++= List(
     "-feature",
@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
     "-Ywarn-unused"
   ),
   libraryDependencies ++= {
-    val catsVersion     = "2.1.0"
+    val catsVersion     = "2.1.1"
     val monixVersion    = "3.2.2"
     val doobieVersion   = "0.9.0"
     val akkaVersion     = "2.6.10"
@@ -30,7 +30,7 @@ lazy val commonSettings = Seq(
       "com.typesafe.akka"    %% "akka-stream"      % akkaVersion,
       "com.typesafe.akka"    %% "akka-slf4j"       % akkaVersion,
       "com.typesafe.akka"    %% "akka-http"        % akkaHttpVersion,
-      "org.xerial"            % "sqlite-jdbc"      % "3.32.3.2",
+      "org.xerial"            % "sqlite-jdbc"      % "3.32.3.3",
       "com.nulab-inc"         % "backlog4j"        % "2.4.2",
       "com.github.mpilquist" %% "simulacrum"       % "0.19.0",
       "org.fusesource.jansi"  % "jansi"            % "1.17",
@@ -43,8 +43,8 @@ lazy val commonSettings = Seq(
       "io.lemonlabs"         %% "scala-uri"        % "2.0.0",
       "com.github.pathikrit" %% "better-files"     % "3.8.0",
       "com.chuusai"          %% "shapeless"        % "2.3.3",
-      "org.apache.commons"    % "commons-csv"      % "1.8",
-      "org.scalatest"        %% "scalatest"        % "3.1.0"       % Test,
+      "org.apache.commons"    % "commons-csv"      % "1.5",
+      "org.scalatest"        %% "scalatest"        % "3.1.4"       % Test,
       "org.tpolecat"         %% "doobie-scalatest" % doobieVersion % "test"
     )
   },
