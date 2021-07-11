@@ -1,7 +1,7 @@
 package com.nulabinc.backlog.migration.common.shared
 
 import cats.data.EitherT
-import cats.implicits._
+import cats.syntax.all._
 import cats.{Applicative, Monad}
 
 object syntax {

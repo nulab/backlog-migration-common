@@ -1,7 +1,7 @@
 package com.nulabinc.backlog.migration.common.validators
 
 import cats.data.ValidatedNec
-import cats.implicits._
+import cats.syntax.all._
 import com.nulabinc.backlog.migration.common.domain.mappings._
 import com.nulabinc.backlog.migration.common.domain.{
   BacklogStatusName,
