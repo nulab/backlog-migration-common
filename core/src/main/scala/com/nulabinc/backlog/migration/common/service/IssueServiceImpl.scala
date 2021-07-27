@@ -55,11 +55,6 @@ class IssueServiceImpl @Inject() (implicit
       backlogIssue: BacklogIssue
   ): Option[BacklogIssue] = {
     val params: GetIssuesParams = new GetIssuesParams(List(projectId).asJava)
-    for { created <- backlogIssue.operation.optCreated } yield {
-      if (created.nonEmpty) {
-        params.createdSince(DateUtil.isoToDateFormat(created))
-      }
-    }
     if (backlogIssue.summary.original.nonEmpty) {
       params.keyword(backlogIssue.summary.original)
     }
