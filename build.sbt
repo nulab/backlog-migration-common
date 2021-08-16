@@ -41,7 +41,7 @@ lazy val commonSettings = Seq(
       "io.spray"             %% "spray-json"       % "1.3.6",
       "net.codingwell"       %% "scala-guice"      % "4.2.6",
       "io.lemonlabs"         %% "scala-uri"        % "2.3.1",
-      "com.github.pathikrit" %% "better-files"     % "3.8.0",
+      "com.github.pathikrit" %% "better-files"     % "3.9.1",
       "com.chuusai"          %% "shapeless"        % "2.3.3",
       "org.apache.commons"    % "commons-csv"      % "1.9.0",
       "org.scalatest"        %% "scalatest"        % "3.2.9"       % Test,
