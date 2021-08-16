@@ -2,7 +2,8 @@ package com.nulabinc.backlog.migration.common.conf
 
 import java.io.File
 
-import com.typesafe.config.{ConfigException, ConfigFactory}
+import com.nulabinc.backlog.migration.common.client.IAAH
+import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 
 /**
  * @author uchida
@@ -11,23 +12,25 @@ trait BacklogConfiguration {
 
   val NaiSpaceDomain = "backlog.com"
 
-  val internal = ConfigFactory.load()
+  val internal: Config = ConfigFactory.load()
 
-  val external = ConfigFactory.parseFile(new File("./application.conf"))
+  val external: Config = ConfigFactory.parseFile(new File("./application.conf"))
 
-  val applicationName = internal.getString("application.title")
+  val applicationName: String = internal.getString("application.title")
 
-  val versionName = internal.getString("application.version")
+  val versionName: String = internal.getString("application.version")
 
-  val language = internal.getString("application.language")
+  val language: String = internal.getString("application.language")
 
-  val productName = internal.getString("application.product")
+  val productName: String = internal.getString("application.product")
 
-  val productVersion = internal.getString("application.version")
+  val productVersion: String = internal.getString("application.version")
 
-  val backlog4jVersion = internal.getString("application.backlog4jVersion")
+  val backlog4jVersion: String = internal.getString("application.backlog4jVersion")
 
-  val exportLimitAtOnce = {
+  val iaah: IAAH = IAAH(internal.getString("application.iaah"))
+
+  val exportLimitAtOnce: Int = {
     try {
       external.getInt("application.export-limit-at-once")
     } catch {
