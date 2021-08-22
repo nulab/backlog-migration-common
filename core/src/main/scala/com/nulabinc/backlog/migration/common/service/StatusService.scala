@@ -8,7 +8,8 @@ import com.nulabinc.backlog.migration.common.domain.{
 }
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 trait StatusService {
 

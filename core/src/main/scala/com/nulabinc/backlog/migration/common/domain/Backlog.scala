@@ -4,7 +4,8 @@ import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
 import com.nulabinc.backlog.migration.common.domain.support.{Identifier, Undefined}
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class BacklogProjectKey(projectKey: String) extends Identifier[String] {
 

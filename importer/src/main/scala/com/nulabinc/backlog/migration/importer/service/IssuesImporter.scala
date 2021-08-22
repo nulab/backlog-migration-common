@@ -21,7 +21,8 @@ import monix.eval.Task
 import monix.execution.Scheduler
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 private[importer] class IssuesImporter(
     backlogPaths: BacklogPaths,
@@ -272,11 +273,11 @@ private[importer] class IssuesImporter(
             case Left(_)            => Seq.empty[BacklogAttachment]
           }
         for {
-          attachmentInfo      <- changeLog.optAttachmentInfo
-          attachment          <- issueAttachments.sortBy(_.optId).find(_.name == attachmentInfo.name)
-          attachmentId        <- attachment.optId
-          createdUser         <- comment.optCreatedUser
-          createdUserId       <- createdUser.optUserId
+          attachmentInfo <- changeLog.optAttachmentInfo
+          attachment     <- issueAttachments.sortBy(_.optId).find(_.name == attachmentInfo.name)
+          attachmentId   <- attachment.optId
+          createdUser    <- comment.optCreatedUser
+          createdUserId  <- createdUser.optUserId
           solvedCreatedUserId <- ctx.propertyResolver.optResolvedUserId(createdUserId)
           created             <- comment.optCreated
         } yield {
@@ -304,8 +305,8 @@ private[importer] class IssuesImporter(
     }
   }
 
-  private[this] val postAttachment = (path: Path, index: Int, size: Int) => {
-    fileName: String => {
+  private[this] val postAttachment = (path: Path, index: Int, size: Int) => { fileName: String =>
+    {
       val files = backlogPaths.issueAttachmentDirectoryPath(path).list
       files.find(file => file.name == fileName) match {
         case Some(filePath) =>

@@ -3,7 +3,8 @@ package com.nulabinc.backlog.migration.common.service
 import com.nulabinc.backlog.migration.common.domain.BacklogUser
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 trait ProjectUserService {
 

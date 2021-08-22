@@ -14,7 +14,8 @@ import org.scalatest.matchers.should.Matchers
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class IssueServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixture {
 
@@ -28,9 +29,9 @@ class IssueServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixture 
 
   "setCreateParam" should "return the valid params" in {
     val propertyResolver = new TestPropertyResolver()
-    val toRemoteIssueId  = (localIssueId: Long) => None: Option[Long]
-    val issueOfId        = (id: Long) => issue2
-    val postAttachment   = (fileName: String) => None: Option[Long]
+    val toRemoteIssueId  = (_: Long) => None: Option[Long]
+    val issueOfId        = (_: Long) => issue2
+    val postAttachment   = (_: String) => None: Option[Long]
 
     val params = issueService().setCreateParam(
       projectId,

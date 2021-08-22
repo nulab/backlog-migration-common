@@ -7,7 +7,8 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import scala.collection.mutable
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 private[importer] case class IssueContext(
     propertyResolver: PropertyResolver,
@@ -15,7 +16,7 @@ private[importer] case class IssueContext(
     retryCount: Int
 ) extends Logging {
 
-  val toRemoteIssueId                            = (localIssueId: Long) => issueIdMap.get(localIssueId): Option[Long]
+  val toRemoteIssueId = (localIssueId: Long) => issueIdMap.get(localIssueId): Option[Long]
   val excludeIssueIds: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
 
   private[this] val issueIdMap: mutable.Map[Long, Long] = mutable.Map()

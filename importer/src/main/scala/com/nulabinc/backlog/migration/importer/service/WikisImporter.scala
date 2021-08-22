@@ -19,7 +19,8 @@ import monix.eval.Task
 import monix.execution.Scheduler
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 private[importer] class WikisImporter @Inject() (
     backlogPaths: BacklogPaths,

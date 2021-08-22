@@ -16,7 +16,8 @@ import org.scalatest.matchers.should.Matchers
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class CommentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixture {
 
