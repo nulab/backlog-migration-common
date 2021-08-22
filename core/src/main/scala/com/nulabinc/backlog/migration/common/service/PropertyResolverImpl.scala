@@ -10,7 +10,8 @@ import com.nulabinc.backlog.migration.common.domain.{
 import com.nulabinc.backlog.migration.common.utils.Logging
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class PropertyResolverImpl(
     customFieldSettingService: CustomFieldSettingService,
