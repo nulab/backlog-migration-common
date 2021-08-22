@@ -19,7 +19,8 @@ import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class StatusServiceImpl @Inject() (
     backlog: BacklogAPIClient,

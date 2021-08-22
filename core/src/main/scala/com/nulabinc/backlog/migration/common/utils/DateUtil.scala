@@ -4,7 +4,8 @@ import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone}
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 object DateUtil {
 

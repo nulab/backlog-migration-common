@@ -14,7 +14,8 @@ import com.nulabinc.backlog4j.api.option.AddIssueTypeParams
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class IssueTypeServiceImpl @Inject() (implicit
     val issueTypeWrites: IssueTypeWrites,

@@ -8,7 +8,8 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.AttributeInfo
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 private[common] class AttributeInfoWrites @Inject() ()
     extends Writes[AttributeInfo, BacklogAttributeInfo]

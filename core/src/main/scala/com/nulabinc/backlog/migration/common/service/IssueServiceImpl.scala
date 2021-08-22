@@ -23,7 +23,8 @@ import io.lemonlabs.uri._
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class IssueServiceImpl @Inject() (implicit
     issueWrites: IssueWrites,

@@ -93,7 +93,7 @@ object PriorityMappingFileService {
       decoder: PriorityMappingDecoder[A]
   ): F[Either[MappingFileError, Seq[ValidatedPriorityMapping[A]]]] = {
     val result = for {
-      _           <- StorageDSL[F].exists(path).orError(MappingFileNotFound("priority", path)).handleError
+      _ <- StorageDSL[F].exists(path).orError(MappingFileNotFound("priority", path)).handleError
       unvalidated <- getMappings(path).handleError
       validated   <- validateMappings(unvalidated, dstItems).lift.handleError
     } yield validated

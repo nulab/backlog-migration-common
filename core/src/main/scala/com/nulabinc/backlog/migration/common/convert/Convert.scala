@@ -1,7 +1,8 @@
 package com.nulabinc.backlog.migration.common.convert
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 object Convert {
 

@@ -10,7 +10,8 @@ import com.nulabinc.backlog4j.{Attachment, SharedFile, Wiki, WikiTag}
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 private[common] class WikiWrites @Inject() (
     implicit val userWrites: UserWrites,
