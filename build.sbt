@@ -15,7 +15,7 @@ lazy val commonSettings = Seq(
     val catsVersion     = "2.1.1"
     val monixVersion    = "3.4.0"
     val doobieVersion   = "0.9.4"
-    val akkaVersion     = "2.6.15"
+    val akkaVersion     = "2.6.16"
     val akkaHttpVersion = "10.2.6"
     Seq(
       "org.typelevel"        %% "cats-core"        % catsVersion,
