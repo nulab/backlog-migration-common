@@ -1,7 +1,8 @@
 package com.nulabinc.backlog.migration.common.utils
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 object IssueKeyUtil {
   def replace(issueKey: String, projectKey: String): String = {

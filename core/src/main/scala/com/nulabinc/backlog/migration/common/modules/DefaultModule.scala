@@ -15,7 +15,8 @@ import monix.execution.Scheduler
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
 

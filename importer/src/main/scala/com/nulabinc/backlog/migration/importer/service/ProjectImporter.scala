@@ -23,7 +23,8 @@ import org.fusesource.jansi.Ansi.ansi
 import scala.util.Try
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 private[importer] class ProjectImporter @Inject() (
     attachmentService: AttachmentService,

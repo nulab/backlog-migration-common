@@ -8,7 +8,8 @@ import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging}
 import com.nulabinc.backlog4j.Space
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 private[common] class SpaceWrites @Inject() () extends Writes[Space, BacklogSpace] with Logging {
 

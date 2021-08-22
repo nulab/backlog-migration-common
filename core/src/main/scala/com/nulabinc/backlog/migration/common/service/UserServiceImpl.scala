@@ -10,7 +10,8 @@ import com.nulabinc.backlog.migration.common.domain.BacklogUser
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class UserServiceImpl @Inject() (implicit
     val userWrites: UserWrites,

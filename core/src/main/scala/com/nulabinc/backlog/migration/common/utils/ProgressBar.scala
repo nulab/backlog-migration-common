@@ -9,7 +9,8 @@ import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.ansi
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 object ProgressBar extends Logging {
 

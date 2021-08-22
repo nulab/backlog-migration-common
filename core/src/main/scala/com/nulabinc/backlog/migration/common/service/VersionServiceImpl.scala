@@ -13,7 +13,8 @@ import com.nulabinc.backlog4j.api.option.{AddVersionParams, UpdateVersionParams}
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class VersionServiceImpl @Inject() (implicit
     val versionWrites: VersionWrites,

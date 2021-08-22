@@ -9,7 +9,8 @@ import org.fusesource.jansi.Ansi.Color._
 import org.fusesource.jansi.Ansi.ansi
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 private[importer] class IssueProgressBar() extends Logging {
 
@@ -63,7 +64,7 @@ private[importer] class IssueProgressBar() extends Logging {
   }
 
   def progress(indexOfDate: Int, totalOfDate: Int) = {
-    newLine = (indexOfDate == 1)
+    newLine = indexOfDate == 1
     clear()
     val message =
       s"""${current(indexOfDate, totalOfDate)}

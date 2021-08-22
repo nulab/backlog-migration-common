@@ -5,7 +5,8 @@ import com.nulabinc.backlog4j.Project.IssueTypeColor
 import com.nulabinc.backlog4j.User.RoleType
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 object BacklogConstantValue {
 

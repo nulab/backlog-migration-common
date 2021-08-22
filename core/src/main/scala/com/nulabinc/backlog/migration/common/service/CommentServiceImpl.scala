@@ -22,7 +22,8 @@ import monix.execution.Scheduler
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class CommentServiceImpl @Inject() (
     implicit val issueWrites: IssueWrites,

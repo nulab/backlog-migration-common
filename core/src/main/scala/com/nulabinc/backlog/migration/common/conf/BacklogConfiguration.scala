@@ -6,7 +6,8 @@ import com.nulabinc.backlog.migration.common.client.IAAH
 import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 trait BacklogConfiguration {
 

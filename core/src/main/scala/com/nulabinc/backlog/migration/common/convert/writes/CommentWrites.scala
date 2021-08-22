@@ -10,7 +10,8 @@ import com.nulabinc.backlog4j.IssueComment
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 private[common] class CommentWrites @Inject() (
     implicit val changeLogWrites: ChangeLogWrites,
