@@ -5,7 +5,8 @@ import java.io.InputStream
 import com.nulabinc.backlog.migration.common.domain.{BacklogAttachment, BacklogWiki}
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 trait WikiService {
 

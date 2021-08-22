@@ -7,7 +7,8 @@ import better.files.{File => BetterFile}
 import com.nulabinc.backlog.migration.common.utils.{DateUtil, FileUtil}
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class BacklogPaths(
     projectKey: String,

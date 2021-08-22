@@ -1,6 +1,6 @@
 lazy val commonSettings = Seq(
   organization := "com.nulabinc",
-  version := "0.4.0",
+  version      := "0.4.0",
   scalaVersion := "2.13.6",
   scalacOptions ++= List(
     "-feature",
@@ -13,9 +13,9 @@ lazy val commonSettings = Seq(
   ),
   libraryDependencies ++= {
     val catsVersion     = "2.1.1"
-    val monixVersion    = "3.2.2"
+    val monixVersion    = "3.4.0"
     val doobieVersion   = "0.13.4"
-    val akkaVersion     = "2.6.10"
+    val akkaVersion     = "2.6.16"
     val akkaHttpVersion = "10.2.6"
     Seq(
       "org.typelevel"        %% "cats-core"        % catsVersion,
@@ -40,7 +40,7 @@ lazy val commonSettings = Seq(
       "com.google.inject"     % "guice"            % "4.2.3",
       "io.spray"             %% "spray-json"       % "1.3.6",
       "net.codingwell"       %% "scala-guice"      % "4.2.11",
-      "io.lemonlabs"         %% "scala-uri"        % "2.3.1",
+      "io.lemonlabs"         %% "scala-uri"        % "3.5.0",
       "com.github.pathikrit" %% "better-files"     % "3.9.1",
       "com.chuusai"          %% "shapeless"        % "2.3.7",
       "org.apache.commons"    % "commons-csv"      % "1.9.0",

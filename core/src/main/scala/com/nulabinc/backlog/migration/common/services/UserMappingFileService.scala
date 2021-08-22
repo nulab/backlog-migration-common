@@ -105,7 +105,7 @@ object UserMappingFileService {
       decoder: UserMappingDecoder[A]
   ): F[Either[MappingFileError, Seq[ValidatedUserMapping[A]]]] = {
     val result = for {
-      _           <- StorageDSL[F].exists(path).orError(MappingFileNotFound("users", path)).handleError
+      _ <- StorageDSL[F].exists(path).orError(MappingFileNotFound("users", path)).handleError
       unvalidated <- getMappings(path).handleError
       validated   <- validateMappings(unvalidated, dstItems).lift.handleError
     } yield validated

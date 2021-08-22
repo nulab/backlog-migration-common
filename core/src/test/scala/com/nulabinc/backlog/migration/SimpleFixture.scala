@@ -8,7 +8,8 @@ import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
 import com.nulabinc.backlog4j.internal.json.customFields.DateCustomFieldSetting.InitialValueType
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 trait SimpleFixture {
 
@@ -67,25 +68,25 @@ trait SimpleFixture {
   val issueTypeName                  = "Task"
   val issueTypeId                    = 30
   val statusId                       = Issue.StatusType.Open.getIntValue
-  val status                         = BacklogDefaultStatus(Id.backlogStatusId(1), BacklogStatusName("Open"), 1000)
-  val statusId1                      = Issue.StatusType.InProgress.getIntValue
-  val status1                        = BacklogDefaultStatus(Id.backlogStatusId(2), BacklogStatusName("In progress"), 2000)
-  val categoryName1                  = "Development"
-  val categoryName2                  = "Test"
-  val categoryId1                    = 31
-  val categoryId2                    = 32
-  val versionName1                   = "0.0.1"
-  val versionName2                   = "0.0.2"
-  val versionName3                   = "0.0.3"
-  val versionName4                   = "0.0.4"
-  val versionId1                     = 33
-  val versionId2                     = 34
-  val versionId3                     = 35
-  val versionId4                     = 36
-  val priorityName                   = PriorityType.Normal.toString
-  val priorityId                     = PriorityType.Normal.getIntValue
-  val resolutionId                   = ResolutionType.Fixed.getIntValue
-  val resolutionName                 = ResolutionType.Fixed.name()
+  val status    = BacklogDefaultStatus(Id.backlogStatusId(1), BacklogStatusName("Open"), 1000)
+  val statusId1 = Issue.StatusType.InProgress.getIntValue
+  val status1 = BacklogDefaultStatus(Id.backlogStatusId(2), BacklogStatusName("In progress"), 2000)
+  val categoryName1  = "Development"
+  val categoryName2  = "Test"
+  val categoryId1    = 31
+  val categoryId2    = 32
+  val versionName1   = "0.0.1"
+  val versionName2   = "0.0.2"
+  val versionName3   = "0.0.3"
+  val versionName4   = "0.0.4"
+  val versionId1     = 33
+  val versionId2     = 34
+  val versionId3     = 35
+  val versionId4     = 36
+  val priorityName   = PriorityType.Normal.toString
+  val priorityId     = PriorityType.Normal.getIntValue
+  val resolutionId   = ResolutionType.Fixed.getIntValue
+  val resolutionName = ResolutionType.Fixed.name()
 
   val issueCreated   = "2015-05-01T16:01:51+09:00"
   val issueUpdated   = "2015-05-01T16:01:51+09:00"

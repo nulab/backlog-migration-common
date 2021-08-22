@@ -22,7 +22,8 @@ import com.nulabinc.backlog4j.internal.json.customFields._
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class CustomFieldSettingServiceImpl @Inject() (implicit
     val customFieldSettingWrites: CustomFieldSettingWrites,
