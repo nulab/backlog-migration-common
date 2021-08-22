@@ -3,7 +3,8 @@ package com.nulabinc.backlog.migration.common.service
 import com.nulabinc.backlog.migration.common.domain.BacklogIssueCategory
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 trait IssueCategoryService {
 

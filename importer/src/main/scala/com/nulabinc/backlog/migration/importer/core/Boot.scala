@@ -11,7 +11,8 @@ import monix.eval.Task
 import monix.execution.Scheduler
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 object Boot extends Logging {
 

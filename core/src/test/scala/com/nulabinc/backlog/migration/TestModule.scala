@@ -17,7 +17,8 @@ import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
 import com.nulabinc.backlog4j.api.option.{GetIssuesCountParams, GetIssuesParams}
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class TestModule extends AbstractModule {
 

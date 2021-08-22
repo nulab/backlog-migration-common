@@ -3,7 +3,8 @@ package com.nulabinc.backlog.migration.common.utils
 import java.text.Normalizer
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 object FileUtil {
 

@@ -8,7 +8,8 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.IssueType
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class IssueTypeWrites @Inject() () extends Writes[IssueType, BacklogIssueType] with Logging {
 

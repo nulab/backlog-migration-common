@@ -8,7 +8,8 @@ import com.nulabinc.backlog.migration.common.utils.{FileUtil, Logging}
 import com.nulabinc.backlog4j.Attachment
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 private[common] class AttachmentWrites @Inject() ()
     extends Writes[Attachment, BacklogAttachment]

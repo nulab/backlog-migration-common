@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
+import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -22,7 +23,8 @@ import io.lemonlabs.uri._
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class IssueServiceImpl @Inject() (implicit
     issueWrites: IssueWrites,
@@ -30,8 +32,10 @@ class IssueServiceImpl @Inject() (implicit
 ) extends IssueService
     with Logging {
 
-  override def issueOfId(id: Long): BacklogIssue =
+  override def issueOfId(id: Long): BacklogIssue = {
+    sleep(200)
     Convert.toBacklog(backlog.getIssue(id))
+  }
 
   override def optIssueOfId(id: Long): Option[Issue] =
     try {

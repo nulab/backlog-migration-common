@@ -11,7 +11,8 @@ import com.nulabinc.backlog4j.internal.json.customFields._
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 private[common] class CustomFieldWrites @Inject() ()
     extends Writes[CustomField, Option[BacklogCustomField]]

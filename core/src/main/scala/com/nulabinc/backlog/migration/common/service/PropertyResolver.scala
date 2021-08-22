@@ -4,7 +4,8 @@ import com.nulabinc.backlog.migration.common.domain.{BacklogCustomFieldSetting, 
 
 /**
  * 
- * @author uchida
+ * @author
+ *   uchida
  */
 trait PropertyResolver {
 

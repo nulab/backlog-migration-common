@@ -36,9 +36,9 @@ object StatusMappingFileService {
   import com.nulabinc.backlog.migration.common.shared.syntax._
 
   /**
-   *    Create mapping files.
-   *      - statuses.csv       Link the source and destination states. User must edit to link it.
-   *      - statuses_list.csv  List of items that can be specified in statuses.csv
+   * Create mapping files.
+   *   - statuses.csv Link the source and destination states. User must edit to link it.
+   *   - statuses_list.csv List of items that can be specified in statuses.csv
    */
   def init[A, F[_]: Monad: StorageDSL: ConsoleDSL](
       mappingFilePath: Path,
@@ -108,7 +108,7 @@ object StatusMappingFileService {
       decoder: StatusMappingDecoder[A]
   ): F[Either[MappingFileError, Seq[ValidatedStatusMapping[A]]]] = {
     val result = for {
-      _           <- StorageDSL[F].exists(path).orError(MappingFileNotFound("status", path)).handleError
+      _ <- StorageDSL[F].exists(path).orError(MappingFileNotFound("status", path)).handleError
       unvalidated <- getMappings(path).handleError
       validated   <- validateMappings(unvalidated, dstItems).lift.handleError
     } yield validated

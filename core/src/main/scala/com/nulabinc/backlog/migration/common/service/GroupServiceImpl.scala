@@ -13,7 +13,8 @@ import com.nulabinc.backlog4j.api.option.CreateGroupParams
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class GroupServiceImpl @Inject() (implicit
     val groupWrites: GroupWrites,

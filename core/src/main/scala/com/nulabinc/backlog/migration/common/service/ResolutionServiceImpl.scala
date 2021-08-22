@@ -8,7 +8,8 @@ import com.nulabinc.backlog4j.Resolution
 import scala.jdk.CollectionConverters._
 
 /**
- * @author uchida
+ * @author
+ *   uchida
  */
 class ResolutionServiceImpl @Inject() (backlog: BacklogAPIClient) extends ResolutionService {
 
