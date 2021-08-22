@@ -39,7 +39,7 @@ lazy val commonSettings = Seq(
       "com.typesafe"          % "config"           % "1.4.1",
       "com.google.inject"     % "guice"            % "4.2.3",
       "io.spray"             %% "spray-json"       % "1.3.6",
-      "net.codingwell"       %% "scala-guice"      % "4.2.11",
+      "net.codingwell"       %% "scala-guice"      % "5.0.1",
       "io.lemonlabs"         %% "scala-uri"        % "2.3.1",
       "com.github.pathikrit" %% "better-files"     % "3.9.1",
       "com.chuusai"          %% "shapeless"        % "2.3.7",
