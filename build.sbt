@@ -20,7 +20,7 @@ lazy val commonSettings = Seq(
     Seq(
       "org.typelevel"        %% "cats-core"        % catsVersion,
       "org.typelevel"        %% "cats-kernel"      % catsVersion,
-      "org.typelevel"        %% "cats-macros"      % catsVersion,
+      "org.typelevel"        %% "cats-macros"      % "2.1.1",
       "io.monix"             %% "monix"            % monixVersion,
       "io.monix"             %% "monix-eval"       % monixVersion,
       "io.monix"             %% "monix-reactive"   % monixVersion,
