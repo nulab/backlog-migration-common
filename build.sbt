@@ -30,7 +30,7 @@ lazy val commonSettings = Seq(
       "com.typesafe.akka"    %% "akka-stream"      % akkaVersion,
       "com.typesafe.akka"    %% "akka-slf4j"       % akkaVersion,
       "com.typesafe.akka"    %% "akka-http"        % akkaHttpVersion,
-      "org.xerial"            % "sqlite-jdbc"      % "3.36.0.1",
+      "org.xerial"            % "sqlite-jdbc"      % "3.36.0.3",
       "com.nulab-inc"         % "backlog4j"        % "2.4.2",
       "com.github.mpilquist" %% "simulacrum"       % "0.19.0",
       "org.fusesource.jansi"  % "jansi"            % "2.3.4",
