@@ -44,7 +44,7 @@ lazy val commonSettings = Seq(
       "com.github.pathikrit" %% "better-files"     % "3.9.1",
       "com.chuusai"          %% "shapeless"        % "2.3.7",
       "org.apache.commons"    % "commons-csv"      % "1.9.0",
-      "org.scalatest"        %% "scalatest"        % "3.2.9"       % Test,
+      "org.scalatest"        %% "scalatest"        % "3.2.10"       % Test,
       "org.tpolecat"         %% "doobie-scalatest" % doobieVersion % "test"
     )
   },
