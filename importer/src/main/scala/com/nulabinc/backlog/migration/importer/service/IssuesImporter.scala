@@ -48,11 +48,15 @@ private[importer] class IssuesImporter(
       _ <- ConsoleDSL[Task].println("""
       :""".stripMargin)
     } yield {
+      logger.warn("BLG_INTG-157 pass1")
       console.totalSize = totalSize()
+      logger.warn("BLG_INTG-157 pass2")
 
       implicit val context =
         IssueContext(propertyResolver, fitIssueKey, retryCount)
+      logger.warn("BLG_INTG-157 pass3")
       val paths = IOUtil.directoryPaths(backlogPaths.issueDirectoryPath).sortWith(_.name < _.name)
+      logger.warn(s"BLG_INTG-157 pass4:${paths.size}")
       paths.foreach { path =>
         loadDateDirectory(project, path)
       }
@@ -66,11 +70,13 @@ private[importer] class IssuesImporter(
       storeDSL: StoreDSL[Task],
       consoleDSL: ConsoleDSL[Task]
   ): Unit = {
+    logger.warn("BLG_INTG-157 pass5")
     val jsonDirs =
       path.list.filter(_.isDirectory).toSeq.sortWith(compareIssueJsons)
     console.date = DateUtil.yyyymmddToSlashFormat(path.name)
     console.failed = 0
 
+    logger.warn("BLG_INTG-157 pass6")
     jsonDirs.zipWithIndex.foreach {
       case (jsonDir, index) =>
         loadJson(project, jsonDir, index, jsonDirs.size)
@@ -83,15 +89,19 @@ private[importer] class IssuesImporter(
       storeDSL: StoreDSL[Task],
       consoleDSL: ConsoleDSL[Task]
   ): Unit = {
+    logger.warn("BLG_INTG-157 pass7")
     BacklogUnmarshaller.issue(backlogPaths.issueJson(path)) match {
       case Some(issue: BacklogIssue) =>
         createTemporaryIssues(project, issue)
         retryBacklogAPIException(ctx.retryCount, retryInterval) {
+          logger.warn("BLG_INTG-157 pass8")
           createIssue(project, issue, path, index, size)
         }
       case Some(comment: BacklogComment) =>
+        logger.warn("BLG_INTG-157 pass9")
         createComment(comment, path, index, size)
       case _ =>
+        logger.warn("BLG_INTG-157 pass10")
         None
     }
     console.count = console.count + 1
