@@ -92,19 +92,21 @@ private[importer] class IssuesImporter(
     logger.warn("BLG_INTG-157 pass7")
     BacklogUnmarshaller.issue(backlogPaths.issueJson(path)) match {
       case Some(issue: BacklogIssue) =>
+        logger.warn("BLG_INTG-157 pass8")
         createTemporaryIssues(project, issue)
+        logger.warn("BLG_INTG-157 pass9")
         retryBacklogAPIException(ctx.retryCount, retryInterval) {
-          logger.warn("BLG_INTG-157 pass8")
+          logger.warn("BLG_INTG-157 pass10")
           createIssue(project, issue, path, index, size)
         }
       case Some(comment: BacklogComment) =>
-        logger.warn("BLG_INTG-157 pass9")
+        logger.warn("BLG_INTG-157 pass11")
         createComment(comment, path, index, size)
       case _ =>
-        logger.warn("BLG_INTG-157 pass10")
+        logger.warn("BLG_INTG-157 pass12")
         None
     }
-    logger.warn("BLG_INTG-157 pass11")
+    logger.warn("BLG_INTG-157 pass13")
     console.count = console.count + 1
   }
 
