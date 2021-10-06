@@ -2,15 +2,16 @@ package com.nulabinc.backlog.migration.common.convert
 
 import better.files.{File => Path}
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
+import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller.logger
 import com.nulabinc.backlog.migration.common.domain._
-import com.nulabinc.backlog.migration.common.utils.IOUtil
+import com.nulabinc.backlog.migration.common.utils.{IOUtil, Logging}
 import spray.json.JsonParser
 
 /**
  * @author
  *   uchida
  */
-object BacklogUnmarshaller {
+object BacklogUnmarshaller extends Logging {
 
   import com.nulabinc.backlog.migration.common.formatters.BacklogJsonProtocol._
 
@@ -52,7 +53,18 @@ object BacklogUnmarshaller {
       )
 
   def issue(path: Path): Option[BacklogEvent] = {
-    IOUtil.input(path).map(JsonParser(_).convertTo[BacklogEvent])
+    try {
+      logger.warn(s"BLG_INTG-157 path:${path.toString()} exists:${path.exists}")
+      val json = IOUtil.input(path)
+      logger.warn(s"BLG_INTG-157 content:${json}")
+      val obj = json.map(JsonParser(_).convertTo[BacklogEvent])
+      logger.warn(s"BLG_INTG-157 parse ok")
+      obj
+    } catch {
+      case e: Throwable =>
+        logger.warn("BLG_INTG-157 load error", e)
+        None
+    }
   }
 
   def issueTypes(backlogPaths: BacklogPaths): Seq[BacklogIssueType] =
