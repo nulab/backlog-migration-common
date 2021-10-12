@@ -72,32 +72,21 @@ object RetryUtil extends Logging {
     @annotation.tailrec
     def retry0(errors: List[Throwable], f: => T): T = {
       allCatch.either(f) match {
-        case Right(r) =>
-          logger.warn("BLG_INTG-157 pass 100")
-          r
+        case Right(r) => r
         case Left(e) =>
-          logger.warn("BLG_INTG-157 pass 101")
-          logger.warn("BLG_INTG-157 error", e)
           if (shouldCatch(e)) {
-            logger.warn("BLG_INTG-157 pass 102")
             if (retryLimit > 0) {
-              logger.warn("BLG_INTG-157 pass 103")
               val message =
                 s"(${errors.size + 1} / $retryLimit) Retrying... ${e.getMessage}"
               ConsoleDSL[Task].warning(message).runSyncUnsafe()
             }
             if (errors.size < retryLimit - 1) {
-              logger.warn("BLG_INTG-157 pass 104")
               Thread.sleep(retryInterval)
               retry0(e :: errors, f)
             } else {
-              logger.warn("BLG_INTG-157 pass 105")
               throw RetryException(e :: errors)
             }
-          } else {
-            logger.warn("BLG_INTG-157 pass 106")
-            throw e
-          }
+          } else throw e
       }
     }
     retry0(Nil, f)
