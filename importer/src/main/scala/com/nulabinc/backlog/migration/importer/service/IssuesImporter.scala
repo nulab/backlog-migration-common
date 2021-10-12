@@ -104,7 +104,6 @@ private[importer] class IssuesImporter(
         logger.warn("BLG_INTG-157 pass10")
         None
     }
-    logger.warn("BLG_INTG-157 pass11")
     console.count = console.count + 1
   }
 
