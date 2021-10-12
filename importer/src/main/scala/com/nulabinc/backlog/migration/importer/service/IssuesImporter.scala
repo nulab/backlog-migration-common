@@ -178,15 +178,11 @@ private[importer] class IssuesImporter(
       storeDSL: StoreDSL[Task],
       consoleDSL: ConsoleDSL[Task]
   ): Unit = {
-    logger.warn("BLG_INTG-157 pass 200")
     val issueIndex = issue.findIssueIndex
-    logger.warn("BLG_INTG-157 pass 201")
     val prev       = storeDSL.getLatestImportedIssueKeys().runSyncUnsafe().srcIssueIndex
-    logger.warn(s"BLG_INTG-157 pass 202: ctx.fitIssueKey:${ctx.fitIssueKey} prev:${prev} issueIndex:${issueIndex}")
 
     if (ctx.fitIssueKey && (prev + 1) != issueIndex) {
       val seq = (prev + 1) until issueIndex
-      logger.warn(s"BLG_INTG-157 pass 203: seq:${seq}")
 
       seq.foreach { idx =>
         createTemporaryIssue(project, issue, idx)
@@ -204,13 +200,10 @@ private[importer] class IssuesImporter(
       storeDSL: StoreDSL[Task],
       consoleDSL: ConsoleDSL[Task]
   ) = {
-    logger.warn("BLG_INTG-157 pass 204")
     val temporaryIssue = retryBacklogAPIException(ctx.retryCount, retryInterval) {
-      logger.warn("BLG_INTG-157 pass 205")
       issueService.createDummy(project.id, ctx.propertyResolver)
     }
 
-    logger.warn("BLG_INTG-157 pass 206")
     storeDSL
       .storeImportedIssueKeys(
         ImportedIssueKeys(
@@ -222,9 +215,7 @@ private[importer] class IssuesImporter(
       )
       .runSyncUnsafe()
 
-    logger.warn("BLG_INTG-157 pass 207")
     retryBacklogAPIException(ctx.retryCount, retryInterval) {
-      logger.warn("BLG_INTG-157 pass 208")
       issueService.delete(temporaryIssue.getId)
     }
     logger.warn(
