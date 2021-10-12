@@ -1,8 +1,9 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.{File, FileInputStream}
-import javax.inject.Inject
+import java.lang.Thread.sleep
 
+import javax.inject.Inject
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.AttachmentWrites
@@ -29,6 +30,7 @@ class AttachmentServiceImpl @Inject() (implicit
     val attachmentData =
       new AttachmentDataImpl(file.getName, new FileInputStream(file))
     try {
+      sleep(400)
       Right(Convert.toBacklog(backlog.postAttachment(attachmentData)))
     } catch {
       case e: Throwable =>
