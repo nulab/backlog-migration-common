@@ -93,7 +93,7 @@ private[importer] class IssuesImporter(
     BacklogUnmarshaller.issue(backlogPaths.issueJson(path)) match {
       case Some(issue: BacklogIssue) =>
         logger.warn("BLG_INTG-157 pass8")
-//        createTemporaryIssues(project, issue)
+        createTemporaryIssues(project, issue)
         logger.warn("BLG_INTG-157 pass9")
         retryBacklogAPIException(ctx.retryCount, retryInterval) {
           logger.warn("BLG_INTG-157 pass10")
