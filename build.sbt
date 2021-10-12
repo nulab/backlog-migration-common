@@ -14,7 +14,7 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= {
     val catsVersion     = "2.1.1"
     val monixVersion    = "3.2.2"
-    val doobieVersion   = "0.9.4"
+    val doobieVersion   = "0.9.0"
     val akkaVersion     = "2.6.16"
     val akkaHttpVersion = "10.2.6"
     Seq(
@@ -44,7 +44,7 @@ lazy val commonSettings = Seq(
       "com.github.pathikrit" %% "better-files"     % "3.9.1",
       "com.chuusai"          %% "shapeless"        % "2.3.7",
       "org.apache.commons"    % "commons-csv"      % "1.9.0",
-      "org.scalatest"        %% "scalatest"        % "3.2.9"       % Test,
+      "org.scalatest"        %% "scalatest"        % "3.1.0"       % Test,
       "org.tpolecat"         %% "doobie-scalatest" % doobieVersion % "test"
     )
   },
