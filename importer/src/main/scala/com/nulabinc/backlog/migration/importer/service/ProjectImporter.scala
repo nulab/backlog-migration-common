@@ -99,10 +99,10 @@ private[importer] class ProjectImporter @Inject() (
     )
     val propertyResolver = buildPropertyResolver()
 
-    //Wiki
+    // Wiki
     wikisImporter.execute(project.id, propertyResolver)
 
-    //Issue
+    // Issue
     issuesImporter.execute(project, propertyResolver, fitIssueKey, retryCount)
   }
 

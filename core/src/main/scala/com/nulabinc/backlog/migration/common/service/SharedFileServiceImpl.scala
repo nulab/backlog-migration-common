@@ -68,8 +68,8 @@ class SharedFileServiceImpl @Inject() (
         .map(_.getId)
     } catch {
       case _: Throwable =>
-        //TODO
-        //logger.error(e.getMessage, e)
+        // TODO
+        // logger.error(e.getMessage, e)
         None
     }
   }

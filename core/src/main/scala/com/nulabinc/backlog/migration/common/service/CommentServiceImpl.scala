@@ -104,32 +104,32 @@ class CommentServiceImpl @Inject() (
     val optCurrentIssue = issueService.optIssueOfId(issueId)
     val params          = new ImportUpdateIssueParams(issueId)
 
-    //comment
+    // comment
     for { content <- backlogComment.optContent } yield {
       params.comment(content)
     }
 
-    //notificationUserIds
+    // notificationUserIds
     val notifiedUserIds = backlogComment.notifications
       .flatMap(_.optUser)
       .flatMap(_.optUserId)
       .flatMap(propertyResolver.optResolvedUserId)
     params.notifiedUserIds(notifiedUserIds.asJava)
 
-    //created updated
+    // created updated
     for { created <- backlogComment.optCreated } yield {
       params.created(created)
       params.updated(created)
     }
 
-    //created updated user id
+    // created updated user id
     for {
       createdUser <- backlogComment.optCreatedUser
       userId      <- createdUser.optUserId
       id          <- propertyResolver.optResolvedUserId(userId)
     } yield params.updatedUserId(id)
 
-    //changelog
+    // changelog
     backlogComment.changeLogs.foreach { changeLog =>
       setChangeLog(
         changeLog,
