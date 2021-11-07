@@ -66,7 +66,7 @@ lazy val common = (project in file("."))
   .dependsOn(core, importer)
   .aggregate(core, importer)
 
-ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.5.0"
+ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
 addCommandAlias(
   "fixAll",
