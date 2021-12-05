@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
     "-Ywarn-unused"
   ),
   libraryDependencies ++= {
-    val catsVersion     = "2.1.1"
+    val catsVersion     = "2.7.0"
     val monixVersion    = "3.2.2"
     val doobieVersion   = "0.9.0"
     val akkaVersion     = "2.6.16"
