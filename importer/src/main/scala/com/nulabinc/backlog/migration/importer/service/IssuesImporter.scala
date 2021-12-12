@@ -104,20 +104,24 @@ private[importer] class IssuesImporter(
       index: Int,
       size: Int
   )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
+    logger.warn("BLG_INTG-157 pass 300")
     if (issueService.exists(project.id, issue)) {
+      logger.warn("BLG_INTG-157 pass 301")
       ctx.excludeIssueIds += issue.id
       for {
         remoteIssue <- issueService.optIssueOfParams(project.id, issue)
       } yield {
-        storeDSL.storeImportedIssueKeys(
-          ImportedIssueKeys(
-            issue.id,
-            issue.findIssueIndex,
-            remoteIssue.id,
-            remoteIssue.findIssueIndex
-          )
-        )
+        logger.warn("BLG_INTG-157 pass 302")
+//        storeDSL.storeImportedIssueKeys(
+//          ImportedIssueKeys(
+//            issue.id,
+//            issue.findIssueIndex,
+//            remoteIssue.id,
+//            remoteIssue.findIssueIndex
+//          )
+//        )
       }
+      logger.warn("BLG_INTG-157 pass 303")
       console.warning(
         index + 1,
         size,
@@ -127,6 +131,7 @@ private[importer] class IssuesImporter(
         )
       )
     } else {
+      logger.warn("BLG_INTG-157 pass 304")
       issueService.create(
         issueService.setCreateParam(
           project.id,
@@ -137,21 +142,24 @@ private[importer] class IssuesImporter(
         )
       )(issue) match {
         case Right(remoteIssue) =>
+          logger.warn("BLG_INTG-157 pass 305")
           sharedFileService.linkIssueSharedFile(remoteIssue.id, issue)
           ctx.addIssueId(issue, remoteIssue)
-          storeDSL
-            .storeImportedIssueKeys(
-              ImportedIssueKeys(
-                srcIssueId = issue.id,
-                srcIssueIndex = issue.findIssueIndex,
-                dstIssueId = remoteIssue.id,
-                dstIssueIndex = remoteIssue.findIssueIndex
-              )
-            )
-            .runSyncUnsafe()
+//          storeDSL
+//            .storeImportedIssueKeys(
+//              ImportedIssueKeys(
+//                srcIssueId = issue.id,
+//                srcIssueIndex = issue.findIssueIndex,
+//                dstIssueId = remoteIssue.id,
+//                dstIssueIndex = remoteIssue.findIssueIndex
+//              )
+//            )
+//            .runSyncUnsafe()
         case _ =>
+          logger.warn("BLG_INTG-157 pass 306")
           console.failed += 1
       }
+      logger.warn("BLG_INTG-157 pass 307")
       console.progress(index + 1, size)
     }
   }
