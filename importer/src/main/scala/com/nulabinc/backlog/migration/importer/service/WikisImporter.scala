@@ -101,9 +101,9 @@ private[importer] class WikisImporter @Inject() (
       wikiDir: Path,
       wiki: BacklogWiki
   )(implicit consoleDSL: ConsoleDSL[Task]): Task[Seq[BacklogAttachment]] = {
-    wiki.attachments
-      .flatMap(attachment => toPath(attachment, wikiDir))
-      .foldLeft(Task(Seq.empty[BacklogAttachment])) { (acc, path) =>
+    Task
+      .sequence(wiki.attachments.map(attachment => toPath(attachment, wikiDir)))
+      .flatMap(_.flatten.foldLeft(Task(Seq.empty[BacklogAttachment])) { (acc, path) =>
         attachmentService.postAttachment(path.pathAsString) match {
           case Right(attachment) =>
             acc.map(attachments => attachments :+ attachment)
@@ -119,15 +119,25 @@ private[importer] class WikisImporter @Inject() (
                 )
             task.flatMap(_ => acc)
         }
-      }
+      })
   }
 
   private[this] def toPath(
       attachment: BacklogAttachment,
       wikiDir: Path
-  ): Option[Path] = {
-    val files = backlogPaths.wikiAttachmentPath(wikiDir).list
-    files.find(file => file.name == attachment.name)
+  )(implicit consoleDSL: ConsoleDSL[Task]): Task[Option[Path]] = {
+    val dirPath = backlogPaths.wikiAttachmentPath(wikiDir)
+    val files   = dirPath.list
+    files.find(file => file.name == attachment.name) match {
+      case Some(f) => Task(Some(f))
+      case None =>
+        logger.warn(s"${attachment.name} does not exist")
+        ConsoleDSL[Task]
+          .errorln(
+            Messages("import.error.issue.attachment", attachment.name, dirPath.pathAsString)
+          )
+          .map(_ => None)
+    }
   }
 
   private[this] def unmarshal(path: Path): Option[BacklogWiki] =
