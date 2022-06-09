@@ -1,7 +1,6 @@
 package com.nulabinc.backlog.migration.importer.service
 
 import better.files.{File => Path}
-import cats.syntax.all._
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain.imports.ImportedIssueKeys
@@ -266,29 +265,33 @@ private[importer] class IssuesImporter(
     }
 
     def deleteAttachment(remoteIssueId: Long) =
-      comment.changeLogs.filter { _.mustDeleteAttachment }.map { changeLog =>
-        val issueAttachments =
-          attachmentService.allAttachmentsOfIssue(remoteIssueId) match {
-            case Right(attachments) => attachments
-            case Left(_)            => Seq.empty[BacklogAttachment]
-          }
-        for {
-          attachmentInfo <- changeLog.optAttachmentInfo
-          attachment     <- issueAttachments.sortBy(_.optId).find(_.name == attachmentInfo.name)
-          attachmentId   <- attachment.optId
-          createdUser    <- comment.optCreatedUser
-          createdUserId  <- createdUser.optUserId
-          solvedCreatedUserId <- ctx.propertyResolver.optResolvedUserId(createdUserId)
-          created             <- comment.optCreated
-        } yield {
-          issueService.deleteAttachment(
-            remoteIssueId,
-            attachmentId,
-            solvedCreatedUserId,
-            created
-          )
+      comment.changeLogs
+        .filter {
+          _.mustDeleteAttachment
         }
-      }
+        .map { changeLog =>
+          val issueAttachments =
+            attachmentService.allAttachmentsOfIssue(remoteIssueId) match {
+              case Right(attachments) => attachments
+              case Left(_)            => Seq.empty[BacklogAttachment]
+            }
+          for {
+            attachmentInfo <- changeLog.optAttachmentInfo
+            attachment     <- issueAttachments.sortBy(_.optId).find(_.name == attachmentInfo.name)
+            attachmentId   <- attachment.optId
+            createdUser    <- comment.optCreatedUser
+            createdUserId  <- createdUser.optUserId
+            solvedCreatedUserId <- ctx.propertyResolver.optResolvedUserId(createdUserId)
+            created             <- comment.optCreated
+          } yield {
+            issueService.deleteAttachment(
+              remoteIssueId,
+              attachmentId,
+              solvedCreatedUserId,
+              created
+            )
+          }
+        }
 
     for {
       issueId       <- comment.optIssueId
@@ -307,7 +310,8 @@ private[importer] class IssuesImporter(
 
   private[this] val postAttachment = (path: Path, index: Int, size: Int) => { fileName: String =>
     {
-      val files = backlogPaths.issueAttachmentDirectoryPath(path).list
+      val dirPath = backlogPaths.issueAttachmentDirectoryPath(path)
+      val files   = dirPath.list
       files.find(file => file.name == fileName) match {
         case Some(filePath) =>
           attachmentService.postAttachment(filePath.pathAsString) match {
@@ -335,7 +339,19 @@ private[importer] class IssuesImporter(
                 )
               None
           }
-        case _ => None
+        case _ => {
+          logger.warn(s"${fileName} does not exist")
+          console.error(
+            index + 1,
+            size,
+            Messages(
+              "import.error.attachment.not_exists",
+              fileName,
+              dirPath.pathAsString
+            )
+          )
+          None
+        }
 
       }
     }
