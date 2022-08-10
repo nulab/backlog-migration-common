@@ -1,8 +1,5 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.lang.Thread.sleep
-import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.IssueTypeWrites
@@ -10,6 +7,7 @@ import com.nulabinc.backlog.migration.common.domain.{BacklogIssueType, BacklogPr
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.Project
 import com.nulabinc.backlog4j.api.option.AddIssueTypeParams
+import javax.inject.Inject
 
 import scala.jdk.CollectionConverters._
 
@@ -28,7 +26,6 @@ class IssueTypeServiceImpl @Inject() (implicit
     backlog.getIssueTypes(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
 
   override def add(issueType: BacklogIssueType): BacklogIssueType = {
-    sleep(500)
     val params = new AddIssueTypeParams(
       projectKey.value,
       issueType.name,

@@ -1,8 +1,5 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.lang.Thread.sleep
-import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.client.params._
 import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
@@ -16,6 +13,7 @@ import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.{PriorityType, ResolutionType}
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option.{QueryParams, UpdateIssueParams}
+import javax.inject.Inject
 import monix.eval.Task
 import monix.execution.Scheduler
 
@@ -44,7 +42,6 @@ class CommentServiceImpl @Inject() (
         offset: Long
     ): Seq[IssueComment] =
       if (offset < allCount) {
-        sleep(200)
         val queryParams = new QueryParams()
         for { minId <- optMinId } yield {
           queryParams.minId(minId)

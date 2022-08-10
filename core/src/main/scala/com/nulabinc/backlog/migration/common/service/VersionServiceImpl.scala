@@ -1,14 +1,12 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.lang.Thread.sleep
-import javax.inject.Inject
-
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.VersionWrites
 import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, BacklogVersion}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option.{AddVersionParams, UpdateVersionParams}
+import javax.inject.Inject
 
 import scala.jdk.CollectionConverters._
 
@@ -36,7 +34,6 @@ class VersionServiceImpl @Inject() (implicit
       params.releaseDueDate(releaseDueDate)
     }
     try {
-      sleep(500)
       Some(Convert.toBacklog(backlog.addVersion(params)))
     } catch {
       case e: Throwable =>

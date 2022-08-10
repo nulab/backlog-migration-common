@@ -1,7 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -32,10 +31,8 @@ class IssueServiceImpl @Inject() (implicit
 ) extends IssueService
     with Logging {
 
-  override def issueOfId(id: Long): BacklogIssue = {
-    sleep(200)
+  override def issueOfId(id: Long): BacklogIssue =
     Convert.toBacklog(backlog.getIssue(id))
-  }
 
   override def optIssueOfId(id: Long): Option[Issue] =
     try {
