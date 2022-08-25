@@ -56,8 +56,10 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
 
   private[this] def createBacklogAPIClient(iaah: IAAH): BacklogAPIClient = {
     val backlogPackageConfigure = new BacklogPackageConfigure(apiConfig.url)
-    val configure               = backlogPackageConfigure.apiKey(apiConfig.key)
-
+    val configure               = backlogPackageConfigure
+                                    .apiKey(apiConfig.key)
+                                    .connectionTimeout(300000)
+                                    .readTimeout(300000)
     new BacklogAPIClientImpl(configure, iaah)
   }
 
