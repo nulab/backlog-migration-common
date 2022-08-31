@@ -1,12 +1,13 @@
 package com.nulabinc.backlog.migration.common.service
 
+import javax.inject.Inject
+
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.CategoryWrites
 import com.nulabinc.backlog.migration.common.domain.{BacklogIssueCategory, BacklogProjectKey}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option.AddCategoryParams
-import javax.inject.Inject
 
 import scala.jdk.CollectionConverters._
 
