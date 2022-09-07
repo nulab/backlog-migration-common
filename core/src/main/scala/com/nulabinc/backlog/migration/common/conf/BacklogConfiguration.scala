@@ -29,6 +29,8 @@ trait BacklogConfiguration {
 
   val backlog4jVersion: String = internal.getString("application.backlog4jVersion")
 
+  val defaultRetryCount = internal.getInt("application.defaultRetryCount")
+
   val iaah: IAAH = IAAH(internal.getString("application.iaah"))
 
   val exportLimitAtOnce: Int = {

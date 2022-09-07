@@ -1,6 +1,6 @@
 lazy val commonSettings = Seq(
   organization := "com.nulabinc",
-  version      := "0.4.3-SNAPSHOT",
+  version      := "0.4.4-SNAPSHOT",
   scalaVersion := "2.13.6",
   scalacOptions ++= List(
     "-feature",
@@ -40,7 +40,7 @@ lazy val commonSettings = Seq(
       "com.google.inject"     % "guice"            % "5.0.1",
       "io.spray"             %% "spray-json"       % "1.3.6",
       "net.codingwell"       %% "scala-guice"      % "5.0.1",
-      "io.lemonlabs"         %% "scala-uri"        % "2.3.1",
+      "io.lemonlabs"         %% "scala-uri"        % "2.3.0",
       "com.github.pathikrit" %% "better-files"     % "3.9.1",
       "com.chuusai"          %% "shapeless"        % "2.3.7",
       "org.apache.commons"    % "commons-csv"      % "1.9.0",
