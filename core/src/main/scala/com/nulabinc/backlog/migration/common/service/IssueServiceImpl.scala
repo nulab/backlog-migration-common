@@ -93,9 +93,12 @@ class IssueServiceImpl @Inject() (implicit
     val params: GetIssuesParams = new GetIssuesParams(List(projectId).asJava)
     params.offset(offset.toLong)
     params.count(count)
-    params.sort(GetIssuesParams.SortKey.Created)
-    params.order(GetIssuesParams.Order.Asc)
-    addIssuesParams(params, filter)
+    if (filter.isDefined) {
+      addIssuesParams(params, filter)
+    } else {
+      params.sort(GetIssuesParams.SortKey.Created)
+      params.order(GetIssuesParams.Order.Asc)
+    }
     try {
       backlog.getIssues(params).asScala.toSeq
     } catch {
