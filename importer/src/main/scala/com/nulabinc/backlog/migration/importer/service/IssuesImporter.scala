@@ -136,7 +136,9 @@ private[importer] class IssuesImporter(
         )
       )(issue) match {
         case Right(remoteIssue) =>
-          sharedFileService.linkIssueSharedFile(remoteIssue.id, issue)
+          if (project.useFileSharing) {
+            sharedFileService.linkIssueSharedFile(remoteIssue.id, issue)
+          }
           ctx.addIssueId(issue, remoteIssue)
           storeDSL
             .storeImportedIssueKeys(
