@@ -1,7 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -32,10 +31,8 @@ class IssueServiceImpl @Inject() (implicit
 ) extends IssueService
     with Logging {
 
-  override def issueOfId(id: Long): BacklogIssue = {
-    sleep(200)
+  override def issueOfId(id: Long): BacklogIssue =
     Convert.toBacklog(backlog.getIssue(id))
-  }
 
   override def optIssueOfId(id: Long): Option[Issue] =
     try {
@@ -96,9 +93,12 @@ class IssueServiceImpl @Inject() (implicit
     val params: GetIssuesParams = new GetIssuesParams(List(projectId).asJava)
     params.offset(offset.toLong)
     params.count(count)
-    params.sort(GetIssuesParams.SortKey.Created)
-    params.order(GetIssuesParams.Order.Asc)
-    addIssuesParams(params, filter)
+    if (filter.isDefined) {
+      addIssuesParams(params, filter)
+    } else {
+      params.sort(GetIssuesParams.SortKey.Created)
+      params.order(GetIssuesParams.Order.Asc)
+    }
     try {
       backlog.getIssues(params).asScala.toSeq
     } catch {

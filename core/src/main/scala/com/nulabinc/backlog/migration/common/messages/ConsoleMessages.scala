@@ -40,6 +40,9 @@ object ConsoleMessages {
   def cliUnknownError(e: Throwable): String =
     s"${Messages("cli.error.unknown")}:${e.getMessage}"
 
+  def cliRateLimitWarn: String =
+    s"${Messages("cli.warn.rate_limit")}"
+
   def executed(key: String, value: String): String =
     Messages("message.executed", key, value)
 

@@ -1,6 +1,5 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -28,7 +27,6 @@ class IssueTypeServiceImpl @Inject() (implicit
     backlog.getIssueTypes(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
 
   override def add(issueType: BacklogIssueType): BacklogIssueType = {
-    sleep(500)
     val params = new AddIssueTypeParams(
       projectKey.value,
       issueType.name,
