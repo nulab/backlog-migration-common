@@ -13,10 +13,10 @@ object BacklogConstantValue {
   val USER_PASSWORD: String = "password"
   val USER_ROLE: Int        = RoleType.User.getIntValue
 
-  //Project Setting
+  // Project Setting
   val ISSUE_TYPE_COLOR: IssueTypeColor = IssueTypeColor.Color1
 
-  //Wiki Home Name
+  // Wiki Home Name
   val WIKI_HOME_NAME: String = "Home"
 
   object CustomField {

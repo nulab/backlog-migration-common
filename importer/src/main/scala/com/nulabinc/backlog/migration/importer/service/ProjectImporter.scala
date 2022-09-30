@@ -100,11 +100,11 @@ private[importer] class ProjectImporter @Inject() (
     val propertyResolver = buildPropertyResolver()
 
     if (project.useWiki) {
-      //Wiki
+      // Wiki
       wikisImporter.execute(project, propertyResolver)
     }
 
-    //Issue
+    // Issue
     issuesImporter.execute(project, propertyResolver, fitIssueKey, retryCount)
   }
 
