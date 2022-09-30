@@ -1,6 +1,5 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -55,10 +54,8 @@ class CustomFieldSettingServiceImpl @Inject() (implicit
 
   override def add(
       setAddParams: BacklogCustomFieldSetting => AddCustomFieldParams
-  )(backlogCustomFieldSetting: BacklogCustomFieldSetting) = {
-    sleep(500)
+  )(backlogCustomFieldSetting: BacklogCustomFieldSetting) =
     addCustomFieldSetting(setAddParams(backlogCustomFieldSetting))
-  }
 
   override def setAddParams(
       backlogCustomFieldSetting: BacklogCustomFieldSetting

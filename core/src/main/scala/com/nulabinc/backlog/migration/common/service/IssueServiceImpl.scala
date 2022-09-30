@@ -1,7 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -32,10 +31,8 @@ class IssueServiceImpl @Inject() (implicit
 ) extends IssueService
     with Logging {
 
-  override def issueOfId(id: Long): BacklogIssue = {
-    sleep(200)
+  override def issueOfId(id: Long): BacklogIssue =
     Convert.toBacklog(backlog.getIssue(id))
-  }
 
   override def optIssueOfId(id: Long): Option[Issue] =
     try {
@@ -96,9 +93,12 @@ class IssueServiceImpl @Inject() (implicit
     val params: GetIssuesParams = new GetIssuesParams(List(projectId).asJava)
     params.offset(offset.toLong)
     params.count(count)
-    params.sort(GetIssuesParams.SortKey.Created)
-    params.order(GetIssuesParams.Order.Asc)
-    addIssuesParams(params, filter)
+    if (filter.isDefined) {
+      addIssuesParams(params, filter)
+    } else {
+      params.sort(GetIssuesParams.SortKey.Created)
+      params.order(GetIssuesParams.Order.Asc)
+    }
     try {
       backlog.getIssues(params).asScala.toSeq
     } catch {
@@ -211,7 +211,7 @@ class IssueServiceImpl @Inject() (implicit
       postAttachment: (String) => Option[Long],
       issueOfId: (Long) => BacklogIssue
   )(backlogIssue: BacklogIssue): ImportIssueParams = {
-    //issue type
+    // issue type
     val issueTypeId = backlogIssue.optIssueTypeName match {
       case Some(issueTypeName) =>
         propertyResolver
@@ -220,14 +220,14 @@ class IssueServiceImpl @Inject() (implicit
       case None => propertyResolver.tryDefaultIssueTypeId()
     }
 
-    //priority
+    // priority
     val priorityType =
       propertyResolver
         .optResolvedPriorityId(backlogIssue.priorityName)
         .map(value => PriorityType.valueOf(value.toInt))
         .getOrElse(PriorityType.Normal)
 
-    //parameter
+    // parameter
     val params: ImportIssueParams = new ImportIssueParams(
       projectId,
       backlogIssue.summary.value,
@@ -235,11 +235,11 @@ class IssueServiceImpl @Inject() (implicit
       priorityType
     )
 
-    //parent issue
+    // parent issue
     val optParentIssue: Option[BacklogIssue] =
       backlogIssue.optParentIssueId.flatMap(toRemoteIssueId(_).map(issueOfId))
 
-    //description
+    // description
     optParentIssue match {
       case Some(parentIssue) if parentIssue.optParentIssueId.nonEmpty =>
         val sb = new StringBuilder()
@@ -249,86 +249,86 @@ class IssueServiceImpl @Inject() (implicit
           .append(parentIssue.issueKey)
         params.description(sb.toString())
       case Some(parentIssue) if parentIssue.optParentIssueId.isEmpty =>
-        params.parentIssueId(parentIssue.id) //parent id
+        params.parentIssueId(parentIssue.id) // parent id
         params.description(backlogIssue.description)
       case _ =>
         params.description(backlogIssue.description)
     }
 
-    //category
+    // category
     val categoryIds =
       backlogIssue.categoryNames.flatMap(propertyResolver.optResolvedCategoryId)
     params.categoryIds(categoryIds.asJava)
 
-    //version
+    // version
     val versionIds =
       backlogIssue.versionNames.flatMap(propertyResolver.optResolvedVersionId)
     params.versionIds(versionIds.asJava)
 
-    //milestone
+    // milestone
     val milestoneIds =
       backlogIssue.milestoneNames.flatMap(propertyResolver.optResolvedVersionId)
     params.milestoneIds(milestoneIds.asJava)
 
-    //assignee
+    // assignee
     for {
       user   <- backlogIssue.optAssignee
       userId <- user.optUserId
       id     <- propertyResolver.optResolvedUserId(userId)
     } yield params.assigneeId(id)
 
-    //start date
+    // start date
     for { startDate <- backlogIssue.optStartDate } yield params.startDate(
       startDate
     )
 
-    //due date
+    // due date
     for { dueDate <- backlogIssue.optDueDate } yield params.dueDate(dueDate)
 
-    //estimated hours
+    // estimated hours
     for (estimatedHours <- backlogIssue.optEstimatedHours)
       yield params.estimatedHours(estimatedHours)
 
-    //actual hours
+    // actual hours
     for { actualHours <- backlogIssue.optActualHours } yield params.actualHours(
       actualHours
     )
 
-    //created
+    // created
     for { created <- backlogIssue.operation.optCreated } yield params.created(
       created
     )
 
-    //created user id
+    // created user id
     for {
       createdUser <- backlogIssue.operation.optCreatedUser
       userId      <- createdUser.optUserId
       id          <- propertyResolver.optResolvedUserId(userId)
     } yield params.createdUserId(id)
 
-    //updated
+    // updated
     for { updated <- backlogIssue.operation.optUpdated } yield params.updated(
       updated
     )
 
-    //updated user id
+    // updated user id
     for {
       updatedUser <- backlogIssue.operation.optUpdatedUser
       userId      <- updatedUser.optUserId
       id          <- propertyResolver.optResolvedUserId(userId)
     } yield params.updatedUserId(id)
 
-    //custom fields
+    // custom fields
     backlogIssue.customFields.map(setCustomFieldParams).foreach(_(params, propertyResolver))
 
-    //attachments
+    // attachments
     backlogIssue.attachments.foreach { attachment =>
       for { id <- postAttachment(attachment.name) } yield {
         params.attachmentIds(Seq(Long.box(id)).asJava)
       }
     }
 
-    //notified user id
+    // notified user id
     val notifiedUserIds =
       backlogIssue.notifiedUsers.flatMap(_.optUserId).flatMap(propertyResolver.optResolvedUserId)
     params.notifiedUserIds(notifiedUserIds.asJava)
@@ -339,7 +339,7 @@ class IssueServiceImpl @Inject() (implicit
       projectId: Long,
       propertyResolver: PropertyResolver
   ): Issue = {
-    //parameter
+    // parameter
     val params: ImportIssueParams = new ImportIssueParams(
       projectId,
       "dummy issue",
