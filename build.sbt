@@ -32,7 +32,7 @@ lazy val commonSettings = Seq(
       "com.typesafe.akka"    %% "akka-http"        % akkaHttpVersion,
       "org.xerial"            % "sqlite-jdbc"      % "3.36.0.1",
       "com.nulab-inc"         % "backlog4j"        % "2.5.2",
-      "com.github.mpilquist" %% "simulacrum"       % "0.19.0",
+      "org.typelevel"        %% "simulacrum"       % "1.0.0",
       "org.fusesource.jansi"  % "jansi"            % "2.3.4",
       "com.osinka.i18n"      %% "scala-i18n"       % "1.0.3",
       "ch.qos.logback"        % "logback-classic"  % "1.2.5",
