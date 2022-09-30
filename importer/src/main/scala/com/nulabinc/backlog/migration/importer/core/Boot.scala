@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.importer.core
 
 import com.google.inject.Guice
+import com.nulabinc.backlog.migration.common.client.{BacklogAPIClient, RateLimitEvent}
 import com.nulabinc.backlog.migration.common.conf.BacklogApiConfiguration
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, StoreDSL}
 import com.nulabinc.backlog.migration.common.messages.ConsoleMessages
@@ -28,6 +29,13 @@ object Boot extends Logging {
     try {
       val injector =
         Guice.createInjector(new BacklogModule(apiConfig))
+
+      injector
+        .getInstance(classOf[BacklogAPIClient])
+        .addRateLimitEventListener((_: RateLimitEvent) => {
+          ConsoleDSL[Task].warning(ConsoleMessages.cliRateLimitWarn).runSyncUnsafe()
+        })
+
       val projectImporter = injector.getInstance(classOf[ProjectImporter])
 
       for {

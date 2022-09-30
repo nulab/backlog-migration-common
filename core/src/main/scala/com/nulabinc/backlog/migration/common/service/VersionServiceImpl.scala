@@ -1,6 +1,5 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -36,7 +35,6 @@ class VersionServiceImpl @Inject() (implicit
       params.releaseDueDate(releaseDueDate)
     }
     try {
-      sleep(500)
       Some(Convert.toBacklog(backlog.addVersion(params)))
     } catch {
       case e: Throwable =>
