@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
     "-Ywarn-unused"
   ),
   libraryDependencies ++= {
-    val catsVersion     = "2.7.0"
+    val catsVersion     = "2.8.0"
     val monixVersion    = "3.2.2"
     val doobieVersion   = "0.9.0"
     val akkaVersion     = "2.6.17"
@@ -20,7 +20,7 @@ lazy val commonSettings = Seq(
     Seq(
       "org.typelevel"        %% "cats-core"        % catsVersion,
       "org.typelevel"        %% "cats-kernel"      % catsVersion,
-      "org.typelevel"        %% "cats-macros"      % catsVersion,
+      "org.typelevel"        %% "cats-macros"      % "2.1.1",
       "io.monix"             %% "monix"            % monixVersion,
       "io.monix"             %% "monix-eval"       % monixVersion,
       "io.monix"             %% "monix-reactive"   % monixVersion,
