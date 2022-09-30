@@ -47,7 +47,16 @@ case class BacklogProject(
     key: String,
     isChartEnabled: Boolean,
     isSubtaskingEnabled: Boolean,
-    textFormattingRule: String
+    textFormattingRule: String,
+    isProjectLeaderCanEditProjectLeader: Boolean,
+    useWiki: Boolean,
+    useFileSharing: Boolean,
+    useDevAttributes: Boolean,
+    useResolvedForChart: Boolean,
+    useWikiTreeView: Boolean,
+    useOriginalImageSizeAtWiki: Boolean,
+    useSubversion: Boolean,
+    useGit: Boolean
 ) {
   def id: Long =
     optId match {
