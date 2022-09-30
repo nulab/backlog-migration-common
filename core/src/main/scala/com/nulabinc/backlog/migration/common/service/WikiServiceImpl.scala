@@ -1,7 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -38,10 +37,8 @@ class WikiServiceImpl @Inject() (implicit
   override def allWikis(): Seq[BacklogWiki] =
     backlog.getWikis(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
 
-  override def wikiOfId(wikiId: Long): BacklogWiki = {
-    sleep(200)
+  override def wikiOfId(wikiId: Long): BacklogWiki =
     Convert.toBacklog(backlog.getWiki(wikiId))
-  }
 
   override def update(wiki: BacklogWiki): Option[BacklogWiki] =
     for {
@@ -63,20 +60,20 @@ class WikiServiceImpl @Inject() (implicit
     val params =
       new ImportWikiParams(projectId, wiki.name, wiki.optContent.getOrElse(""))
 
-    //created
+    // created
     for { created <- wiki.optCreated } yield params.created(created)
 
-    //created user id
+    // created user id
     for {
       createdUser <- wiki.optCreatedUser
       userId      <- createdUser.optUserId
       id          <- propertyResolver.optResolvedUserId(userId)
     } yield params.createdUserId(id)
 
-    //updated
+    // updated
     for { updated <- wiki.optUpdated } yield params.updated(updated)
 
-    //updated user id
+    // updated user id
     for {
       updatedUser <- wiki.optUpdatedUser
       userId      <- updatedUser.optUserId
