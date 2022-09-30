@@ -2,7 +2,7 @@ package com.nulabinc.backlog.migration.common.interpreters
 
 import java.nio.file.Path
 
-import cats.implicits._
+import cats.syntax.all._
 import com.nulabinc.backlog.migration.common.domain.exports.ExportedBacklogStatus
 import com.nulabinc.backlog.migration.common.domain.imports.ImportedIssueKeys
 import com.nulabinc.backlog.migration.common.domain.{BacklogStatus, BacklogStatuses}
