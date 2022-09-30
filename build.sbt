@@ -35,7 +35,7 @@ lazy val commonSettings = Seq(
       "org.typelevel"        %% "simulacrum"       % "1.0.0",
       "org.fusesource.jansi"  % "jansi"            % "2.4.0",
       "com.osinka.i18n"      %% "scala-i18n"       % "1.0.3",
-      "ch.qos.logback"        % "logback-classic"  % "1.2.5",
+      "ch.qos.logback"        % "logback-classic"  % "1.2.7",
       "com.typesafe"          % "config"           % "1.4.1",
       "com.google.inject"     % "guice"            % "5.0.1",
       "io.spray"             %% "spray-json"       % "1.3.6",
