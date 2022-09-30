@@ -1,7 +1,6 @@
 package com.nulabinc.backlog.migration.importer.service
 
 import better.files.{File => Path}
-import cats.syntax.all._
 import com.nulabinc.backlog.migration.common.conf.BacklogPaths
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain.imports.ImportedIssueKeys
@@ -106,16 +105,25 @@ private[importer] class IssuesImporter(
   )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
     if (issueService.exists(project.id, issue)) {
       ctx.excludeIssueIds += issue.id
-      for {
-        remoteIssue <- issueService.optIssueOfParams(project.id, issue)
-      } yield {
-        storeDSL.storeImportedIssueKeys(
-          ImportedIssueKeys(
-            issue.id,
-            issue.findIssueIndex,
-            remoteIssue.id,
-            remoteIssue.findIssueIndex
+      if (ctx.fitIssueKey) {
+        for {
+          remoteIssue <- issueService.optIssueOfParams(project.id, issue)
+        } yield {
+          storeDSL.storeImportedIssueKeys(
+            ImportedIssueKeys(
+              issue.id,
+              issue.findIssueIndex,
+              remoteIssue.id,
+              remoteIssue.findIssueIndex
+            )
           )
+          logger.debug(
+            s"[StoreDSL] success to store imported issue keys: ${issue.id} => ${remoteIssue.id}"
+          )
+        }
+      } else {
+        logger.debug(
+          "[StoreDSL] skip storing imported issue keys(--fitIssueKey option is not specified)"
         )
       }
       console.warning(
@@ -137,18 +145,29 @@ private[importer] class IssuesImporter(
         )
       )(issue) match {
         case Right(remoteIssue) =>
-          sharedFileService.linkIssueSharedFile(remoteIssue.id, issue)
+          if (project.useFileSharing) {
+            sharedFileService.linkIssueSharedFile(remoteIssue.id, issue)
+          }
           ctx.addIssueId(issue, remoteIssue)
-          storeDSL
-            .storeImportedIssueKeys(
-              ImportedIssueKeys(
-                srcIssueId = issue.id,
-                srcIssueIndex = issue.findIssueIndex,
-                dstIssueId = remoteIssue.id,
-                dstIssueIndex = remoteIssue.findIssueIndex
+          if (ctx.fitIssueKey) {
+            storeDSL
+              .storeImportedIssueKeys(
+                ImportedIssueKeys(
+                  srcIssueId = issue.id,
+                  srcIssueIndex = issue.findIssueIndex,
+                  dstIssueId = remoteIssue.id,
+                  dstIssueIndex = remoteIssue.findIssueIndex
+                )
               )
+              .runSyncUnsafe()
+            logger.debug(
+              s"[StoreDSL] success to store new imported issue keys: ${issue.id} => ${remoteIssue.id}"
             )
-            .runSyncUnsafe()
+          } else {
+            logger.debug(
+              "[StoreDSL] skip storing new imported issue keys(--fitIssueKey option is not specified)"
+            )
+          }
         case _ =>
           console.failed += 1
       }
@@ -165,15 +184,21 @@ private[importer] class IssuesImporter(
       storeDSL: StoreDSL[Task],
       consoleDSL: ConsoleDSL[Task]
   ): Unit = {
-    val issueIndex = issue.findIssueIndex
-    val prev       = storeDSL.getLatestImportedIssueKeys().runSyncUnsafe().srcIssueIndex
+    if (ctx.fitIssueKey) {
+      val issueIndex = issue.findIssueIndex
+      val prev       = storeDSL.getLatestImportedIssueKeys().runSyncUnsafe().srcIssueIndex
 
-    if (ctx.fitIssueKey && (prev + 1) != issueIndex) {
-      val seq = (prev + 1) until issueIndex
+      if ((prev + 1) != issueIndex) {
+        val seq = (prev + 1) until issueIndex
 
-      seq.foreach { idx =>
-        createTemporaryIssue(project, issue, idx)
+        seq.foreach { idx =>
+          createTemporaryIssue(project, issue, idx)
+        }
       }
+    } else {
+      logger.debug(
+        "[Temporary Issues] skip creating temporary issues(--fitIssueKey option is not specified)"
+      )
     }
   }
 
@@ -266,29 +291,33 @@ private[importer] class IssuesImporter(
     }
 
     def deleteAttachment(remoteIssueId: Long) =
-      comment.changeLogs.filter { _.mustDeleteAttachment }.map { changeLog =>
-        val issueAttachments =
-          attachmentService.allAttachmentsOfIssue(remoteIssueId) match {
-            case Right(attachments) => attachments
-            case Left(_)            => Seq.empty[BacklogAttachment]
-          }
-        for {
-          attachmentInfo <- changeLog.optAttachmentInfo
-          attachment     <- issueAttachments.sortBy(_.optId).find(_.name == attachmentInfo.name)
-          attachmentId   <- attachment.optId
-          createdUser    <- comment.optCreatedUser
-          createdUserId  <- createdUser.optUserId
-          solvedCreatedUserId <- ctx.propertyResolver.optResolvedUserId(createdUserId)
-          created             <- comment.optCreated
-        } yield {
-          issueService.deleteAttachment(
-            remoteIssueId,
-            attachmentId,
-            solvedCreatedUserId,
-            created
-          )
+      comment.changeLogs
+        .filter {
+          _.mustDeleteAttachment
         }
-      }
+        .map { changeLog =>
+          val issueAttachments =
+            attachmentService.allAttachmentsOfIssue(remoteIssueId) match {
+              case Right(attachments) => attachments
+              case Left(_)            => Seq.empty[BacklogAttachment]
+            }
+          for {
+            attachmentInfo <- changeLog.optAttachmentInfo
+            attachment     <- issueAttachments.sortBy(_.optId).find(_.name == attachmentInfo.name)
+            attachmentId   <- attachment.optId
+            createdUser    <- comment.optCreatedUser
+            createdUserId  <- createdUser.optUserId
+            solvedCreatedUserId <- ctx.propertyResolver.optResolvedUserId(createdUserId)
+            created             <- comment.optCreated
+          } yield {
+            issueService.deleteAttachment(
+              remoteIssueId,
+              attachmentId,
+              solvedCreatedUserId,
+              created
+            )
+          }
+        }
 
     for {
       issueId       <- comment.optIssueId
@@ -307,7 +336,8 @@ private[importer] class IssuesImporter(
 
   private[this] val postAttachment = (path: Path, index: Int, size: Int) => { fileName: String =>
     {
-      val files = backlogPaths.issueAttachmentDirectoryPath(path).list
+      val dirPath = backlogPaths.issueAttachmentDirectoryPath(path)
+      val files   = dirPath.list
       files.find(file => file.name == fileName) match {
         case Some(filePath) =>
           attachmentService.postAttachment(filePath.pathAsString) match {
@@ -335,7 +365,19 @@ private[importer] class IssuesImporter(
                 )
               None
           }
-        case _ => None
+        case _ => {
+          logger.warn(s"${fileName} does not exist")
+          console.error(
+            index + 1,
+            size,
+            Messages(
+              "import.error.attachment.not_exists",
+              fileName,
+              dirPath.pathAsString
+            )
+          )
+          None
+        }
 
       }
     }
