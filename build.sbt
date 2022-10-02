@@ -1,6 +1,6 @@
 lazy val commonSettings = Seq(
   organization := "com.nulabinc",
-  version      := "0.4.3-SNAPSHOT",
+  version      := "0.4.5-SNAPSHOT",
   scalaVersion := "2.13.6",
   scalacOptions ++= List(
     "-feature",
@@ -14,9 +14,9 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= {
     val catsVersion     = "2.1.1"
     val monixVersion    = "3.2.2"
-    val doobieVersion   = "0.9.4"
-    val akkaVersion     = "2.6.16"
-    val akkaHttpVersion = "10.2.6"
+    val doobieVersion   = "0.9.0"
+    val akkaVersion     = "2.6.17"
+    val akkaHttpVersion = "10.2.7"
     Seq(
       "org.typelevel"        %% "cats-core"        % catsVersion,
       "org.typelevel"        %% "cats-kernel"      % catsVersion,
@@ -30,21 +30,21 @@ lazy val commonSettings = Seq(
       "com.typesafe.akka"    %% "akka-stream"      % akkaVersion,
       "com.typesafe.akka"    %% "akka-slf4j"       % akkaVersion,
       "com.typesafe.akka"    %% "akka-http"        % akkaHttpVersion,
-      "org.xerial"            % "sqlite-jdbc"      % "3.36.0.1",
-      "com.nulab-inc"         % "backlog4j"        % "2.4.2",
-      "com.github.mpilquist" %% "simulacrum"       % "0.19.0",
-      "org.fusesource.jansi"  % "jansi"            % "2.3.4",
+      "org.xerial"            % "sqlite-jdbc"      % "3.36.0.3",
+      "com.nulab-inc"         % "backlog4j"        % "2.5.2",
+      "org.typelevel"        %% "simulacrum"       % "1.0.0",
+      "org.fusesource.jansi"  % "jansi"            % "2.4.0",
       "com.osinka.i18n"      %% "scala-i18n"       % "1.0.3",
-      "ch.qos.logback"        % "logback-classic"  % "1.2.5",
+      "ch.qos.logback"        % "logback-classic"  % "1.2.7",
       "com.typesafe"          % "config"           % "1.4.1",
       "com.google.inject"     % "guice"            % "5.0.1",
       "io.spray"             %% "spray-json"       % "1.3.6",
-      "net.codingwell"       %% "scala-guice"      % "5.0.1",
-      "io.lemonlabs"         %% "scala-uri"        % "2.3.1",
+      "net.codingwell"       %% "scala-guice"      % "5.0.2",
+      "io.lemonlabs"         %% "scala-uri"        % "2.3.0",
       "com.github.pathikrit" %% "better-files"     % "3.9.1",
       "com.chuusai"          %% "shapeless"        % "2.3.7",
       "org.apache.commons"    % "commons-csv"      % "1.9.0",
-      "org.scalatest"        %% "scalatest"        % "3.2.10"       % Test,
+      "org.scalatest"        %% "scalatest"        % "3.2.10"      % Test,
       "org.tpolecat"         %% "doobie-scalatest" % doobieVersion % "test"
     )
   },
@@ -66,7 +66,7 @@ lazy val common = (project in file("."))
   .dependsOn(core, importer)
   .aggregate(core, importer)
 
-ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.5.0"
+ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
 addCommandAlias(
   "fixAll",
