@@ -44,6 +44,7 @@ object BacklogStatusOps extends BaseTableOps {
     """.update
 
   def store(statuses: BacklogStatuses): ConnectionIO[Int] = {
+    import cats.implicits._
 
     Update[BacklogStatus](
       """

@@ -43,6 +43,7 @@ object ExportedStatusTableOps extends BaseTableOps {
     }
 
   def store(status: ExportedBacklogStatus): ConnectionIO[Int] = {
+    import cats.implicits._
 
     val (selectSql, name) = status match {
       case ExistingExportedBacklogStatus(status) =>
@@ -77,6 +78,7 @@ object ExportedStatusTableOps extends BaseTableOps {
   }
 
   def store(statuses: Seq[ExportedBacklogStatus]): ConnectionIO[Int] = {
+    import cats.implicits._
 
     Update[ExportedBacklogStatus](
       """
