@@ -6,7 +6,7 @@ import com.nulabinc.backlog.migration.common.client.params._
 import com.nulabinc.backlog.migration.common.conf.BacklogConfiguration
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j._
-import com.nulabinc.backlog4j.api.option.{GetParams, QueryParams}
+import com.nulabinc.backlog4j.api.option.{AddStatusParams, GetParams, QueryParams}
 import com.nulabinc.backlog4j.conf.BacklogConfigure
 import com.nulabinc.backlog4j.http.{
   BacklogHttpClient,
@@ -78,6 +78,15 @@ class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
         )
       def importWiki(params: ImportWikiParams): Wiki =
         factory.importWiki(post(buildEndpoint("wikis/import"), params.getParamList, headers))
+
+      override def addStatus(params: AddStatusParams): Status =
+        factory.createStatus(
+          post(
+            buildEndpoint("projects/" + params.getProjectIdOrKeyString + "/statuses"),
+            params.getParamList,
+            headers
+          )
+        )
     }
 
   override def importIssue(params: ImportIssueParams): Issue = retryRateLimit() {
@@ -98,6 +107,10 @@ class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
 
   override def importWiki(params: ImportWikiParams): Wiki = retryRateLimit() {
     client.importWiki(params)
+  }
+
+  override def addStatus(parameters: AddStatusParams): Status = {
+    client.addStatus(parameters)
   }
 
   override def delete(
