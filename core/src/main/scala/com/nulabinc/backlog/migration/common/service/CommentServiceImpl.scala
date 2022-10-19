@@ -374,14 +374,11 @@ class CommentServiceImpl @Inject() (
       changeLog: BacklogChangeLog,
       propertyResolver: PropertyResolver
   ) = {
-    val resolutionType = changeLog.optNewValue
-      .flatMap { value =>
-        propertyResolver
-          .optResolvedResolutionId(value)
-          .map(value => ResolutionType.valueOf(value.toInt))
-      }
-      .getOrElse(ResolutionType.NotSet)
-    params.resolution(resolutionType)
+    val optResolutionType = for {
+      value        <- changeLog.optNewValue
+      resolutionId <- propertyResolver.optResolvedResolutionId(value)
+    } yield ResolutionType.valueOf(resolutionId.toInt)
+    params.resolution(optResolutionType.getOrElse(ResolutionType.NotSet))
   }
 
   private[this] def setEstimatedHours(
