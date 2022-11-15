@@ -20,7 +20,8 @@ object Boot extends Logging {
   def execute(
       apiConfig: BacklogApiConfiguration,
       fitIssueKey: Boolean,
-      retryCount: Int
+      retryCount: Int,
+      grantDuplicatedIssues: Boolean
   )(implicit
       s: Scheduler,
       storeDSL: StoreDSL[Task],
@@ -40,7 +41,7 @@ object Boot extends Logging {
 
       for {
         _ <- ConsoleDSL[Task].println(ConsoleMessages.Imports.start)
-        _ <- projectImporter.execute(fitIssueKey, retryCount)
+        _ <- projectImporter.execute(fitIssueKey, retryCount, grantDuplicatedIssues)
       } yield Right(())
     } catch {
       case e: Throwable =>

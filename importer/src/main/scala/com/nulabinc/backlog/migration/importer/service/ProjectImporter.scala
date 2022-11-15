@@ -48,14 +48,15 @@ private[importer] class ProjectImporter @Inject() (
 
   def execute[A](
       fitIssueKey: Boolean,
-      retryCount: Int
+      retryCount: Int,
+      grantDuplicatedIssues: Boolean
   )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
     val project = BacklogUnmarshaller.project(backlogPaths)
     projectService.create(project) match {
       case Right(project) =>
         for {
           _ <- preExecute()
-          _ <- contents(project, fitIssueKey, retryCount)
+          _ <- contents(project, fitIssueKey, retryCount, grantDuplicatedIssues)
           _ <- postExecute()
           _ <- ConsoleDSL[Task].printStream(
             ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
@@ -88,7 +89,8 @@ private[importer] class ProjectImporter @Inject() (
   private def contents(
       project: BacklogProject,
       fitIssueKey: Boolean,
-      retryCount: Int
+      retryCount: Int,
+      grantDuplicatedIssues: Boolean
   )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
     val issuesImporter = new IssuesImporter(
       backlogPaths = backlogPaths,
@@ -103,7 +105,13 @@ private[importer] class ProjectImporter @Inject() (
     wikisImporter.execute(project.id, propertyResolver)
 
     //Issue
-    issuesImporter.execute(project, propertyResolver, fitIssueKey, retryCount)
+    issuesImporter.execute(
+      project,
+      propertyResolver,
+      fitIssueKey,
+      retryCount,
+      grantDuplicatedIssues
+    )
   }
 
   private def preExecute()(implicit

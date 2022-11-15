@@ -40,7 +40,8 @@ private[importer] class IssuesImporter(
       project: BacklogProject,
       propertyResolver: PropertyResolver,
       fitIssueKey: Boolean,
-      retryCount: Int
+      retryCount: Int,
+      grantDuplicatedIssues: Boolean
   )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
 
     for {
@@ -50,7 +51,7 @@ private[importer] class IssuesImporter(
       console.totalSize = totalSize()
 
       implicit val context =
-        IssueContext(propertyResolver, fitIssueKey, retryCount)
+        IssueContext(propertyResolver, fitIssueKey, retryCount, grantDuplicatedIssues)
       val paths = IOUtil.directoryPaths(backlogPaths.issueDirectoryPath).sortWith(_.name < _.name)
       paths.foreach { path =>
         loadDateDirectory(project, path)
@@ -103,7 +104,7 @@ private[importer] class IssuesImporter(
       index: Int,
       size: Int
   )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
-    if (issueService.exists(project.id, issue)) {
+    if (!ctx.grantDuplicatedIssues && issueService.exists(project.id, issue)) {
       ctx.excludeIssueIds += issue.id
       for {
         remoteIssue <- issueService.optIssueOfParams(project.id, issue)
