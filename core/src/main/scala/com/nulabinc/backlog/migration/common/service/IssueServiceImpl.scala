@@ -51,39 +51,6 @@ class IssueServiceImpl @Inject() (implicit
   override def issueOfKey(key: String): BacklogIssue =
     Convert.toBacklog(backlog.getIssue(key))
 
-  override def optIssueOfParams(
-      projectId: Long,
-      backlogIssue: BacklogIssue
-  ): Option[BacklogIssue] = {
-    val params: GetIssuesParams = new GetIssuesParams(List(projectId).asJava)
-    if (backlogIssue.summary.original.nonEmpty) {
-      params.keyword(backlogIssue.summary.original)
-    }
-    val issues =
-      try {
-        backlog.getIssues(params).asScala
-      } catch {
-        case e: BacklogAPIException =>
-          logger.error(e.getMessage, e)
-          Seq.empty[Issue]
-      }
-    (for {
-      createdUser  <- backlogIssue.operation.optCreatedUser
-      userId       <- createdUser.optUserId
-      createdSince <- backlogIssue.operation.optCreated
-    } yield {
-      val optFoundIssue = issues.find { issue =>
-        (backlogIssue.summary.original == issue.getSummary) && (userId.trim == issue.getCreatedUser.getUserId.trim) &&
-        (createdSince == DateUtil.isoFormat(issue.getCreated))
-      }
-      optFoundIssue match {
-        case Some(foundIssue) => Convert.toBacklog(foundIssue)
-        case _                => None
-      }
-      optFoundIssue.map(Convert.toBacklog(_))
-    }).flatten
-  }
-
   override def allIssues(
       projectId: Long,
       offset: Int,

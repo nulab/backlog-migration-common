@@ -105,18 +105,6 @@ private[importer] class IssuesImporter(
   )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
     if (issueService.exists(project.id, issue)) {
       ctx.excludeIssueIds += issue.id
-      for {
-        remoteIssue <- issueService.optIssueOfParams(project.id, issue)
-      } yield {
-        storeDSL.storeImportedIssueKeys(
-          ImportedIssueKeys(
-            issue.id,
-            issue.findIssueIndex,
-            remoteIssue.id,
-            remoteIssue.findIssueIndex
-          )
-        )
-      }
       console.warning(
         index + 1,
         size,
@@ -165,7 +153,7 @@ private[importer] class IssuesImporter(
       consoleDSL: ConsoleDSL[Task]
   ): Unit = {
     val issueIndex = issue.findIssueIndex
-    val prev       = storeDSL.getLatestImportedIssueKeys().runSyncUnsafe().srcIssueIndex
+    val prev       = storeDSL.getLatestImportedIssueKeys().runSyncUnsafe().dstIssueIndex
 
     if (ctx.fitIssueKey && (prev + 1) != issueIndex) {
       val seq = (prev + 1) until issueIndex

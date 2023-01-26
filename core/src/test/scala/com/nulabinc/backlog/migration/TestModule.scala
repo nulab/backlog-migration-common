@@ -42,11 +42,6 @@ class TestIssueServiceImpl extends IssueService with SimpleFixture {
 
   override def issueOfKey(key: String): BacklogIssue = ???
 
-  override def optIssueOfParams(
-      projectId: Long,
-      backlogIssue: BacklogIssue
-  ): Option[BacklogIssue] = ???
-
   override def allIssues(
       projectId: Long,
       offset: Int,
