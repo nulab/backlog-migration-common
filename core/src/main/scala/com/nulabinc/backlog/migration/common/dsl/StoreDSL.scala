@@ -15,5 +15,4 @@ trait StoreDSL[F[_]] {
   def storeSrcStatus(statuses: Seq[ExportedBacklogStatus]): F[Unit]
   def storeImportedIssueKeys(importedIssueKeys: ImportedIssueKeys): F[Unit]
   def getLatestImportedIssueKeys(): F[ImportedIssueKeys]
-  def findBySrcIssueIdLatest(srcIssueId: Long): F[Option[ImportedIssueKeys]]
 }
