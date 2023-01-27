@@ -21,11 +21,6 @@ trait IssueService {
 
   def issueOfKey(key: String): BacklogIssue
 
-  def optIssueOfParams(
-      projectId: Long,
-      backlogIssue: BacklogIssue
-  ): Option[BacklogIssue]
-
   def allIssues(
       projectId: Long,
       offset: Int,
