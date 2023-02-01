@@ -60,9 +60,6 @@ class SQLiteStoreDSL(private val dbPath: Path) extends StoreDSL[Task] {
   def getLatestImportedIssueKeys(): Task[ImportedIssueKeys] =
     ImportedIssueKeysOps.findLatest().option.transact(xa).map(_.getOrElse(ImportedIssueKeys.empty))
 
-  def findBySrcIssueIdLatest(srcIssueId: Long): Task[Option[ImportedIssueKeys]] =
-    ImportedIssueKeysOps.findBySrcIssueIdLatest(srcIssueId).option.transact(xa)
-
   def createTable: Task[Unit] =
     (
       BacklogStatusOps.createTable().run,

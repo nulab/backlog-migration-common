@@ -16,12 +16,7 @@ object ImportedIssueKeysOps extends BaseTableOps {
 
   def findLatest(): Query0[ImportedIssueKeys] =
     sql"""
-      select * from imported_issue_keys order by src_issue_id desc limit 1;
-    """.query[ImportedIssueKeys]
-
-  def findBySrcIssueIdLatest(id: Long): Query0[ImportedIssueKeys] =
-    sql"""
-      select * from imported_issue_keys where src_issue_id = ${id} order by src_issue_id desc limit 1;
+      select * from imported_issue_keys order by dst_issue_id desc limit 1;
     """.query[ImportedIssueKeys]
 
   def createTable(): Update0 =

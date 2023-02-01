@@ -105,27 +105,6 @@ private[importer] class IssuesImporter(
   )(implicit ctx: IssueContext, s: Scheduler, storeDSL: StoreDSL[Task]): Unit = {
     if (issueService.exists(project.id, issue)) {
       ctx.excludeIssueIds += issue.id
-      if (ctx.fitIssueKey) {
-        for {
-          remoteIssue <- issueService.optIssueOfParams(project.id, issue)
-        } yield {
-          storeDSL.storeImportedIssueKeys(
-            ImportedIssueKeys(
-              issue.id,
-              issue.findIssueIndex,
-              remoteIssue.id,
-              remoteIssue.findIssueIndex
-            )
-          )
-          logger.debug(
-            s"[StoreDSL] success to store imported issue keys: ${issue.id} => ${remoteIssue.id}"
-          )
-        }
-      } else {
-        logger.debug(
-          "[StoreDSL] skip storing imported issue keys(--fitIssueKey option is not specified)"
-        )
-      }
       console.warning(
         index + 1,
         size,
@@ -186,7 +165,7 @@ private[importer] class IssuesImporter(
   ): Unit = {
     if (ctx.fitIssueKey) {
       val issueIndex = issue.findIssueIndex
-      val prev       = storeDSL.getLatestImportedIssueKeys().runSyncUnsafe().srcIssueIndex
+      val prev       = storeDSL.getLatestImportedIssueKeys().runSyncUnsafe().dstIssueIndex
 
       if ((prev + 1) != issueIndex) {
         val seq = (prev + 1) until issueIndex
