@@ -507,7 +507,7 @@ class CommentServiceImpl @Inject() (
     (changeLog.optNewValue, customFieldSetting.optId) match {
       case (Some(""), Some(id)) => params.numericCustomField(id, null)
       case (Some(value), Some(id)) =>
-        params.numericCustomField(id, StringUtil.safeUnitStringToFloat(value))
+        params.numericCustomField(id, StringUtil.safeUnitStringToBigDecimal(value).bigDecimal)
       case (None, Some(id)) => params.numericCustomField(id, null)
       case _                => throw new RuntimeException
     }

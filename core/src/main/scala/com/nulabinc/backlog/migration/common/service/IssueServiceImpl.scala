@@ -639,7 +639,7 @@ class IssueServiceImpl @Inject() (implicit
       id    <- customFieldSetting.optId
     } yield
       if (value.nonEmpty)
-        params.numericCustomField(id, StringUtil.safeUnitStringToFloat(value))
+        params.numericCustomField(id, StringUtil.safeUnitStringToBigDecimal(value).bigDecimal)
   }
 
   private[this] def setRadioCustomField(

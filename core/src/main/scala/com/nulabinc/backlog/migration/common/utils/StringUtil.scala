@@ -22,14 +22,14 @@ object StringUtil {
     catching(classOf[NumberFormatException]) opt str.toLong
   }
 
-  def safeUnitStringToFloat(str: String): Float = {
+  def safeUnitStringToBigDecimal(str: String): BigDecimal = {
     import scala.util.control.Exception._
-    catching(classOf[NumberFormatException]) opt str.toFloat match {
-      case Some(float) => float
+    catching(classOf[NumberFormatException]) opt BigDecimal(str) match {
+      case Some(value) => value
       case _ =>
-        val pattern: Regex = """^(\d+).*$""".r
-        val pattern(float) = str
-        float.toFloat
+        val pattern: Regex   = """^(\d+).*$""".r
+        val pattern(matched) = str
+        BigDecimal(matched)
     }
   }
 
