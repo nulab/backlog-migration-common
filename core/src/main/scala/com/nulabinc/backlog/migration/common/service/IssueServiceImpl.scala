@@ -414,6 +414,10 @@ class IssueServiceImpl @Inject() (implicit
         head           <- startDateSince.headOption
       } yield params.startDateSince(head)
       for {
+        startDateUntil <- uri.query.paramMap.get("startDateUntil")
+        head           <- startDateUntil.headOption
+      } yield params.startDateUntil(head)
+      for {
         dueDateSince <- uri.query.paramMap.get("dueDateSince")
         head         <- dueDateSince.headOption
       } yield params.dueDateSince(head)
@@ -529,6 +533,10 @@ class IssueServiceImpl @Inject() (implicit
         startDateSince <- uri.query.paramMap.get("startDateSince")
         head           <- startDateSince.headOption
       } yield params.startDateSince(head)
+      for {
+        startDateUntil <- uri.query.paramMap.get("startDateUntil")
+        head           <- startDateUntil.headOption
+      } yield params.startDateUntil(head)
       for {
         dueDateSince <- uri.query.paramMap.get("dueDateSince")
         head         <- dueDateSince.headOption
