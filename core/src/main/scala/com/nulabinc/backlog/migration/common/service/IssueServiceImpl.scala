@@ -402,6 +402,10 @@ class IssueServiceImpl @Inject() (implicit
         head         <- createdUntil.headOption
       } yield params.createdUntil(head)
       for {
+        updatedSince <- uri.query.paramMap.get("updatedSince")
+        head         <- updatedSince.headOption
+      } yield params.updatedSince(head)
+      for {
         updatedUntil <- uri.query.paramMap.get("updatedUntil")
         head         <- updatedUntil.headOption
       } yield params.updatedUntil(head)
@@ -513,6 +517,10 @@ class IssueServiceImpl @Inject() (implicit
         createdUntil <- uri.query.paramMap.get("createdUntil")
         head         <- createdUntil.headOption
       } yield params.createdUntil(head)
+      for {
+        updatedSince <- uri.query.paramMap.get("updatedSince")
+        head         <- updatedSince.headOption
+      } yield params.updatedSince(head)
       for {
         updatedUntil <- uri.query.paramMap.get("updatedUntil")
         head         <- updatedUntil.headOption
