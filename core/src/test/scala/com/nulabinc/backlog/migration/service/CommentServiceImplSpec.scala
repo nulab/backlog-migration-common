@@ -83,7 +83,7 @@ class CommentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtur
       Some(textAreaCustomFieldValue)
     )
     getValue(params, s"customField_${numericCustomFieldId}") should be(
-      Some(numericCustomFieldValue)
+      Some(numericCustomFieldScaledValue)
     )
     getValue(params, s"customField_${dateCustomFieldId}") should be(
       Some(dateCustomFieldValue)

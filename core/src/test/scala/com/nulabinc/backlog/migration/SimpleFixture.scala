@@ -149,9 +149,10 @@ trait SimpleFixture {
     )
 
   // Numeric
-  val numericCustomFieldId    = 3
-  val numericCustomFieldName  = "numeric"
-  val numericCustomFieldValue = "12.12"
+  val numericCustomFieldId          = 3
+  val numericCustomFieldName        = "numeric"
+  val numericCustomFieldValue       = "12.12"
+  val numericCustomFieldScaledValue = "12.1200"
   val numericCustomField =
     BacklogCustomField(
       numericCustomFieldName,
