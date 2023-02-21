@@ -27,7 +27,7 @@ object StringUtil {
     catching(classOf[NumberFormatException]) opt BigDecimal(str) match {
       case Some(value) => value
       case _ =>
-        val pattern: Regex   = """^(\d+).*$""".r
+        val pattern: Regex   = """^([+\-]?\d+(?:\.\d+)?).*$""".r
         val pattern(matched) = str
         BigDecimal(matched)
     }
