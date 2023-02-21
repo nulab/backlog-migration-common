@@ -23,7 +23,7 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
   protected val backlog: BacklogAPIClient = createBacklogAPIClient(apiConfig.iaah)
 
   override def configure(): Unit = {
-    //base
+    // base
     bind(classOf[BacklogAPIClient]).toInstance(backlog)
     bind(classOf[BacklogProjectKey]).toInstance(BacklogProjectKey(apiConfig.projectKey))
     bind(classOf[BacklogPaths]).toInstance(

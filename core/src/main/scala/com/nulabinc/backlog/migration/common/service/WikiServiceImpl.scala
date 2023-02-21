@@ -60,20 +60,20 @@ class WikiServiceImpl @Inject() (implicit
     val params =
       new ImportWikiParams(projectId, wiki.name, wiki.optContent.getOrElse(""))
 
-    //created
+    // created
     for { created <- wiki.optCreated } yield params.created(created)
 
-    //created user id
+    // created user id
     for {
       createdUser <- wiki.optCreatedUser
       userId      <- createdUser.optUserId
       id          <- propertyResolver.optResolvedUserId(userId)
     } yield params.createdUserId(id)
 
-    //updated
+    // updated
     for { updated <- wiki.optUpdated } yield params.updated(updated)
 
-    //updated user id
+    // updated user id
     for {
       updatedUser <- wiki.optUpdatedUser
       userId      <- updatedUser.optUserId

@@ -5,7 +5,11 @@ import javax.inject.Inject
 import better.files.{File => Path}
 import com.nulabinc.backlog.migration.common.conf.{BacklogConstantValue, BacklogPaths}
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
-import com.nulabinc.backlog.migration.common.domain.{BacklogAttachment, BacklogWiki}
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogAttachment,
+  BacklogProject,
+  BacklogWiki
+}
 import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
 import com.nulabinc.backlog.migration.common.service.{
   AttachmentService,
@@ -29,7 +33,7 @@ private[importer] class WikisImporter @Inject() (
     attachmentService: AttachmentService
 ) extends Logging {
 
-  def execute(projectId: Long, propertyResolver: PropertyResolver)(implicit
+  def execute(project: BacklogProject, propertyResolver: PropertyResolver)(implicit
       s: Scheduler,
       consoleDSL: ConsoleDSL[Task]
   ) = {
@@ -59,8 +63,8 @@ private[importer] class WikisImporter @Inject() (
       case (wikiDir, index) =>
         for {
           wiki    <- unmarshal(wikiDir)
-          created <- create(projectId, propertyResolver, wiki)
-        } yield postCreate(created.id, wikiDir, wiki).runSyncUnsafe()
+          created <- create(project.id, propertyResolver, wiki)
+        } yield postCreate(project, created.id, wikiDir, wiki).runSyncUnsafe()
         console(index + 1, wikiDirs.size)
     }
   }
@@ -77,6 +81,7 @@ private[importer] class WikisImporter @Inject() (
   }
 
   private def postCreate(
+      project: BacklogProject,
       createdId: Long,
       wikiDir: Path,
       wiki: BacklogWiki
@@ -91,7 +96,9 @@ private[importer] class WikisImporter @Inject() (
               Messages("import.error.wiki.attachment", wiki.name, e.getMessage)
             ),
           _ => {
-            sharedFileService.linkWikiSharedFile(createdId, wiki)
+            if (project.useFileSharing) {
+              sharedFileService.linkWikiSharedFile(createdId, wiki)
+            }
             Task.unit
           }
         )

@@ -103,7 +103,7 @@ trait SimpleFixture {
   val item1 = BacklogItem(Some(1), "a")
   val item2 = BacklogItem(Some(2), "b")
 
-  //Text
+  // Text
   val textCustomFieldId    = 1
   val textCustomFieldName  = "text"
   val textCustomFieldValue = "text value"
@@ -125,7 +125,7 @@ trait SimpleFixture {
       property = BacklogCustomFieldTextProperty(typeId = FieldType.Text.getIntValue)
     )
 
-  //TextArea
+  // TextArea
   val textAreaCustomFieldId    = 2
   val textAreaCustomFieldName  = "text area"
   val textAreaCustomFieldValue = "text area value"
@@ -148,10 +148,11 @@ trait SimpleFixture {
       property = BacklogCustomFieldTextProperty(typeId = FieldType.TextArea.getIntValue)
     )
 
-  //Numeric
-  val numericCustomFieldId    = 3
-  val numericCustomFieldName  = "numeric"
-  val numericCustomFieldValue = "12.12"
+  // Numeric
+  val numericCustomFieldId          = 3
+  val numericCustomFieldName        = "numeric"
+  val numericCustomFieldValue       = "12.12"
+  val numericCustomFieldScaledValue = "12.1200"
   val numericCustomField =
     BacklogCustomField(
       numericCustomFieldName,
@@ -177,7 +178,7 @@ trait SimpleFixture {
       )
     )
 
-  //Date
+  // Date
   val dateCustomFieldId    = 4
   val dateCustomFieldName  = "date"
   val dateCustomFieldValue = "2017-03-20"
@@ -211,7 +212,7 @@ trait SimpleFixture {
       )
     )
 
-  //SingleList
+  // SingleList
   val singleListCustomFieldId   = 5
   val singleListCustomFieldName = "singleList"
   val singleListCustomField =
@@ -238,7 +239,7 @@ trait SimpleFixture {
       )
     )
 
-  //MultipleList
+  // MultipleList
   val multipleListCustomFieldId   = 6
   val multipleListCustomFieldName = "multipleList"
   val multipleListCustomField =
@@ -265,7 +266,7 @@ trait SimpleFixture {
       )
     )
 
-  //CheckBox
+  // CheckBox
   val checkBoxCustomFieldId   = 7
   val checkBoxCustomFieldName = "checkBox"
   val checkBoxCustomField =
@@ -292,7 +293,7 @@ trait SimpleFixture {
       )
     )
 
-  //Radio
+  // Radio
   val radioCustomFieldId   = 8
   val radioCustomFieldName = "radio"
   val radioCustomField =

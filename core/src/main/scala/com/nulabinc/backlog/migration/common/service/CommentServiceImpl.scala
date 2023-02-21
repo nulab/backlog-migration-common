@@ -102,32 +102,32 @@ class CommentServiceImpl @Inject() (
     val optCurrentIssue = issueService.optIssueOfId(issueId)
     val params          = new ImportUpdateIssueParams(issueId)
 
-    //comment
+    // comment
     for { content <- backlogComment.optContent } yield {
       params.comment(content)
     }
 
-    //notificationUserIds
+    // notificationUserIds
     val notifiedUserIds = backlogComment.notifications
       .flatMap(_.optUser)
       .flatMap(_.optUserId)
       .flatMap(propertyResolver.optResolvedUserId)
     params.notifiedUserIds(notifiedUserIds.asJava)
 
-    //created updated
+    // created updated
     for { created <- backlogComment.optCreated } yield {
       params.created(created)
       params.updated(created)
     }
 
-    //created updated user id
+    // created updated user id
     for {
       createdUser <- backlogComment.optCreatedUser
       userId      <- createdUser.optUserId
       id          <- propertyResolver.optResolvedUserId(userId)
     } yield params.updatedUserId(id)
 
-    //changelog
+    // changelog
     backlogComment.changeLogs.foreach { changeLog =>
       setChangeLog(
         changeLog,
@@ -373,13 +373,13 @@ class CommentServiceImpl @Inject() (
       params: ImportUpdateIssueParams,
       changeLog: BacklogChangeLog,
       propertyResolver: PropertyResolver
-  ) =
-    for { value <- changeLog.optNewValue } yield {
-      val optResolutionType = propertyResolver
-        .optResolvedResolutionId(value)
-        .map(value => ResolutionType.valueOf(value.toInt))
-      params.resolution(optResolutionType.getOrElse(ResolutionType.NotSet))
-    }
+  ) = {
+    val optResolutionType = for {
+      value        <- changeLog.optNewValue
+      resolutionId <- propertyResolver.optResolvedResolutionId(value)
+    } yield ResolutionType.valueOf(resolutionId.toInt)
+    params.resolution(optResolutionType.getOrElse(ResolutionType.NotSet))
+  }
 
   private[this] def setEstimatedHours(
       params: ImportUpdateIssueParams,
@@ -507,7 +507,7 @@ class CommentServiceImpl @Inject() (
     (changeLog.optNewValue, customFieldSetting.optId) match {
       case (Some(""), Some(id)) => params.numericCustomField(id, null)
       case (Some(value), Some(id)) =>
-        params.numericCustomField(id, StringUtil.safeUnitStringToFloat(value))
+        params.numericCustomField(id, StringUtil.safeUnitStringToBigDecimal(value).bigDecimal)
       case (None, Some(id)) => params.numericCustomField(id, null)
       case _                => throw new RuntimeException
     }
