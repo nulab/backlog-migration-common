@@ -394,7 +394,7 @@ class CustomFieldSettingServiceImpl @Inject() (implicit
           backlogCustomFieldSetting,
           propertyResolver
         )
-        params.initialValueType(DateCustomFieldSetting.InitialValueType.Today)
+
         for { min <- property.optMin } yield {
           params.min(min)
         }
