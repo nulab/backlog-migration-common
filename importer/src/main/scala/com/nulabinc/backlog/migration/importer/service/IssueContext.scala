@@ -13,7 +13,8 @@ import scala.collection.mutable
 private[importer] case class IssueContext(
     propertyResolver: PropertyResolver,
     fitIssueKey: Boolean,
-    retryCount: Int
+    retryCount: Int,
+    grantDuplicatedIssues: Boolean
 ) extends Logging {
 
   val toRemoteIssueId = (localIssueId: Long) => issueIdMap.get(localIssueId): Option[Long]
