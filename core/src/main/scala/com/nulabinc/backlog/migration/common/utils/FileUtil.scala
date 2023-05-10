@@ -12,7 +12,7 @@ object FileUtil {
     normalize(string).replaceAll("\\\\|/|\\||:|\\?|\\*|\"|<|>|\\p{Cntrl}", "_")
   }
 
-  def normalize(string: String): String = {
+  private def normalize(string: String): String = {
     Normalizer.normalize(Option(string).getOrElse(""), Normalizer.Form.NFC)
   }
 
