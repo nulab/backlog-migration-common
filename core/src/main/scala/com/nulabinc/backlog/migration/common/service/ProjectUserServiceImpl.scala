@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
+import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -32,7 +33,9 @@ class ProjectUserServiceImpl @Inject() (implicit
     }
   }
 
-  override def add(userId: Long) =
+  override def add(userId: Long) = {
+    sleep(500)
     backlog.addProjectUser(projectKey.value, userId)
+  }
 
 }
