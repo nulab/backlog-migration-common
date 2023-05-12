@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
+import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -37,6 +38,7 @@ class GroupServiceImpl @Inject() (implicit
     val memberIds = group.members.flatMap(_.optUserId).flatMap(propertyResolver.optResolvedUserId)
     val params    = new CreateGroupParams(group.name)
     params.members(memberIds.asJava)
+    sleep(500)
     backlog.createGroup(params)
   }
 

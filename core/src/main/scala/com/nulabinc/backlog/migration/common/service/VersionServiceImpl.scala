@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
+import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -26,6 +27,7 @@ class VersionServiceImpl @Inject() (implicit
     backlog.getVersions(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
 
   override def add(backlogVersion: BacklogVersion): Option[BacklogVersion] = {
+    sleep(500)
     val params = new AddVersionParams(projectKey.value, backlogVersion.name)
     params.description(backlogVersion.description)
     for { startDate <- backlogVersion.optStartDate } yield {

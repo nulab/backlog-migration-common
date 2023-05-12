@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
+import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -28,6 +29,7 @@ class IssueCategoryServiceImpl @Inject() (implicit
   override def add(
       backlogIssueCategory: BacklogIssueCategory
   ): BacklogIssueCategory = {
+    sleep(500)
     val params =
       new AddCategoryParams(projectKey.value, backlogIssueCategory.name)
     Convert.toBacklog(backlog.addCategory(params))
