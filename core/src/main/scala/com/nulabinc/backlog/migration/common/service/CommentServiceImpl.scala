@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
+import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -43,6 +44,7 @@ class CommentServiceImpl @Inject() (
         offset: Long
     ): Seq[IssueComment] =
       if (offset < allCount) {
+        sleep(500)
         val queryParams = new QueryParams()
         for { minId <- optMinId } yield {
           queryParams.minId(minId)
