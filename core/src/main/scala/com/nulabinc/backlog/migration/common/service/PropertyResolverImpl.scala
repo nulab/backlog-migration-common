@@ -95,8 +95,10 @@ class PropertyResolverImpl(
   override def optResolvedUserId(userId: String): Option[Long] = {
     val optUser = users.find(user => user.optUserId.getOrElse("") == userId)
     if (optUser.isEmpty) {
+      val ids = users.flatMap(_.optUserId).mkString(",")
       logger.debug(
-        s"[User not found.]:${userId}:${users.flatMap(_.optUserId).mkString(",")}"
+        s"[User not found.]:${userId}:${if (ids.length > 128) ids.substring(0, 128) + "..."
+        else ids}"
       )
     }
     optUser.map(_.id)
