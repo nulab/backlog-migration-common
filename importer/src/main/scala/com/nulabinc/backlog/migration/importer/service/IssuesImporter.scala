@@ -65,8 +65,10 @@ private[importer] class IssuesImporter(
       storeDSL: StoreDSL[Task],
       consoleDSL: ConsoleDSL[Task]
   ): Unit = {
+    val comparator: (Path, Path) => Boolean =
+      if (ctx.fitIssueKey) compareIssueJsonsById else compareIssueJsons
     val jsonDirs =
-      path.list.filter(_.isDirectory).toSeq.sortWith(compareIssueJsons)
+      path.list.filter(_.isDirectory).toSeq.sortWith(comparator)
     console.date = DateUtil.yyyymmddToSlashFormat(path.name)
     console.failed = 0
 
@@ -378,6 +380,20 @@ private[importer] class IssuesImporter(
         else getIssueId(path1.name) < getIssueId(path2.name)
       else getType(path1.name) > getType(path2.name)
     } else getTimestamp(path1.name) < getTimestamp(path2.name)
+  }
+
+  private[this] def compareIssueJsonsById(path1: Path, path2: Path): Boolean = {
+    def getIssueId(value: String): Long = value.split("-")(1).toLong
+
+    def getType(value: String) = value.split("-")(2)
+
+    def getIndex(value: String) = value.split("-")(3).toInt
+
+    if (getIssueId(path1.name) == getIssueId(path2.name))
+      if (getType(path1.name) == getType(path2.name))
+        getIndex(path1.name) < getIndex(path2.name)
+      else getType(path1.name) > getType(path2.name)
+    else getIssueId(path1.name) < getIssueId(path2.name)
   }
 
   private[this] def totalSize(): Int = {
