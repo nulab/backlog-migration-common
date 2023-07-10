@@ -167,6 +167,7 @@ class IssueServiceImpl @Inject() (implicit
       params.getParamList.asScala.foreach(p =>
         logger.debug(s"        [Issue Parameter]:${p.getName}:${p.getValue}")
       )
+      sleep(500)
       Right(Convert.toBacklog(backlog.importIssue(params)))
     } catch {
       case e: Throwable =>
@@ -316,6 +317,7 @@ class IssueServiceImpl @Inject() (implicit
       propertyResolver.tryDefaultIssueTypeId(),
       PriorityType.Normal
     )
+    sleep(500)
     val issue = backlog.importIssue(params)
     logger.debug(
       s"[Success Finish Create Dummy Issue]:${issue.getId}----------------------------"
