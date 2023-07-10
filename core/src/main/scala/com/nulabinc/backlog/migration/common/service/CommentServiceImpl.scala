@@ -158,6 +158,7 @@ class CommentServiceImpl @Inject() (
       logger.warn("No update item")
       true
     } else {
+      sleep(500)
       Convert.toBacklog(backlog.importUpdateIssue(params))
       false
     }
