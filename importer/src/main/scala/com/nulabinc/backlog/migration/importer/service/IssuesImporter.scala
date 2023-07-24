@@ -365,35 +365,22 @@ private[importer] class IssuesImporter(
   }
 
   private[this] def compareIssueJsons(path1: Path, path2: Path): Boolean = {
-    def getTimestamp(value: String): Long = value.split("-")(0).toLong
+    val Array(timestamp1, id1, type1, idx1) = path1.name.split("-")
+    val Array(timestamp2, id2, type2, idx2) = path2.name.split("-")
 
-    def getIssueId(value: String): Long = value.split("-")(1).toLong
-
-    def getType(value: String) = value.split("-")(2)
-
-    def getIndex(value: String) = value.split("-")(3).toInt
-
-    if (getTimestamp(path1.name) == getTimestamp(path2.name)) {
-      if (getType(path1.name) == getType(path2.name))
-        if (getIssueId(path1.name) == getIssueId(path2.name))
-          getIndex(path1.name) < getIndex(path2.name)
-        else getIssueId(path1.name) < getIssueId(path2.name)
-      else getType(path1.name) > getType(path2.name)
-    } else getTimestamp(path1.name) < getTimestamp(path2.name)
+    if (timestamp1 != timestamp2) timestamp1 < timestamp2
+    else if (type1 != type2) type1 > type2
+    else if (id1 != id2) id1 < id2
+    else idx1 < idx2
   }
 
   private[this] def compareIssueJsonsById(path1: Path, path2: Path): Boolean = {
-    def getIssueId(value: String): Long = value.split("-")(1).toLong
+    val Array(_, id1, type1, idx1) = path1.name.split("-")
+    val Array(_, id2, type2, idx2) = path2.name.split("-")
 
-    def getType(value: String) = value.split("-")(2)
-
-    def getIndex(value: String) = value.split("-")(3).toInt
-
-    if (getIssueId(path1.name) == getIssueId(path2.name))
-      if (getType(path1.name) == getType(path2.name))
-        getIndex(path1.name) < getIndex(path2.name)
-      else getType(path1.name) > getType(path2.name)
-    else getIssueId(path1.name) < getIssueId(path2.name)
+    if (id1 != id2) id1 < id2
+    else if (type1 != type2) type1 > type2
+    else idx1 < idx2
   }
 
   private[this] def totalSize(): Int = {
