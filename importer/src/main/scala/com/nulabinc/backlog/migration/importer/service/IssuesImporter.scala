@@ -66,10 +66,20 @@ private[importer] class IssuesImporter(
       storeDSL: StoreDSL[Task],
       consoleDSL: ConsoleDSL[Task]
   ): Unit = {
-    val comparator: (Path, Path) => Boolean =
-      if (ctx.fitIssueKey) compareIssueJsonsById else compareIssueJsons
-    val jsonDirs =
-      path.list.filter(_.isDirectory).toSeq.sortWith(comparator)
+    val jsonDirs = if (ctx.fitIssueKey) {
+      val issueGroupKey   = "issue"
+      val commentGroupKey = "comment"
+      val grouped = path.list.filter(_.isDirectory).toList.groupBy(_.name.split("-")(2)).map {
+        case (typeName, issueJsonDirs) if typeName == issueGroupKey =>
+          (typeName, issueJsonDirs.sortWith(compareIssueJsonsById))
+        case (typeName, commentJsonDirs) if typeName == commentGroupKey =>
+          (typeName, commentJsonDirs.sortWith(compareIssueJsons))
+        case (typeName, _) => throw new RuntimeException(s"unsupported type: ${typeName}")
+      }
+      grouped.getOrElse(issueGroupKey, Seq.empty) ++ grouped.getOrElse(commentGroupKey, Seq.empty)
+    } else {
+      path.list.filter(_.isDirectory).toSeq.sortWith(compareIssueJsons)
+    }
     console.date = DateUtil.yyyymmddToSlashFormat(path.name)
     console.failed = 0
 
