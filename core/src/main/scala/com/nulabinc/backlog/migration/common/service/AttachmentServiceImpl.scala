@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.{File, FileInputStream}
+import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -25,6 +26,7 @@ class AttachmentServiceImpl @Inject() (implicit
   override def postAttachment(
       path: String
   ): Either[Throwable, BacklogAttachment] = {
+    sleep(500)
     val file = new File(path)
     val attachmentData =
       new AttachmentDataImpl(file.getName, new FileInputStream(file))

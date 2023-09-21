@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
+import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -31,8 +32,10 @@ class IssueServiceImpl @Inject() (implicit
 ) extends IssueService
     with Logging {
 
-  override def issueOfId(id: Long): BacklogIssue =
+  override def issueOfId(id: Long): BacklogIssue = {
+    sleep(500)
     Convert.toBacklog(backlog.getIssue(id))
+  }
 
   override def optIssueOfId(id: Long): Option[Issue] =
     try {
@@ -164,6 +167,7 @@ class IssueServiceImpl @Inject() (implicit
       params.getParamList.asScala.foreach(p =>
         logger.debug(s"        [Issue Parameter]:${p.getName}:${p.getValue}")
       )
+      sleep(500)
       Right(Convert.toBacklog(backlog.importIssue(params)))
     } catch {
       case e: Throwable =>
@@ -313,6 +317,7 @@ class IssueServiceImpl @Inject() (implicit
       propertyResolver.tryDefaultIssueTypeId(),
       PriorityType.Normal
     )
+    sleep(500)
     val issue = backlog.importIssue(params)
     logger.debug(
       s"[Success Finish Create Dummy Issue]:${issue.getId}----------------------------"
