@@ -17,7 +17,10 @@ object ServiceInjector {
     Guice.createInjector(new AbstractModule() {
       override def configure(): Unit = {
         val backlogPackageConfigure = new BacklogPackageConfigure(apiConfig.url)
-        val configure               = backlogPackageConfigure.apiKey(apiConfig.key)
+        val configure               = backlogPackageConfigure
+                                        .apiKey(apiConfig.key)
+                                        .connectionTimeout(300000)
+                                        .readTimeout(300000)
         val backlog                 = new BacklogAPIClientImpl(configure, apiConfig.iaah)
 
         bind(classOf[BacklogProjectKey]).toInstance(BacklogProjectKey(apiConfig.projectKey))
