@@ -11,7 +11,7 @@ import org.slf4j.{Logger, LoggerFactory}
  */
 trait Logging {
 
-  implicit val userLang =
+  implicit lazy val userLang =
     if (Locale.getDefault.equals(Locale.JAPAN)) Lang("ja") else Lang("en")
 
   val logger: Logger = LoggerFactory.getLogger(getClass)
