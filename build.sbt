@@ -12,11 +12,11 @@ lazy val commonSettings = Seq(
     "-Ywarn-unused"
   ),
   libraryDependencies ++= {
-    val catsVersion     = "2.8.0"
-    val monixVersion    = "3.2.2"
-    val doobieVersion   = "0.9.0"
-    val akkaVersion     = "2.6.17"
-    val akkaHttpVersion = "10.2.7"
+    val catsVersion      = "2.8.0"
+    val monixVersion     = "3.2.2"
+    val doobieVersion    = "0.9.0"
+    val pekkoVersion     = "1.0.3"
+    val pekkoHttpVersion = "1.0.1"
     Seq(
       "org.typelevel"        %% "cats-core"        % catsVersion,
       "org.typelevel"        %% "cats-kernel"      % catsVersion,
@@ -25,10 +25,10 @@ lazy val commonSettings = Seq(
       "io.monix"             %% "monix-reactive"   % monixVersion,
       "org.tpolecat"         %% "doobie-core"      % doobieVersion,
       "org.tpolecat"         %% "doobie-hikari"    % doobieVersion,
-      "com.typesafe.akka"    %% "akka-actor"       % akkaVersion,
-      "com.typesafe.akka"    %% "akka-stream"      % akkaVersion,
-      "com.typesafe.akka"    %% "akka-slf4j"       % akkaVersion,
-      "com.typesafe.akka"    %% "akka-http"        % akkaHttpVersion,
+      "org.apache.pekko"     %% "pekko-actor"      % pekkoVersion,
+      "org.apache.pekko"     %% "pekko-stream"     % pekkoVersion,
+      "org.apache.pekko"     %% "pekko-slf4j"      % pekkoVersion,
+      "org.apache.pekko"     %% "pekko-http"       % pekkoHttpVersion,
       "org.xerial"            % "sqlite-jdbc"      % "3.36.0.3",
       "com.nulab-inc"         % "backlog4j"        % "2.5.2",
       "org.typelevel"        %% "simulacrum"       % "1.0.0",
