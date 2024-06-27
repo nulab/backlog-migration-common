@@ -16,7 +16,7 @@ import scala.concurrent.duration._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Try}
 
-class AkkaHttpDSL()(implicit
+class PekkoHttpDSL()(implicit
     actorSystem: ActorSystem,
     exc: ExecutionContext
 ) extends HttpDSL[Task] {
