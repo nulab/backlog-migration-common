@@ -2,10 +2,11 @@ package com.nulabinc.backlog.migration.common.services
 
 import java.nio.file.Path
 
-import cats.Foldable.ops._
 import cats.Monad
-import cats.Monad.ops._
 import cats.data.Validated.{Invalid, Valid}
+import cats.syntax.flatMap._
+import cats.syntax.foldable._
+import cats.syntax.functor._
 import com.nulabinc.backlog.migration.common.codec.{StatusMappingDecoder, StatusMappingEncoder}
 import com.nulabinc.backlog.migration.common.domain.BacklogStatuses
 import com.nulabinc.backlog.migration.common.domain.mappings._

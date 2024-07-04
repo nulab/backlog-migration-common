@@ -1,6 +1,7 @@
 package com.nulabinc.backlog.migration.common.services
 
-import cats.Monad.ops._
+import cats.syntax.flatMap._
+import cats.syntax.functor._
 import cats.{Applicative, Monad}
 import com.nulabinc.backlog.migration.common.codec.Decoder
 import com.nulabinc.backlog.migration.common.dsl.{ConsoleDSL, HttpDSL, HttpError, HttpQuery}
