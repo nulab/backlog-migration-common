@@ -29,8 +29,8 @@ object syntax {
       EitherT(result.map(_ => Right(())))
   }
 
-  implicit class EitherOps[F[_]: Monad, E, A](result: Either[E, A]) {
-    def lift: F[Either[E, A]] =
+  implicit class EitherOps[E, A](result: Either[E, A]) {
+    def lift[F[_]: Monad]: F[Either[E, A]] =
       Applicative[F].pure(result)
 
     def orFail: A =
