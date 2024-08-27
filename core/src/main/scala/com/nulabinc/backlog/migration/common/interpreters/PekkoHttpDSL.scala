@@ -2,13 +2,13 @@ package com.nulabinc.backlog.migration.common.interpreters
 
 import java.net.InetSocketAddress
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpCredentials}
-import akka.http.scaladsl.settings.{ClientConnectionSettings, ConnectionPoolSettings}
-import akka.http.scaladsl.{ClientTransport, Http}
 import com.nulabinc.backlog.migration.common.dsl.{HttpDSL, HttpQuery, RequestError, ServerDown}
 import monix.eval.Task
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.headers.{BasicHttpCredentials, HttpCredentials}
+import org.apache.pekko.http.scaladsl.settings.{ClientConnectionSettings, ConnectionPoolSettings}
+import org.apache.pekko.http.scaladsl.{ClientTransport, Http}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
@@ -16,7 +16,7 @@ import scala.concurrent.duration._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Try}
 
-class AkkaHttpDSL()(implicit
+class PekkoHttpDSL()(implicit
     actorSystem: ActorSystem,
     exc: ExecutionContext
 ) extends HttpDSL[Task] {
