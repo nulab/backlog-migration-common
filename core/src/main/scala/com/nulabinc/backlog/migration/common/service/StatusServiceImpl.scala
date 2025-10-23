@@ -1,12 +1,15 @@
 package com.nulabinc.backlog.migration.common.service
 
+import java.util.Locale
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.domain.{
   BacklogCustomStatus,
+  BacklogDefaultStatus,
   BacklogProjectKey,
   BacklogStatus,
+  BacklogStatusName,
   BacklogStatuses,
   Id
 }
@@ -29,6 +32,15 @@ class StatusServiceImpl @Inject() (
     with Logging {
 
   override def allStatuses(): BacklogStatuses =
+    BacklogStatuses(
+      allStatusesForExport()
+        .append(defaultStatusesJa.values)
+        .append(defaultStatusesEn.values)
+        .values
+        .distinctBy(_.name)
+    )
+
+  override def allStatusesForExport(): BacklogStatuses =
     Try {
       BacklogStatuses(
         backlog.getStatuses(projectKey).asScala.toSeq.map(BacklogStatus.from)
@@ -68,9 +80,30 @@ class StatusServiceImpl @Inject() (
   override def remove(id: Id[BacklogStatus]): Unit =
     backlog.removeStatus(projectKey.value, id.value, 1) // Any status id is OK
 
-  private def defaultStatuses(): BacklogStatuses =
-    BacklogStatuses(
-      backlog.getStatuses.asScala.toSeq.map(BacklogStatus.from)
+  private val defaultStatusesJa: BacklogStatuses = BacklogStatuses(
+    Seq(
+      BacklogDefaultStatus(Id(1), BacklogStatusName("未対応"), 1000),
+      BacklogDefaultStatus(Id(2), BacklogStatusName("処理中"), 2000),
+      BacklogDefaultStatus(Id(3), BacklogStatusName("処理済み"), 3000),
+      BacklogDefaultStatus(Id(4), BacklogStatusName("完了"), 4000)
     )
+  )
+
+  private val defaultStatusesEn: BacklogStatuses = BacklogStatuses(
+    Seq(
+      BacklogDefaultStatus(Id(1), BacklogStatusName("Open"), 1000),
+      BacklogDefaultStatus(Id(2), BacklogStatusName("In Progress"), 2000),
+      BacklogDefaultStatus(Id(3), BacklogStatusName("Resolved"), 3000),
+      BacklogDefaultStatus(Id(4), BacklogStatusName("Closed"), 4000)
+    )
+  )
+
+  private def defaultStatuses(): BacklogStatuses = {
+    // アプリケーション起動時にconfファイルを参照してLocale.setDefaultが呼び出されている
+    Locale.getDefault match {
+      case Locale.JAPAN => defaultStatusesJa
+      case _            => defaultStatusesEn
+    }
+  }
 
 }
