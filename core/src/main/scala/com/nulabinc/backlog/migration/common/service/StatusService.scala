@@ -15,6 +15,8 @@ trait StatusService {
 
   def allStatuses(): BacklogStatuses
 
+  def allStatusesForExport(): BacklogStatuses
+
   def add(status: BacklogCustomStatus): BacklogCustomStatus
 
   def updateOrder(ids: Seq[Id[BacklogStatus]]): Unit
