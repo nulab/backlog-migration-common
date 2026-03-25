@@ -56,7 +56,8 @@ case class BacklogProject(
     useWikiTreeView: Boolean,
     useOriginalImageSizeAtWiki: Boolean,
     useSubversion: Boolean,
-    useGit: Boolean
+    useGit: Boolean,
+    maxHierarchyLevel: Option[Int] = None  // 追加: 最大階層レベル (None, Some(1), Some(2))
 ) {
   def id: Long =
     optId match {
@@ -138,6 +139,7 @@ case class BacklogIssue(
     issueKey: String,
     summary: BacklogIssueSummary,
     optParentIssueId: Option[Long],
+    hierarchyLevel: Int = 0,  // 追加: 階層レベル (0=親, 1=子, 2=孫)
     description: String,
     optStartDate: Option[String],
     optDueDate: Option[String],

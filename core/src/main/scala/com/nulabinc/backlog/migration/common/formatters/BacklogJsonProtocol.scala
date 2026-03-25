@@ -31,7 +31,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogNotificationFormat   = jsonFormat2(BacklogNotification)
   implicit val BacklogOperationFormat      = jsonFormat4(BacklogOperation)
   implicit val BacklogAttachmentFormat     = jsonFormat2(BacklogAttachment)
-  implicit val BacklogProjectFormat        = jsonFormat15(BacklogProject)
+  implicit val BacklogProjectFormat        = jsonFormat16(BacklogProject)
   implicit val BacklogProjectWrapperFormat = jsonFormat1(BacklogProjectWrapper)
   implicit val BacklogSharedFileFormat     = jsonFormat2(BacklogSharedFile)
   implicit val BacklogGroupFormat          = jsonFormat2(BacklogGroup)
@@ -97,8 +97,63 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
       }
   }
 
-  // Issue
-  implicit val BacklogIssueFormat = jsonFormat22(BacklogIssue.apply _)
+  // Issue - カスタムJsonFormat (23パラメータのため)
+  implicit object BacklogIssueFormat extends RootJsonFormat[BacklogIssue] {
+    override def write(issue: BacklogIssue): JsValue = JsObject(
+      "eventType" -> issue.eventType.toJson,
+      "id" -> issue.id.toJson,
+      "issueKey" -> issue.issueKey.toJson,
+      "summary" -> issue.summary.toJson,
+      "optParentIssueId" -> issue.optParentIssueId.toJson,
+      "hierarchyLevel" -> issue.hierarchyLevel.toJson,
+      "description" -> issue.description.toJson,
+      "optStartDate" -> issue.optStartDate.toJson,
+      "optDueDate" -> issue.optDueDate.toJson,
+      "optEstimatedHours" -> issue.optEstimatedHours.toJson,
+      "optActualHours" -> issue.optActualHours.toJson,
+      "optIssueTypeName" -> issue.optIssueTypeName.toJson,
+      "status" -> issue.status.toJson,
+      "categoryNames" -> issue.categoryNames.toJson,
+      "versionNames" -> issue.versionNames.toJson,
+      "milestoneNames" -> issue.milestoneNames.toJson,
+      "priorityName" -> issue.priorityName.toJson,
+      "optAssignee" -> issue.optAssignee.toJson,
+      "attachments" -> issue.attachments.toJson,
+      "sharedFiles" -> issue.sharedFiles.toJson,
+      "customFields" -> issue.customFields.toJson,
+      "notifiedUsers" -> issue.notifiedUsers.toJson,
+      "operation" -> issue.operation.toJson
+    )
+
+    override def read(json: JsValue): BacklogIssue = {
+      val fields = json.asJsObject.fields
+      BacklogIssue(
+        eventType = fields("eventType").convertTo[String],
+        id = fields("id").convertTo[Long],
+        issueKey = fields("issueKey").convertTo[String],
+        summary = fields("summary").convertTo[BacklogIssueSummary],
+        optParentIssueId = fields("optParentIssueId").convertTo[Option[Long]],
+        hierarchyLevel = fields.getOrElse("hierarchyLevel", JsNumber(0)).convertTo[Int],
+        description = fields("description").convertTo[String],
+        optStartDate = fields("optStartDate").convertTo[Option[String]],
+        optDueDate = fields("optDueDate").convertTo[Option[String]],
+        optEstimatedHours = fields("optEstimatedHours").convertTo[Option[Float]],
+        optActualHours = fields("optActualHours").convertTo[Option[Float]],
+        optIssueTypeName = fields("optIssueTypeName").convertTo[Option[String]],
+        status = fields("status").convertTo[BacklogStatus],
+        categoryNames = fields("categoryNames").convertTo[Seq[String]],
+        versionNames = fields("versionNames").convertTo[Seq[String]],
+        milestoneNames = fields("milestoneNames").convertTo[Seq[String]],
+        priorityName = fields("priorityName").convertTo[String],
+        optAssignee = fields("optAssignee").convertTo[Option[BacklogUser]],
+        attachments = fields("attachments").convertTo[Seq[BacklogAttachment]],
+        sharedFiles = fields("sharedFiles").convertTo[Seq[BacklogSharedFile]],
+        customFields = fields("customFields").convertTo[Seq[BacklogCustomField]],
+        notifiedUsers = fields("notifiedUsers").convertTo[Seq[BacklogUser]],
+        operation = fields("operation").convertTo[BacklogOperation]
+      )
+    }
+  }
 
   implicit object BacklogEventObjectFormat extends RootJsonFormat[BacklogEvent] {
     def write(eventObject: BacklogEvent) =

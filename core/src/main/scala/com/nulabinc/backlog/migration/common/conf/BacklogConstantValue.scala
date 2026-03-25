@@ -30,6 +30,12 @@ object BacklogConstantValue {
     val Radio        = FieldType.Radio.getIntValue
   }
 
+  object HierarchyLevel {
+    val PARENT: Int      = 0  // 親課題
+    val CHILD: Int       = 1  // 子課題
+    val GRANDCHILD: Int  = 2  // 孫課題
+  }
+
   object ChangeLog {
     val NOTIFICATIONINFO_TYPE_ISSUE_CREATE: String = "issue.create"
 
@@ -48,6 +54,7 @@ object BacklogConstantValue {
     val ESTIMATED_HOURS: String = "estimatedHours"
     val ACTUAL_HOURS: String    = "actualHours"
     val PARENT_ISSUE: String    = "parentIssue"
+    val HIERARCHY_LEVEL: String = "hierarchyLevel"  // 追加: 階層レベル変更
     val NOTIFICATION: String    = "notification"
     val ATTACHMENT: String      = "attachment"
     val COMMIT: String          = "commit"
