@@ -17,7 +17,6 @@ import com.nulabinc.backlog4j.CustomField.FieldType
 import com.nulabinc.backlog4j.Issue.PriorityType
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option._
-import com.osinka.i18n.Messages
 import io.lemonlabs.uri._
 
 import scala.jdk.CollectionConverters._
