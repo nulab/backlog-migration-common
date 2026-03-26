@@ -138,6 +138,7 @@ case class BacklogIssue(
     issueKey: String,
     summary: BacklogIssueSummary,
     optParentIssueId: Option[Long],
+    hierarchyLevel: Int = 0,  // 追加: 階層レベル (0=親, 1=子, 2=孫)
     description: String,
     optStartDate: Option[String],
     optDueDate: Option[String],
