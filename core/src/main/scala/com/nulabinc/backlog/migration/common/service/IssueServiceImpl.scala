@@ -213,12 +213,9 @@ class IssueServiceImpl @Inject() (implicit
     // description
     optParentIssue match {
       case Some(parentIssue) if parentIssue.optParentIssueId.nonEmpty =>
-        val sb = new StringBuilder()
-        sb.append(backlogIssue.description).append("\n")
-        sb.append(Messages("common.parent_issue"))
-          .append(":")
-          .append(parentIssue.issueKey)
-        params.description(sb.toString())
+        // 孫課題の場合も親課題IDを設定（3階層対応）
+        params.parentIssueId(parentIssue.id)
+        params.description(backlogIssue.description)
       case Some(parentIssue) if parentIssue.optParentIssueId.isEmpty =>
         params.parentIssueId(parentIssue.id) // parent id
         params.description(backlogIssue.description)

@@ -43,6 +43,9 @@ private[importer] class IssuesImporter(
       retryCount: Int
   )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
 
+    // hierarchy.jsonを読み込む
+    val hierarchyMap = loadHierarchyMap()
+
     for {
       _ <- ConsoleDSL[Task].println("""
       :""".stripMargin)
@@ -53,20 +56,45 @@ private[importer] class IssuesImporter(
         IssueContext(propertyResolver, fitIssueKey, retryCount)
       val paths = IOUtil.directoryPaths(backlogPaths.issueDirectoryPath).sortWith(_.name < _.name)
       paths.foreach { path =>
-        loadDateDirectory(project, path)
+        loadDateDirectory(project, path, hierarchyMap)
       }
     }
 
   }
 
-  private[this] def loadDateDirectory(project: BacklogProject, path: Path)(implicit
+  private def loadHierarchyMap(): Map[Long, Int] = {
+    val hierarchyFile = backlogPaths.outputPath / "hierarchy.json"
+    if (hierarchyFile.exists) {
+      try {
+        import spray.json._
+        import DefaultJsonProtocol._
+        val json = hierarchyFile.contentAsString.parseJson
+        val issues = json.asJsObject.fields("issues").asInstanceOf[JsArray].elements
+        issues.map { issue =>
+          val obj = issue.asJsObject
+          val issueId = obj.fields("issueId").convertTo[Long]
+          val level = obj.fields("level").convertTo[Int]
+          issueId -> level
+        }.toMap
+      } catch {
+        case e: Exception =>
+          logger.warn(s"Failed to load hierarchy.json: ${e.getMessage}")
+          Map.empty[Long, Int]
+      }
+    } else {
+      logger.warn("hierarchy.json not found, using timestamp order")
+      Map.empty[Long, Int]
+    }
+  }
+
+  private[this] def loadDateDirectory(project: BacklogProject, path: Path, hierarchyMap: Map[Long, Int])(implicit
       ctx: IssueContext,
       s: Scheduler,
       storeDSL: StoreDSL[Task],
       consoleDSL: ConsoleDSL[Task]
   ): Unit = {
     val jsonDirs =
-      path.list.filter(_.isDirectory).toSeq.sortWith(compareIssueJsons)
+      path.list.filter(_.isDirectory).toSeq.sortWith(compareIssueJsonsWithHierarchy(_, _, hierarchyMap))
     console.date = DateUtil.yyyymmddToSlashFormat(path.name)
     console.failed = 0
 
@@ -372,6 +400,34 @@ private[importer] class IssuesImporter(
     def getIndex(value: String) = value.split("-")(3).toInt
 
     if (getTimestamp(path1.name) == getTimestamp(path2.name)) {
+      if (getType(path1.name) == getType(path2.name))
+        if (getIssueId(path1.name) == getIssueId(path2.name))
+          getIndex(path1.name) < getIndex(path2.name)
+        else getIssueId(path1.name) < getIssueId(path2.name)
+      else getType(path1.name) > getType(path2.name)
+    } else getTimestamp(path1.name) < getTimestamp(path2.name)
+  }
+
+  private[this] def compareIssueJsonsWithHierarchy(
+      path1: Path,
+      path2: Path,
+      hierarchyMap: Map[Long, Int]
+  ): Boolean = {
+    def getTimestamp(value: String): Long = value.split("-")(0).toLong
+    def getIssueId(value: String): Long = value.split("-")(1).toLong
+    def getType(value: String) = value.split("-")(2)
+    def getIndex(value: String) = value.split("-")(3).toInt
+
+    val issueId1 = getIssueId(path1.name)
+    val issueId2 = getIssueId(path2.name)
+    val level1 = hierarchyMap.getOrElse(issueId1, 999)
+    val level2 = hierarchyMap.getOrElse(issueId2, 999)
+
+    // 階層レベルが異なる場合は階層レベル順（親→子→孫）
+    if (level1 != level2) {
+      level1 < level2
+    } else if (getTimestamp(path1.name) == getTimestamp(path2.name)) {
+      // 同じ階層レベルの場合は従来通りのソート
       if (getType(path1.name) == getType(path2.name))
         if (getIssueId(path1.name) == getIssueId(path2.name))
           getIndex(path1.name) < getIndex(path2.name)
