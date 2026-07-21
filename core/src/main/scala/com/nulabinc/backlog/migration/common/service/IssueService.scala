@@ -68,3 +68,20 @@ trait IssueService {
   ): Unit
 
 }
+
+object IssueService {
+
+  /**
+   * Backlog supports issue hierarchies down to grandchild issues. An issue can be set as a parent
+   * only when it is a top level issue or a child issue, so that the new issue becomes at most a
+   * grandchild issue.
+   */
+  def canBeParentIssue(
+      parentIssue: BacklogIssue,
+      issueOfId: Long => BacklogIssue
+  ): Boolean =
+    parentIssue.optParentIssueId.forall { grandParentId =>
+      issueOfId(grandParentId).optParentIssueId.isEmpty
+    }
+
+}

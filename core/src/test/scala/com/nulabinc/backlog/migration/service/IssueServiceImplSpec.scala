@@ -96,6 +96,70 @@ class IssueServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixture 
     )
   }
 
+  it should "set parentIssueId when the parent is a top level issue" in {
+    val propertyResolver = new TestPropertyResolver()
+    val parentIssue      = issue2.copy(optParentIssueId = None)
+    val toRemoteIssueId  = (id: Long) => Some(id): Option[Long]
+    val issueOfId        = (_: Long) => parentIssue
+    val postAttachment   = (_: String) => None: Option[Long]
+
+    val params = issueService().setCreateParam(
+      projectId,
+      propertyResolver,
+      toRemoteIssueId,
+      postAttachment,
+      issueOfId
+    )(issue1)
+    getValue(params, "parentIssueId").map(_.toLong) should be(
+      Some(issueId2.toLong)
+    )
+    getValue(params, "description") should be(Some(description))
+  }
+
+  it should "set parentIssueId when the parent is a child issue" in {
+    val propertyResolver = new TestPropertyResolver()
+    val grandParentId    = 14L
+    val grandParentIssue = issue2.copy(id = grandParentId, optParentIssueId = None)
+    val parentIssue      = issue2.copy(optParentIssueId = Some(grandParentId))
+    val toRemoteIssueId  = (id: Long) => Some(id): Option[Long]
+    val issueOfId        = (id: Long) => if (id == grandParentId) grandParentIssue else parentIssue
+    val postAttachment   = (_: String) => None: Option[Long]
+
+    val params = issueService().setCreateParam(
+      projectId,
+      propertyResolver,
+      toRemoteIssueId,
+      postAttachment,
+      issueOfId
+    )(issue1)
+    getValue(params, "parentIssueId").map(_.toLong) should be(
+      Some(issueId2.toLong)
+    )
+    getValue(params, "description") should be(Some(description))
+  }
+
+  it should "not set parentIssueId when the parent is a grandchild issue" in {
+    val propertyResolver   = new TestPropertyResolver()
+    val grandParentId      = 14L
+    val greatGrandParentId = 15L
+    val grandParentIssue =
+      issue2.copy(id = grandParentId, optParentIssueId = Some(greatGrandParentId))
+    val parentIssue     = issue2.copy(optParentIssueId = Some(grandParentId))
+    val toRemoteIssueId = (id: Long) => Some(id): Option[Long]
+    val issueOfId       = (id: Long) => if (id == grandParentId) grandParentIssue else parentIssue
+    val postAttachment  = (_: String) => None: Option[Long]
+
+    val params = issueService().setCreateParam(
+      projectId,
+      propertyResolver,
+      toRemoteIssueId,
+      postAttachment,
+      issueOfId
+    )(issue1)
+    getValue(params, "parentIssueId") should be(None)
+    getValue(params, "description").get should include(parentIssue.issueKey)
+  }
+
   "addIssuesParams" should "return the valid params" in {
     val filter = new StringBuilder
     filter.append(s"projectId[]=${projectId}")
