@@ -31,7 +31,8 @@ private[common] class ProjectWithVCSWrites @Inject() ()
       useWikiTreeView = project.getUseWikiTreeView,
       useOriginalImageSizeAtWiki = project.getUseOriginalImageSizeAtWiki,
       useSubversion = project.getUseSubversion,
-      useGit = project.getUseGit
+      useGit = project.getUseGit,
+      isGrandchildIssueEnabled = project.isGrandchildIssueEnabled
     )
   }
 }

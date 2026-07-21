@@ -56,7 +56,8 @@ case class BacklogProject(
     useWikiTreeView: Boolean,
     useOriginalImageSizeAtWiki: Boolean,
     useSubversion: Boolean,
-    useGit: Boolean
+    useGit: Boolean,
+    isGrandchildIssueEnabled: Boolean
 ) {
   def id: Long =
     optId match {
