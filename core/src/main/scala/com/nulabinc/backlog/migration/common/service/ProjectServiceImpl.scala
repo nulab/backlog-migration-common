@@ -56,7 +56,7 @@ class ProjectServiceImpl @Inject() (implicit
       project.useGit,
       project.useOriginalImageSizeAtWiki,
       Project.TextFormattingRule.enumValueOf(project.textFormattingRule),
-      project.useDevAttributes,
+      project.useDevAttributes
     ).grandchildIssueEnabled(project.isGrandchildIssueEnabled)
     try {
       Right(Convert.toBacklog(backlog.createProject(params)))
