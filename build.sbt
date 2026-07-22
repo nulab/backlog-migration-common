@@ -31,10 +31,7 @@ lazy val commonSettings = Seq(
       "org.apache.pekko" %% "pekko-slf4j"    % pekkoVersion,
       "org.apache.pekko" %% "pekko-http"     % pekkoHttpVersion,
       "org.xerial"        % "sqlite-jdbc"    % "3.36.0.3",
-      // Fetched directly from GitHub Releases (no pom), so its dependencies are declared below
-      "com.nulab-inc" % "backlog4j" % "2.7.1-SNAPSHOT" from "https://github.com/nulab/backlog4j/releases/download/early-access/backlog4j-2.7.1-SNAPSHOT.jar",
-      "org.apache.commons"         % "commons-lang3"    % "3.12.0",
-      "com.fasterxml.jackson.core" % "jackson-databind" % "2.19.0",
+      "com.nulab-inc"              % "backlog4j"        % "2.8.0",
       "org.typelevel"             %% "simulacrum"       % "1.0.0",
       "org.fusesource.jansi"       % "jansi"            % "2.4.0",
       "com.osinka.i18n"           %% "scala-i18n"       % "1.0.3",
