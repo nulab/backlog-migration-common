@@ -212,16 +212,16 @@ class IssueServiceImpl @Inject() (implicit
 
     // description
     optParentIssue match {
-      case Some(parentIssue) if parentIssue.optParentIssueId.nonEmpty =>
+      case Some(parentIssue) if IssueService.canBeParentIssue(parentIssue, issueOfId) =>
+        params.parentIssueId(parentIssue.id) // parent id
+        params.description(backlogIssue.description)
+      case Some(parentIssue) =>
         val sb = new StringBuilder()
         sb.append(backlogIssue.description).append("\n")
         sb.append(Messages("common.parent_issue"))
           .append(":")
           .append(parentIssue.issueKey)
         params.description(sb.toString())
-      case Some(parentIssue) if parentIssue.optParentIssueId.isEmpty =>
-        params.parentIssueId(parentIssue.id) // parent id
-        params.description(backlogIssue.description)
       case _ =>
         params.description(backlogIssue.description)
     }

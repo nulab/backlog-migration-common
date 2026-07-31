@@ -415,7 +415,7 @@ class CommentServiceImpl @Inject() (
           id <- toRemoteIssueId(value.toLong)
         } yield {
           val parentIssue = issueService.issueOfId(id)
-          if (parentIssue.optParentIssueId.isEmpty) {
+          if (IssueService.canBeParentIssue(parentIssue, issueService.issueOfId)) {
             params.parentIssueId(id)
           }
         }

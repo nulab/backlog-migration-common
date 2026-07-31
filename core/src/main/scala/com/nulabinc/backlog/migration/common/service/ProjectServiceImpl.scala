@@ -57,7 +57,7 @@ class ProjectServiceImpl @Inject() (implicit
       project.useOriginalImageSizeAtWiki,
       Project.TextFormattingRule.enumValueOf(project.textFormattingRule),
       project.useDevAttributes
-    )
+    ).grandchildIssueEnabled(project.isGrandchildIssueEnabled)
     try {
       Right(Convert.toBacklog(backlog.createProject(params)))
     } catch {
