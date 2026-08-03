@@ -70,11 +70,11 @@ ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports"
 
 addCommandAlias(
   "fixAll",
-  "all compile:scalafix; test:scalafix; scalafmt; test:scalafmt; scalafmtSbt"
+  "all Compile/scalafix; Test/scalafix; scalafmt; Test/scalafmt; scalafmtSbt"
 )
 addCommandAlias(
   "checkAll",
-  "compile:scalafix --check; test:scalafix --check; scalafmtCheck; test:scalafmtCheck; scalafmtSbtCheck"
+  "Compile/scalafix --check; Test/scalafix --check; scalafmtCheck; Test/scalafmtCheck; scalafmtSbtCheck"
 )
 
 Global / onChangedBuildSource := IgnoreSourceChanges
