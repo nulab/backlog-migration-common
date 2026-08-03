@@ -203,6 +203,51 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
       "optUpdated"
     )
 
+  implicit val BacklogDocumentTagFormat = jsonFormat2(BacklogDocumentTag)
+
+  implicit val BacklogDocumentCommentReplyFormat: RootJsonFormat[BacklogDocumentCommentReply] =
+    jsonFormat(
+      BacklogDocumentCommentReply.apply,
+      "optId",
+      "content",
+      "plain",
+      "optCreatedUser",
+      "optCreated",
+      "optUpdated"
+    )
+
+  implicit val BacklogDocumentCommentFormat: RootJsonFormat[BacklogDocumentComment] =
+    jsonFormat(
+      BacklogDocumentComment.apply,
+      "optId",
+      "statusId",
+      "content",
+      "plain",
+      "commentType",
+      "optCreatedUser",
+      "optCreated",
+      "optUpdated",
+      "replies"
+    )
+
+  implicit val BacklogDocumentFormat: RootJsonFormat[BacklogDocument] =
+    jsonFormat(
+      BacklogDocument.apply,
+      "optId",
+      "projectId",
+      "title",
+      "optJson",
+      "optPlain",
+      "optEmoji",
+      "tags",
+      "attachments",
+      "comments",
+      "optCreatedUser",
+      "optCreated",
+      "optUpdatedUser",
+      "optUpdated"
+    )
+
   implicit val BacklogVersionFormat = jsonFormat6(BacklogVersion)
   implicit val BacklogVersionsWrapperFormat = jsonFormat1(
     BacklogVersionsWrapper

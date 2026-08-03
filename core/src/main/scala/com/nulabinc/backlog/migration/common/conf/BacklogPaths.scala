@@ -59,6 +59,24 @@ class BacklogPaths(
       fileName
     )
 
+  def documentDirectoryPath: BetterFile =
+    outputPath / "project" / projectKey / "documents"
+
+  def documentJson(directory: String): BetterFile =
+    documentDirectoryPath / FileUtil.clean(directory) / "document.json"
+
+  def documentJson(path: BetterFile): BetterFile = path / "document.json"
+
+  def documentAttachmentDirectoryPath(directory: String): BetterFile =
+    documentDirectoryPath / FileUtil.clean(directory) / "attachment"
+
+  def documentAttachmentPath(path: BetterFile): BetterFile = path / "attachment"
+
+  def documentAttachmentPath(directory: String, fileName: String): BetterFile =
+    documentAttachmentDirectoryPath(FileUtil.clean(directory)) / FileUtil.clean(
+      fileName
+    )
+
   def issueDirectoryPath: BetterFile =
     outputPath / "project" / projectKey / "issues"
 

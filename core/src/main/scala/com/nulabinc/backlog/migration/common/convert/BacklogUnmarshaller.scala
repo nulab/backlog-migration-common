@@ -17,6 +17,9 @@ object BacklogUnmarshaller {
   def wiki(path: Path): Option[BacklogWiki] =
     IOUtil.input(path).map(JsonParser(_).convertTo[BacklogWiki])
 
+  def document(path: Path): Option[BacklogDocument] =
+    IOUtil.input(path).map(JsonParser(_).convertTo[BacklogDocument])
+
   def versions(backlogPaths: BacklogPaths): Seq[BacklogVersion] =
     IOUtil
       .input(backlogPaths.versionsJson)
