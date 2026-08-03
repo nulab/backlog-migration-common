@@ -46,8 +46,8 @@ private[common] class DocumentWrites @Inject() (
 
 }
 
-private[common] class DocumentCommentWrites @Inject() (
-    implicit val userWrites: UserWrites
+private[common] class DocumentCommentWrites @Inject() (implicit
+    val userWrites: UserWrites
 ) extends Writes[DocumentComment, BacklogDocumentComment]
     with Logging {
 
@@ -61,7 +61,9 @@ private[common] class DocumentCommentWrites @Inject() (
       optCreatedUser = Option(comment.getCreatedUser).map(Convert.toBacklog(_)),
       optCreated = Option(comment.getCreated).map(DateUtil.isoFormat),
       optUpdated = Option(comment.getUpdated).map(DateUtil.isoFormat),
-      replies = comment.getReplies.asScala.toSeq.map(writesReply)
+      replies = Option(comment.getReplies)
+        .map(_.asScala.toSeq.map(writesReply))
+        .getOrElse(Seq.empty)
     )
 
   private[this] def writesReply(reply: DocumentCommentReply): BacklogDocumentCommentReply =

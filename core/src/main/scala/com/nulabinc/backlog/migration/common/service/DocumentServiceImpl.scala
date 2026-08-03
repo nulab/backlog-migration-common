@@ -85,7 +85,10 @@ class DocumentServiceImpl @Inject() (implicit
         backlog.getDocumentComments(document.id).asScala.toSeq.map(Convert.toBacklog(_))
       } catch {
         case e: Throwable =>
-          logger.warn(e.getMessage, e)
+          logger.error(
+            s"Failed to fetch comments for document ${document.id}: ${e.getMessage}",
+            e
+          )
           Seq.empty
       }
     document.copy(comments = comments)
