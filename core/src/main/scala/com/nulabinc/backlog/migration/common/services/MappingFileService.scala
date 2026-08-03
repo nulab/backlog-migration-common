@@ -12,7 +12,7 @@ object MappingFileService {
 
   private val charset: Charset = StandardCharsets.UTF_8
   private val csvFormat: CSVFormat =
-    CSVFormat.DEFAULT.withIgnoreEmptyLines().withSkipHeaderRecord()
+    CSVFormat.DEFAULT.builder().setIgnoreEmptyLines(true).setSkipHeaderRecord(true).build()
 
   def readLine(is: InputStream): IndexedSeq[CSVRecord] =
     CSVParser

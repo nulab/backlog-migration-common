@@ -382,13 +382,13 @@ class IssueServiceImpl @Inject() (implicit
         else if (head == "1")
           params.parentChildType(GetIssuesParams.ParentChildType.NotChild)
         else if (head == "2")
-          params.parentChildType(GetIssuesParams.ParentChildType.Child)
+          params.parentChildType(GetIssuesParams.ParentChildType.ChildOrGrandchild)
         else if (head == "3")
           params.parentChildType(
-            GetIssuesParams.ParentChildType.NotChildNotParent
+            GetIssuesParams.ParentChildType.Standalone
           )
         else if (head == "4")
-          params.parentChildType(GetIssuesParams.ParentChildType.Parent)
+          params.parentChildType(GetIssuesParams.ParentChildType.HasChildren)
       }
       for {
         attachment <- uri.query.paramMap.get("attachment")
@@ -502,13 +502,13 @@ class IssueServiceImpl @Inject() (implicit
         else if (head == "1")
           params.parentChildType(GetIssuesCountParams.ParentChildType.NotChild)
         else if (head == "2")
-          params.parentChildType(GetIssuesCountParams.ParentChildType.Child)
+          params.parentChildType(GetIssuesCountParams.ParentChildType.ChildOrGrandchild)
         else if (head == "3")
           params.parentChildType(
-            GetIssuesCountParams.ParentChildType.NotChildNotParent
+            GetIssuesCountParams.ParentChildType.Standalone
           )
         else if (head == "4")
-          params.parentChildType(GetIssuesCountParams.ParentChildType.Parent)
+          params.parentChildType(GetIssuesCountParams.ParentChildType.HasChildren)
       }
       for {
         attachment <- uri.query.paramMap.get("attachment")
