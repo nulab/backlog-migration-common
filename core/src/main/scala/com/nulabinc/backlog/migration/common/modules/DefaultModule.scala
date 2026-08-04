@@ -33,6 +33,7 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
 
     bind(classOf[CommentService]).to(classOf[CommentServiceImpl])
     bind(classOf[CustomFieldSettingService]).to(classOf[CustomFieldSettingServiceImpl])
+    bind(classOf[DocumentService]).to(classOf[DocumentServiceImpl])
     bind(classOf[GroupService]).to(classOf[GroupServiceImpl])
     bind(classOf[IssueCategoryService]).to(classOf[IssueCategoryServiceImpl])
     bind(classOf[IssueService]).to(classOf[IssueServiceImpl])

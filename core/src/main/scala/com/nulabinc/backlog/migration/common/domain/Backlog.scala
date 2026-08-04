@@ -55,6 +55,7 @@ case class BacklogProject(
     useResolvedForChart: Boolean,
     useWikiTreeView: Boolean,
     useOriginalImageSizeAtWiki: Boolean,
+    useDocument: Boolean,
     useSubversion: Boolean,
     useGit: Boolean,
     isGrandchildIssueEnabled: Boolean
@@ -274,6 +275,66 @@ case class BacklogWiki(
 }
 
 case class BacklogWikiTag(id: Long, name: String)
+
+case class BacklogDocument(
+    optId: Option[String],
+    projectId: Long,
+    title: String,
+    optJson: Option[String],
+    optPlain: Option[String],
+    optEmoji: Option[String],
+    tags: Seq[BacklogDocumentTag],
+    attachments: Seq[BacklogAttachment],
+    comments: Seq[BacklogDocumentComment],
+    optCreatedUser: Option[BacklogUser],
+    optCreated: Option[String],
+    optUpdatedUser: Option[BacklogUser],
+    optUpdated: Option[String]
+) {
+
+  def id: String =
+    optId match {
+      case Some(id) => id
+      case _        => throw new RuntimeException("Document id is empty.")
+    }
+
+}
+
+case class BacklogDocumentTag(id: Long, name: String)
+
+case class BacklogDocumentComment(
+    optId: Option[String],
+    statusId: Long,
+    content: String,
+    plain: String,
+    commentType: String,
+    optCreatedUser: Option[BacklogUser],
+    optCreated: Option[String],
+    optUpdated: Option[String],
+    replies: Seq[BacklogDocumentCommentReply]
+)
+
+case class BacklogDocumentCommentReply(
+    optId: Option[String],
+    content: String,
+    plain: String,
+    optCreatedUser: Option[BacklogUser],
+    optCreated: Option[String],
+    optUpdated: Option[String]
+)
+
+case class BacklogDocumentTree(
+    projectId: Long,
+    activeTree: BacklogDocumentTreeNode,
+    trashTree: BacklogDocumentTreeNode
+)
+
+case class BacklogDocumentTreeNode(
+    id: String,
+    name: String,
+    optEmoji: Option[String],
+    children: Seq[BacklogDocumentTreeNode]
+)
 
 case class BacklogCustomFieldSetting(
     optId: Option[Long],

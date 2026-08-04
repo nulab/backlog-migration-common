@@ -31,7 +31,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogNotificationFormat   = jsonFormat2(BacklogNotification)
   implicit val BacklogOperationFormat      = jsonFormat4(BacklogOperation)
   implicit val BacklogAttachmentFormat     = jsonFormat2(BacklogAttachment)
-  implicit val BacklogProjectFormat        = jsonFormat16(BacklogProject)
+  implicit val BacklogProjectFormat        = jsonFormat17(BacklogProject)
   implicit val BacklogProjectWrapperFormat = jsonFormat1(BacklogProjectWrapper)
   implicit val BacklogSharedFileFormat     = jsonFormat2(BacklogSharedFile)
   implicit val BacklogGroupFormat          = jsonFormat2(BacklogGroup)
@@ -201,6 +201,70 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
       "optCreated",
       "optUpdatedUser",
       "optUpdated"
+    )
+
+  implicit val BacklogDocumentTagFormat = jsonFormat2(BacklogDocumentTag)
+
+  implicit val BacklogDocumentCommentReplyFormat: RootJsonFormat[BacklogDocumentCommentReply] =
+    jsonFormat(
+      BacklogDocumentCommentReply.apply,
+      "optId",
+      "content",
+      "plain",
+      "optCreatedUser",
+      "optCreated",
+      "optUpdated"
+    )
+
+  implicit val BacklogDocumentCommentFormat: RootJsonFormat[BacklogDocumentComment] =
+    jsonFormat(
+      BacklogDocumentComment.apply,
+      "optId",
+      "statusId",
+      "content",
+      "plain",
+      "commentType",
+      "optCreatedUser",
+      "optCreated",
+      "optUpdated",
+      "replies"
+    )
+
+  implicit val BacklogDocumentFormat: RootJsonFormat[BacklogDocument] =
+    jsonFormat(
+      BacklogDocument.apply,
+      "optId",
+      "projectId",
+      "title",
+      "optJson",
+      "optPlain",
+      "optEmoji",
+      "tags",
+      "attachments",
+      "comments",
+      "optCreatedUser",
+      "optCreated",
+      "optUpdatedUser",
+      "optUpdated"
+    )
+
+  implicit lazy val BacklogDocumentTreeNodeFormat: JsonFormat[BacklogDocumentTreeNode] =
+    lazyFormat(
+      jsonFormat(
+        BacklogDocumentTreeNode.apply,
+        "id",
+        "name",
+        "optEmoji",
+        "children"
+      )
+    )
+
+  implicit val BacklogDocumentTreeFormat: RootJsonFormat[BacklogDocumentTree] =
+    jsonFormat(
+      BacklogDocumentTree.apply,
+      "projectId",
+      "activeTree",
+      "trashTree"
     )
 
   implicit val BacklogVersionFormat = jsonFormat6(BacklogVersion)

@@ -8,19 +8,15 @@ import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option.{GetParams, QueryParams}
 import com.nulabinc.backlog4j.conf.BacklogConfigure
-import com.nulabinc.backlog4j.http.{
-  BacklogHttpClient,
-  BacklogHttpClientImpl,
-  BacklogHttpResponse,
-  NameValuePair
-}
+import com.nulabinc.backlog4j.http.httpclient.HttpClientBacklogHttpClient
+import com.nulabinc.backlog4j.http.{BacklogHttpClient, BacklogHttpResponse, NameValuePair}
 
 import scala.jdk.CollectionConverters._
 import scala.language.reflectiveCalls
 
 object BacklogAPIClientImpl extends BacklogConfiguration {
   def create: BacklogHttpClient = {
-    val client = new BacklogHttpClientImpl()
+    val client = new HttpClientBacklogHttpClient()
     client.setUserAgent(
       s"backlog4j/${backlog4jVersion}-$productName/$productVersion"
     )

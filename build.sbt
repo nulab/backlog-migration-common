@@ -31,7 +31,7 @@ lazy val commonSettings = Seq(
       "org.apache.pekko"     %% "pekko-slf4j"      % pekkoVersion,
       "org.apache.pekko"     %% "pekko-http"       % pekkoHttpVersion,
       "org.xerial"            % "sqlite-jdbc"      % "3.36.0.3",
-      "com.nulab-inc"         % "backlog4j"        % "2.9.0",
+      "com.nulab-inc"         % "backlog4j"        % "2.10.0",
       "org.typelevel"        %% "simulacrum"       % "1.0.0",
       "org.fusesource.jansi"  % "jansi"            % "2.4.0",
       "com.osinka.i18n"      %% "scala-i18n"       % "1.0.3",
@@ -70,11 +70,11 @@ ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports"
 
 addCommandAlias(
   "fixAll",
-  "all compile:scalafix; test:scalafix; scalafmt; test:scalafmt; scalafmtSbt"
+  "all Compile/scalafix; Test/scalafix; scalafmt; Test/scalafmt; scalafmtSbt"
 )
 addCommandAlias(
   "checkAll",
-  "compile:scalafix --check; test:scalafix --check; scalafmtCheck; test:scalafmtCheck; scalafmtSbtCheck"
+  "Compile/scalafix --check; Test/scalafix --check; scalafmtCheck; Test/scalafmtCheck; scalafmtSbtCheck"
 )
 
 Global / onChangedBuildSource := IgnoreSourceChanges
