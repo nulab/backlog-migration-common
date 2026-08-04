@@ -7,10 +7,19 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogDocument,
   BacklogDocumentComment,
   BacklogDocumentCommentReply,
-  BacklogDocumentTag
+  BacklogDocumentTag,
+  BacklogDocumentTree,
+  BacklogDocumentTreeNode
 }
 import com.nulabinc.backlog.migration.common.utils.{DateUtil, Logging, StringUtil}
-import com.nulabinc.backlog4j.{Document, DocumentComment, DocumentCommentReply, DocumentTag}
+import com.nulabinc.backlog4j.{
+  Document,
+  DocumentComment,
+  DocumentCommentReply,
+  DocumentTag,
+  DocumentTree,
+  DocumentTreeNode
+}
 
 import scala.jdk.CollectionConverters._
 
@@ -74,6 +83,27 @@ private[common] class DocumentCommentWrites @Inject() (implicit
       optCreatedUser = Option(reply.getCreatedUser).map(Convert.toBacklog(_)),
       optCreated = Option(reply.getCreated).map(DateUtil.isoFormat),
       optUpdated = Option(reply.getUpdated).map(DateUtil.isoFormat)
+    )
+
+}
+
+private[common] class DocumentTreeWrites @Inject() ()
+    extends Writes[DocumentTree, BacklogDocumentTree]
+    with Logging {
+
+  override def writes(tree: DocumentTree): BacklogDocumentTree =
+    BacklogDocumentTree(
+      projectId = tree.getProjectId,
+      activeTree = convertNode(tree.getActiveTree),
+      trashTree = convertNode(tree.getTrashTree)
+    )
+
+  private[this] def convertNode(node: DocumentTreeNode): BacklogDocumentTreeNode =
+    BacklogDocumentTreeNode(
+      id = node.getId,
+      name = StringUtil.toSafeString(node.getName),
+      optEmoji = Option(node.getEmoji),
+      children = node.getChildren.asScala.toSeq.map(convertNode)
     )
 
 }

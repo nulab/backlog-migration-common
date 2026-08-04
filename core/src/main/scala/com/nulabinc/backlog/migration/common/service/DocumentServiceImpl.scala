@@ -6,10 +6,18 @@ import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.convert.Convert
-import com.nulabinc.backlog.migration.common.convert.writes.{DocumentCommentWrites, DocumentWrites}
-import com.nulabinc.backlog.migration.common.domain.BacklogDocument
+import com.nulabinc.backlog.migration.common.convert.writes.{
+  DocumentCommentWrites,
+  DocumentTreeWrites,
+  DocumentWrites
+}
+import com.nulabinc.backlog.migration.common.domain.{BacklogDocument, BacklogDocumentTree}
 import com.nulabinc.backlog.migration.common.utils.Logging
-import com.nulabinc.backlog4j.api.option.{GetDocumentsCountParams, GetDocumentsParams}
+import com.nulabinc.backlog4j.api.option.{
+  GetDocumentTreeParams,
+  GetDocumentsCountParams,
+  GetDocumentsParams
+}
 
 import scala.jdk.CollectionConverters._
 
@@ -20,6 +28,7 @@ import scala.jdk.CollectionConverters._
 class DocumentServiceImpl @Inject() (implicit
     val documentWrites: DocumentWrites,
     val documentCommentWrites: DocumentCommentWrites,
+    val documentTreeWrites: DocumentTreeWrites,
     backlog: BacklogAPIClient
 ) extends DocumentService
     with Logging {
@@ -60,6 +69,11 @@ class DocumentServiceImpl @Inject() (implicit
   override def documentOfId(documentId: String): BacklogDocument = {
     sleep(500)
     withComments(Convert.toBacklog(backlog.getDocument(documentId)))
+  }
+
+  override def documentTree(projectId: Long): BacklogDocumentTree = {
+    val params = new GetDocumentTreeParams(projectId: java.lang.Long)
+    Convert.toBacklog(backlog.getDocumentTree(params))
   }
 
   override def downloadDocumentAttachment(

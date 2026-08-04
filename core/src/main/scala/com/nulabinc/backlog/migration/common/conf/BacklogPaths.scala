@@ -77,6 +77,9 @@ class BacklogPaths(
       fileName
     )
 
+  def documentTreeJson: BetterFile =
+    outputPath / "project" / projectKey / "documentTree.json"
+
   def issueDirectoryPath: BetterFile =
     outputPath / "project" / projectKey / "issues"
 

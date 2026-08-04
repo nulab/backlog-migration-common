@@ -322,6 +322,19 @@ case class BacklogDocumentCommentReply(
     optUpdated: Option[String]
 )
 
+case class BacklogDocumentTree(
+    projectId: Long,
+    activeTree: BacklogDocumentTreeNode,
+    trashTree: BacklogDocumentTreeNode
+)
+
+case class BacklogDocumentTreeNode(
+    id: String,
+    name: String,
+    optEmoji: Option[String],
+    children: Seq[BacklogDocumentTreeNode]
+)
+
 case class BacklogCustomFieldSetting(
     optId: Option[Long],
     private val rawName: String,

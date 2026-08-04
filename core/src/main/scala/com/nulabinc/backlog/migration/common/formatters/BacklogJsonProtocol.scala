@@ -248,6 +248,25 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
       "optUpdated"
     )
 
+  implicit lazy val BacklogDocumentTreeNodeFormat: JsonFormat[BacklogDocumentTreeNode] =
+    lazyFormat(
+      jsonFormat(
+        BacklogDocumentTreeNode.apply,
+        "id",
+        "name",
+        "optEmoji",
+        "children"
+      )
+    )
+
+  implicit val BacklogDocumentTreeFormat: RootJsonFormat[BacklogDocumentTree] =
+    jsonFormat(
+      BacklogDocumentTree.apply,
+      "projectId",
+      "activeTree",
+      "trashTree"
+    )
+
   implicit val BacklogVersionFormat = jsonFormat6(BacklogVersion)
   implicit val BacklogVersionsWrapperFormat = jsonFormat1(
     BacklogVersionsWrapper
