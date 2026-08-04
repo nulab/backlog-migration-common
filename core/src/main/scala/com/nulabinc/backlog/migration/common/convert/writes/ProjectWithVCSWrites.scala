@@ -30,6 +30,7 @@ private[common] class ProjectWithVCSWrites @Inject() ()
       useResolvedForChart = project.getUseResolvedForChart,
       useWikiTreeView = project.getUseWikiTreeView,
       useOriginalImageSizeAtWiki = project.getUseOriginalImageSizeAtWiki,
+      useDocument = project.getUseDocument,
       useSubversion = project.getUseSubversion,
       useGit = project.getUseGit,
       isGrandchildIssueEnabled = project.isGrandchildIssueEnabled

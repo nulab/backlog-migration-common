@@ -55,6 +55,7 @@ case class BacklogProject(
     useResolvedForChart: Boolean,
     useWikiTreeView: Boolean,
     useOriginalImageSizeAtWiki: Boolean,
+    useDocument: Boolean,
     useSubversion: Boolean,
     useGit: Boolean,
     isGrandchildIssueEnabled: Boolean

@@ -58,6 +58,7 @@ class ProjectServiceImpl @Inject() (implicit
       Project.TextFormattingRule.enumValueOf(project.textFormattingRule),
       project.useDevAttributes
     ).grandchildIssueEnabled(project.isGrandchildIssueEnabled)
+      .documentEnabled(project.useDocument)
     try {
       Right(Convert.toBacklog(backlog.createProject(params)))
     } catch {
