@@ -72,7 +72,7 @@ class DocumentServiceImpl @Inject() (implicit
   }
 
   override def documentTree(projectId: Long): BacklogDocumentTree = {
-    val params = new GetDocumentTreeParams(projectId: java.lang.Long)
+    val params = new GetDocumentTreeParams(java.lang.Long.valueOf(projectId))
     Convert.toBacklog(backlog.getDocumentTree(params))
   }
 
