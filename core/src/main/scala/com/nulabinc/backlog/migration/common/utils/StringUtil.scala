@@ -47,8 +47,11 @@ object StringUtil {
   }
 
   def toSafeString(str: String): String = {
-    val newString = str.filter((c: Char) => c != EOI)
-    newString.replaceAll(Emoji, "")
+    if (str == null) ""
+    else {
+      val newString = str.filter((c: Char) => c != EOI)
+      newString.replaceAll(Emoji, "")
+    }
   }
 
 }
