@@ -28,8 +28,8 @@ import com.nulabinc.backlog4j.api.option.{
   GetDocumentsParams
 }
 import com.nulabinc.backlog4j.internal.file.AttachmentDataImpl
-import spray.json._
 import spray.json.DefaultJsonProtocol._
+import spray.json._
 
 import scala.jdk.CollectionConverters._
 
