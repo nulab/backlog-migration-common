@@ -104,7 +104,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
 
   it should "fall back to an empty object and empty string when content is missing" in {
     val propertyResolver = new TestPropertyResolver()
-    val emptyDocument     = document.copy(optJson = None, optPlain = None)
+    val emptyDocument    = document.copy(optJson = None, optPlain = None)
 
     val json = documentService().updateContentJson(emptyDocument, propertyResolver)
 
