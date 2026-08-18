@@ -39,6 +39,7 @@ private[importer] class ProjectImporter @Inject() (
     issueCategoryService: IssueCategoryService,
     customFieldSettingService: CustomFieldSettingService,
     wikisImporter: WikisImporter,
+    documentsImporter: DocumentsImporter,
     resolutionService: ResolutionService,
     userService: UserService,
     sharedFileService: SharedFileService,
@@ -102,6 +103,11 @@ private[importer] class ProjectImporter @Inject() (
     if (project.useWiki) {
       // Wiki
       wikisImporter.execute(project, propertyResolver)
+    }
+
+    if (project.useDocument) {
+      // Document
+      documentsImporter.execute(project, propertyResolver)
     }
 
     // Issue
