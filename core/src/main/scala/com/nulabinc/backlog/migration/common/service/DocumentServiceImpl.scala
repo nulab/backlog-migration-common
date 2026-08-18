@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.io.InputStream
+import java.io.{File, FileInputStream, InputStream}
 import java.lang.Thread.sleep
 import javax.inject.Inject
 
@@ -11,13 +11,25 @@ import com.nulabinc.backlog.migration.common.convert.writes.{
   DocumentTreeWrites,
   DocumentWrites
 }
-import com.nulabinc.backlog.migration.common.domain.{BacklogDocument, BacklogDocumentTree}
-import com.nulabinc.backlog.migration.common.utils.Logging
+import com.nulabinc.backlog.migration.common.domain.{
+  BacklogAttachment,
+  BacklogDocument,
+  BacklogDocumentComment,
+  BacklogDocumentCommentReply,
+  BacklogDocumentTag,
+  BacklogDocumentTree,
+  BacklogUser
+}
+import com.nulabinc.backlog.migration.common.utils.{FileUtil, Logging}
 import com.nulabinc.backlog4j.api.option.{
+  AddDocumentTagsParams,
   GetDocumentTreeParams,
   GetDocumentsCountParams,
   GetDocumentsParams
 }
+import com.nulabinc.backlog4j.internal.file.AttachmentDataImpl
+import spray.json._
+import spray.json.DefaultJsonProtocol._
 
 import scala.jdk.CollectionConverters._
 
@@ -92,6 +104,167 @@ class DocumentServiceImpl @Inject() (implicit
         logger.warn(e.getMessage, e)
         None
     }
+
+  override def create(
+      projectId: Long,
+      document: BacklogDocument,
+      optParentId: Option[String],
+      addLast: Boolean,
+      propertyResolver: PropertyResolver
+  ): String = {
+    val jsonBody =
+      createDocumentJson(projectId, document, optParentId, addLast, propertyResolver).compactPrint
+    val response = backlog.importDocument(jsonBody)
+    JsonParser(response).asJsObject.fields("id").convertTo[String]
+  }
+
+  override def updateContent(
+      documentId: String,
+      document: BacklogDocument,
+      propertyResolver: PropertyResolver
+  ): Unit = {
+    val jsonBody = updateContentJson(document, propertyResolver).compactPrint
+    backlog.importUpdateDocumentContent(documentId, jsonBody)
+  }
+
+  override def addComment(
+      documentId: String,
+      comment: BacklogDocumentComment,
+      propertyResolver: PropertyResolver
+  ): Either[Throwable, String] =
+    try {
+      val jsonBody = commentJson(comment, propertyResolver).compactPrint
+      val response = backlog.importDocumentComment(documentId, jsonBody)
+      Right(JsonParser(response).asJsObject.fields("id").convertTo[String])
+    } catch {
+      case e: Throwable =>
+        logger.error(e.getMessage, e)
+        Left(e)
+    }
+
+  def createDocumentJson(
+      projectId: Long,
+      document: BacklogDocument,
+      optParentId: Option[String],
+      addLast: Boolean,
+      propertyResolver: PropertyResolver
+  ): JsObject = {
+    val fields = scala.collection.mutable.Map[String, JsValue](
+      "projectId" -> JsNumber(projectId),
+      "title"     -> JsString(document.title),
+      "addLast"   -> JsBoolean(addLast)
+    )
+    document.optEmoji.foreach(emoji => fields += "emoji" -> JsString(emoji))
+    optParentId.foreach(parentId => fields += "parentId" -> JsString(parentId))
+    document.optCreated.foreach(created => fields += "created" -> JsString(created))
+    resolvedUserId(document.optCreatedUser, propertyResolver)
+      .foreach(id => fields += "createdUserId" -> JsNumber(id))
+    document.optUpdated.foreach(updated => fields += "updated" -> JsString(updated))
+    resolvedUserId(document.optUpdatedUser, propertyResolver)
+      .foreach(id => fields += "updatedUserId" -> JsNumber(id))
+    JsObject(fields.toMap)
+  }
+
+  def updateContentJson(
+      document: BacklogDocument,
+      propertyResolver: PropertyResolver
+  ): JsObject = {
+    val fields = scala.collection.mutable.Map[String, JsValue](
+      "json"  -> document.optJson.map(_.parseJson).getOrElse(JsObject.empty),
+      "plain" -> JsString(document.optPlain.getOrElse(""))
+    )
+    document.optUpdated.foreach(updated => fields += "updated" -> JsString(updated))
+    resolvedUserId(document.optUpdatedUser, propertyResolver)
+      .foreach(id => fields += "updatedUserId" -> JsNumber(id))
+    JsObject(fields.toMap)
+  }
+
+  def commentJson(
+      comment: BacklogDocumentComment,
+      propertyResolver: PropertyResolver
+  ): JsObject = {
+    val fields = scala.collection.mutable.Map[String, JsValue](
+      "content"     -> JsString(comment.content),
+      "plain"       -> JsString(comment.plain),
+      "statusId"    -> JsNumber(comment.statusId),
+      "commentType" -> JsString(comment.commentType)
+    )
+    comment.optCreated.foreach(created => fields += "created" -> JsString(created))
+    resolvedUserId(comment.optCreatedUser, propertyResolver)
+      .foreach(id => fields += "createdUserId" -> JsNumber(id))
+    comment.optUpdated.foreach(updated => fields += "updated" -> JsString(updated))
+    if (comment.replies.nonEmpty) {
+      fields += "replies" -> JsArray(
+        comment.replies.map(replyFields(_, propertyResolver)).toVector
+      )
+    }
+    JsObject(fields.toMap)
+  }
+
+  override def addAttachment(
+      documentId: String,
+      path: String
+  ): Either[Throwable, BacklogAttachment] = {
+    sleep(500)
+    val file           = new File(path)
+    val attachmentData = new AttachmentDataImpl(file.getName, new FileInputStream(file))
+    try {
+      val attachment = backlog.addDocumentAttachment(documentId, attachmentData)
+      Right(
+        BacklogAttachment(
+          optId = Some(attachment.getId),
+          name = FileUtil.clean(attachment.getName)
+        )
+      )
+    } catch {
+      case e: Throwable =>
+        logger.error(e.getMessage, e)
+        Left(e)
+    }
+  }
+
+  override def addTags(
+      documentId: String,
+      tagNames: Seq[String]
+  ): Either[Throwable, Seq[BacklogDocumentTag]] =
+    try {
+      if (tagNames.isEmpty) {
+        Right(Seq.empty)
+      } else {
+        val params = new AddDocumentTagsParams(tagNames.asJava)
+        val tags   = backlog.addDocumentTags(documentId, params).asScala.toSeq
+        Right(tags.map(tag => BacklogDocumentTag(id = tag.getId, name = tag.getName)))
+      }
+    } catch {
+      case e: Throwable =>
+        logger.error(e.getMessage, e)
+        Left(e)
+    }
+
+  private[this] def resolvedUserId(
+      optUser: Option[BacklogUser],
+      propertyResolver: PropertyResolver
+  ): Option[Long] =
+    for {
+      user   <- optUser
+      userId <- user.optUserId
+      id     <- propertyResolver.optResolvedUserId(userId)
+    } yield id
+
+  private[this] def replyFields(
+      reply: BacklogDocumentCommentReply,
+      propertyResolver: PropertyResolver
+  ): JsObject = {
+    val fields = scala.collection.mutable.Map[String, JsValue](
+      "content" -> JsString(reply.content),
+      "plain"   -> JsString(reply.plain)
+    )
+    reply.optCreated.foreach(created => fields += "created" -> JsString(created))
+    resolvedUserId(reply.optCreatedUser, propertyResolver)
+      .foreach(id => fields += "createdUserId" -> JsNumber(id))
+    reply.optUpdated.foreach(updated => fields += "updated" -> JsString(updated))
+    JsObject(fields.toMap)
+  }
 
   private[this] def withComments(document: BacklogDocument): BacklogDocument = {
     val comments =

@@ -17,6 +17,12 @@ trait BacklogAPIClient extends BacklogClient {
 
   def importWiki(params: ImportWikiParams): Wiki
 
+  def importDocument(jsonBody: String): String
+
+  def importUpdateDocumentContent(documentId: String, jsonBody: String): Unit
+
+  def importDocumentComment(documentId: String, jsonBody: String): String
+
   def addRateLimitEventListener(listener: RateLimitEventListener): Unit
 
   def removeRateLimitEventListener(listener: RateLimitEventListener): Unit
