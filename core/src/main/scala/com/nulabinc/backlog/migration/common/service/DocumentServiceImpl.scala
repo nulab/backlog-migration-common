@@ -32,6 +32,7 @@ import spray.json.DefaultJsonProtocol._
 import spray.json._
 
 import scala.jdk.CollectionConverters._
+import scala.util.Using
 
 /**
  * @author
@@ -206,10 +207,12 @@ class DocumentServiceImpl @Inject() (implicit
       path: String
   ): Either[Throwable, BacklogAttachment] = {
     sleep(500)
-    val file           = new File(path)
-    val attachmentData = new AttachmentDataImpl(file.getName, new FileInputStream(file))
+    val file = new File(path)
     try {
-      val attachment = backlog.addDocumentAttachment(documentId, attachmentData)
+      val attachment = Using.resource(new FileInputStream(file)) { inputStream =>
+        val attachmentData = new AttachmentDataImpl(file.getName, inputStream)
+        backlog.addDocumentAttachment(documentId, attachmentData)
+      }
       Right(
         BacklogAttachment(
           optId = Some(attachment.getId),
