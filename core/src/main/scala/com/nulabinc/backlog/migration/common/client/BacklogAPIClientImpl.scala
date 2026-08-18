@@ -1,6 +1,15 @@
 package com.nulabinc.backlog.migration.common.client
 
+import java.net.http.{
+  HttpClient => JHttpClient,
+  HttpRequest => JHttpRequest,
+  HttpResponse => JHttpResponse
+}
+import java.net.{URI, URLEncoder}
+import java.nio.charset.StandardCharsets
+import java.time.Duration
 import java.util
+import java.util.Date
 
 import com.nulabinc.backlog.migration.common.client.params._
 import com.nulabinc.backlog.migration.common.conf.BacklogConfiguration
@@ -28,6 +37,32 @@ case class IAAH(value: String) extends AnyVal
 
 object IAAH {
   val empty: IAAH = IAAH("")
+}
+
+private class JsonBacklogHttpResponse(response: JHttpResponse[String])
+    extends BacklogHttpResponse {
+  override def getStatusCode: Int = response.statusCode()
+
+  override def getRateLimitLimit: Int =
+    response.headers().firstValueAsLong("X-RateLimit-Limit").orElse(0L).toInt
+
+  override def getRateLimitRemaining: Int =
+    response.headers().firstValueAsLong("X-RateLimit-Remaining").orElse(0L).toInt
+
+  override def getRateLimitResetDate: Date = {
+    val reset = response.headers().firstValueAsLong("X-RateLimit-Reset")
+    if (reset.isPresent) new Date(reset.getAsLong * 1000) else null
+  }
+
+  override def getRateLimitReset: String =
+    response.headers().firstValue("X-RateLimit-Reset").orElse(null)
+
+  override def asInputStream(): java.io.InputStream =
+    new java.io.ByteArrayInputStream(response.body().getBytes(StandardCharsets.UTF_8))
+
+  override def asString(): String = response.body()
+
+  override def getFileNameFromContentDisposition: String = null
 }
 
 class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
@@ -76,6 +111,38 @@ class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
         factory.importWiki(post(buildEndpoint("wikis/import"), params.getParamList, headers))
     }
 
+  // Document import APIs require a JSON request body (unlike the form-urlencoded
+  // params used by importWiki/importIssue), which backlog4j's BacklogHttpClient
+  // cannot send. Talk to these endpoints directly instead.
+  private val jsonHttpClient: JHttpClient =
+    JHttpClient
+      .newBuilder()
+      .connectTimeout(Duration.ofMillis(configure.getConnectionTimeout))
+      .build()
+
+  private def sendJson(method: String, endpoint: String, jsonBody: String): String = {
+    val uriSeparator = if (endpoint.contains("?")) "&" else "?"
+    val apiKeyParam  = URLEncoder.encode(configure.getApiKey, StandardCharsets.UTF_8.name())
+    val request = JHttpRequest
+      .newBuilder()
+      .uri(URI.create(s"$endpoint$uriSeparator" + s"apiKey=$apiKeyParam"))
+      .timeout(Duration.ofMillis(configure.getReadTimeout))
+      .header("Content-Type", "application/json; charset=UTF-8")
+      .header("iaah", iaah.value)
+      .method(method, JHttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8))
+      .build()
+    val response =
+      jsonHttpClient.send(request, JHttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
+    val statusCode = response.statusCode()
+    if (statusCode < 200 || statusCode >= 300) {
+      val message =
+        if (statusCode == rateLimitStatusCode) "The API usage limit has been exceeded."
+        else "backlog api request failed."
+      throw new BacklogAPIException(message, new JsonBacklogHttpResponse(response))
+    }
+    response.body()
+  }
+
   override def importIssue(params: ImportIssueParams): Issue = retryRateLimit() {
     client.importIssue(params)
   }
@@ -95,6 +162,21 @@ class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
   override def importWiki(params: ImportWikiParams): Wiki = retryRateLimit() {
     client.importWiki(params)
   }
+
+  override def importDocument(jsonBody: String): String = retryRateLimit() {
+    sendJson("POST", buildEndpoint("documents/import"), jsonBody)
+  }
+
+  override def importUpdateDocumentContent(documentId: String, jsonBody: String): Unit =
+    retryRateLimit() {
+      sendJson("PATCH", buildEndpoint(s"documents/$documentId/content/import"), jsonBody)
+      ()
+    }
+
+  override def importDocumentComment(documentId: String, jsonBody: String): String =
+    retryRateLimit() {
+      sendJson("POST", buildEndpoint(s"documents/$documentId/comments/import"), jsonBody)
+    }
 
   override def delete(
       endpoint: String,
