@@ -170,4 +170,53 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     json.fields.keySet should not contain "replies"
   }
 
+  "rewriteInlineCommentIds" should "rewrite every inlineComment mark's id using the mapping" in {
+    val body =
+      """{"type":"doc","content":[
+        |{"type":"paragraph","content":[{"type":"text","text":"test","marks":[
+        |{"type":"inlineComment","attrs":{"comment":{"id":"old-1","statusId":0}}}
+        |]}]},
+        |{"type":"paragraph","content":[{"type":"text","text":"foo","marks":[
+        |{"type":"inlineComment","attrs":{"comment":{"id":"old-2","statusId":0}}}
+        |]}]}
+        |]}""".stripMargin
+    val documentWithBody = document.copy(optJson = Some(body))
+    val commentIdMap     = Map("old-1" -> "new-1", "old-2" -> "new-2")
+
+    val rewritten = documentService().rewriteInlineCommentIds(documentWithBody, commentIdMap)
+
+    val marks = rewritten.optJson.get.parseJson.asJsObject
+      .fields("content")
+      .asInstanceOf[JsArray]
+      .elements
+      .flatMap(_.asJsObject.fields("content").asInstanceOf[JsArray].elements)
+      .flatMap(_.asJsObject.fields("marks").asInstanceOf[JsArray].elements)
+      .map(_.asJsObject.fields("attrs").asJsObject.fields("comment").asJsObject.fields("id"))
+
+    marks should contain theSameElementsInOrderAs Seq(JsString("new-1"), JsString("new-2"))
+  }
+
+  it should "leave the id untouched when no mapping exists for it" in {
+    val body =
+      """{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"test",
+        |"marks":[{"type":"inlineComment","attrs":{"comment":{"id":"unmapped","statusId":0}}}]}]}]}""".stripMargin
+    val documentWithBody = document.copy(optJson = Some(body))
+
+    val rewritten = documentService().rewriteInlineCommentIds(documentWithBody, Map.empty)
+
+    rewritten.optJson should be(Some(body))
+  }
+
+  it should "not touch marks other than inlineComment" in {
+    val body =
+      """{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"test",
+        |"marks":[{"type":"bold"}]}]}]}""".stripMargin
+    val documentWithBody = document.copy(optJson = Some(body))
+
+    val rewritten =
+      documentService().rewriteInlineCommentIds(documentWithBody, Map("old" -> "new"))
+
+    rewritten.optJson.get.parseJson should be(body.parseJson)
+  }
+
 }

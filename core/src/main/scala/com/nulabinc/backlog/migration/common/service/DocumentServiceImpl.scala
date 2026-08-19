@@ -269,6 +269,64 @@ class DocumentServiceImpl @Inject() (implicit
     JsObject(fields.toMap)
   }
 
+  override def rewriteInlineCommentIds(
+      document: BacklogDocument,
+      commentIdMap: Map[String, String]
+  ): BacklogDocument =
+    if (commentIdMap.isEmpty) document
+    else
+      document.optJson match {
+        case Some(json) =>
+          document.copy(optJson = Some(rewriteJsValue(json.parseJson, commentIdMap).compactPrint))
+        case None => document
+      }
+
+  private[this] def rewriteJsValue(value: JsValue, commentIdMap: Map[String, String]): JsValue =
+    value match {
+      case JsObject(fields) =>
+        val rewritten = fields.map { case (key, v) => key -> rewriteJsValue(v, commentIdMap) }
+        rewritten.get("type") match {
+          case Some(JsString("inlineComment")) =>
+            rewritten.get("attrs") match {
+              case Some(attrs: JsObject) =>
+                JsObject(
+                  rewritten.updated("attrs", rewriteInlineCommentAttrs(attrs, commentIdMap))
+                )
+              case _ => JsObject(rewritten)
+            }
+          case _ => JsObject(rewritten)
+        }
+      case JsArray(elements) => JsArray(elements.map(rewriteJsValue(_, commentIdMap)))
+      case other             => other
+    }
+
+  private[this] def rewriteInlineCommentAttrs(
+      attrs: JsObject,
+      commentIdMap: Map[String, String]
+  ): JsObject =
+    attrs.fields.get("comment") match {
+      case Some(comment: JsObject) =>
+        comment.fields.get("id") match {
+          case Some(JsString(oldCommentId)) =>
+            commentIdMap.get(oldCommentId) match {
+              case Some(newCommentId) =>
+                JsObject(
+                  attrs.fields.updated(
+                    "comment",
+                    JsObject(comment.fields.updated("id", JsString(newCommentId)))
+                  )
+                )
+              case None =>
+                logger.warn(
+                  s"No migrated comment id found for inline comment mark (id=$oldCommentId)"
+                )
+                attrs
+            }
+          case _ => attrs
+        }
+      case _ => attrs
+    }
+
   private[this] def withComments(document: BacklogDocument): BacklogDocument = {
     val comments =
       try {
