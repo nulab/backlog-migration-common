@@ -68,7 +68,6 @@ private[importer] class DocumentsImporter @Inject() (
           addLast = true,
           propertyResolver
         )
-        documentService.updateContent(newId, document, propertyResolver)
         postCreate(node.id, newId, document, propertyResolver).runSyncUnsafe()
         newId
       }
@@ -86,9 +85,19 @@ private[importer] class DocumentsImporter @Inject() (
       propertyResolver: PropertyResolver
   )(implicit consoleDSL: ConsoleDSL[Task]): Task[Unit] =
     for {
+      // Comments must be created before the content update: the body's
+      // inlineComment marks reference comment ids, which only exist once
+      // comments have been (re-)created at the destination.
+      commentIdMap <- postComments(newDocumentId, document, propertyResolver)
+      _ <- Task(
+        documentService.updateContent(
+          newDocumentId,
+          documentService.rewriteInlineCommentIds(document, commentIdMap),
+          propertyResolver
+        )
+      )
       _ <- postAttachments(oldDocumentId, newDocumentId, document)
       _ <- postTags(newDocumentId, document)
-      _ <- postComments(newDocumentId, document, propertyResolver)
     } yield ()
 
   private[this] def postAttachments(
@@ -135,22 +144,28 @@ private[importer] class DocumentsImporter @Inject() (
       }
   }
 
+  // Returns a map of old (source-space) comment id -> new (destination-space)
+  // comment id, so the document body's inlineComment marks can be rewritten
+  // to point at the newly created comments.
   private[this] def postComments(
       newDocumentId: String,
       document: BacklogDocument,
       propertyResolver: PropertyResolver
-  )(implicit consoleDSL: ConsoleDSL[Task]): Task[Unit] =
+  )(implicit consoleDSL: ConsoleDSL[Task]): Task[Map[String, String]] =
     Task
       .sequence(document.comments.map { comment =>
         documentService.addComment(newDocumentId, comment, propertyResolver) match {
-          case Right(_) => Task.unit
+          case Right(newCommentId) =>
+            Task(comment.optId.map(oldCommentId => oldCommentId -> newCommentId))
           case Left(e) =>
-            ConsoleDSL[Task].errorln(
-              Messages("import.error.document.comment", document.title, e.getMessage)
-            )
+            ConsoleDSL[Task]
+              .errorln(
+                Messages("import.error.document.comment", document.title, e.getMessage)
+              )
+              .map(_ => None)
         }
       })
-      .map(_ => ())
+      .map(_.flatten.toMap)
 
   private[this] def unmarshal(documentId: String): Option[BacklogDocument] =
     BacklogUnmarshaller.document(backlogPaths.documentJson(documentId))

@@ -59,4 +59,16 @@ trait DocumentService {
       tagNames: Seq[String]
   ): Either[Throwable, Seq[BacklogDocumentTag]]
 
+  // The document body (ProseMirror JSON) anchors each inline comment to a
+  // range of text via an `inlineComment` mark carrying the comment's id
+  // (`{"type":"inlineComment","attrs":{"comment":{"id":"...","statusId":...}}}`).
+  // That id is only valid within the source space, so it must be rewritten to
+  // the id assigned when the comment was recreated at the destination,
+  // otherwise the app can't resolve the mark and the comment isn't shown as
+  // linked to the document.
+  def rewriteInlineCommentIds(
+      document: BacklogDocument,
+      commentIdMap: Map[String, String]
+  ): BacklogDocument
+
 }
