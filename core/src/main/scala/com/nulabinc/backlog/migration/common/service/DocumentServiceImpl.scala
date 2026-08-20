@@ -111,10 +111,11 @@ class DocumentServiceImpl @Inject() (implicit
       document: BacklogDocument,
       optParentId: Option[String],
       addLast: Boolean,
+      isTrash: Boolean,
       propertyResolver: PropertyResolver
   ): String = {
     val jsonBody =
-      createDocumentJson(projectId, document, optParentId, addLast, propertyResolver).compactPrint
+      createDocumentJson(projectId, document, optParentId, addLast, isTrash, propertyResolver).compactPrint
     val response = backlog.importDocument(jsonBody)
     JsonParser(response).asJsObject.fields("id").convertTo[String]
   }
@@ -148,12 +149,14 @@ class DocumentServiceImpl @Inject() (implicit
       document: BacklogDocument,
       optParentId: Option[String],
       addLast: Boolean,
+      isTrash: Boolean,
       propertyResolver: PropertyResolver
   ): JsObject = {
     val fields = scala.collection.mutable.Map[String, JsValue](
       "projectId" -> JsNumber(projectId),
       "title"     -> JsString(document.title),
-      "addLast"   -> JsBoolean(addLast)
+      "addLast"   -> JsBoolean(addLast),
+      "isTrash"   -> JsBoolean(isTrash)
     )
     document.optEmoji.foreach(emoji => fields += "emoji" -> JsString(emoji))
     optParentId.foreach(parentId => fields += "parentId" -> JsString(parentId))

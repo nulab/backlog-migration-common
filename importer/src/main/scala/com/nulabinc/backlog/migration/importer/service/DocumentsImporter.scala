@@ -32,7 +32,7 @@ private[importer] class DocumentsImporter @Inject() (
       consoleDSL: ConsoleDSL[Task]
   ): Unit =
     BacklogUnmarshaller.documentTree(backlogPaths).foreach { tree =>
-      val total = countNodes(tree.activeTree.children)
+      val total = countNodes(tree.activeTree.children) + countNodes(tree.trashTree.children)
       val console = (ProgressBar.progress _)(
         Messages("common.documents"),
         Messages("message.importing"),
@@ -45,8 +45,8 @@ private[importer] class DocumentsImporter @Inject() (
         console(done, total)
       }
 
-      // Only the active tree is migrated; trashed documents are not restored.
-      walk(tree.activeTree.children, None, project, propertyResolver, progress)
+      walk(tree.activeTree.children, None, isTrash = false, project, propertyResolver, progress)
+      walk(tree.trashTree.children, None, isTrash = true, project, propertyResolver, progress)
     }
 
   private[this] def countNodes(nodes: Seq[BacklogDocumentTreeNode]): Int =
@@ -55,17 +55,21 @@ private[importer] class DocumentsImporter @Inject() (
   private[this] def walk(
       nodes: Seq[BacklogDocumentTreeNode],
       optNewParentId: Option[String],
+      isTrash: Boolean,
       project: BacklogProject,
       propertyResolver: PropertyResolver,
       progress: () => Unit
   )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit =
     nodes.foreach { node =>
       val optNewId = unmarshal(node.id).map { document =>
+        // isTrash is only consulted by the destination when optNewParentId is
+        // empty (root of the subtree); it's harmless to pass through unconditionally.
         val newId = documentService.create(
           project.id,
           document,
           optNewParentId,
           addLast = true,
+          isTrash = isTrash,
           propertyResolver
         )
         postCreate(node.id, newId, document, propertyResolver).runSyncUnsafe()
@@ -74,7 +78,7 @@ private[importer] class DocumentsImporter @Inject() (
       progress()
       // A failed/missing parent breaks the id mapping, so its children are skipped too.
       optNewId.foreach { newId =>
-        walk(node.children, Some(newId), project, propertyResolver, progress)
+        walk(node.children, Some(newId), isTrash, project, propertyResolver, progress)
       }
     }
 
