@@ -54,6 +54,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
       document,
       Some("parentDocumentId"),
       addLast = true,
+      isTrash = false,
       propertyResolver
     )
 
@@ -62,6 +63,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     json.fields("emoji") should be(JsString(":smile:"))
     json.fields("parentId") should be(JsString("parentDocumentId"))
     json.fields("addLast") should be(JsBoolean(true))
+    json.fields("isTrash") should be(JsBoolean(false))
     json.fields("created") should be(JsString(documentCreated))
     json.fields("createdUserId") should be(JsNumber(userId1))
     json.fields("updated") should be(JsString(documentUpdated))
@@ -84,10 +86,12 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
       minimalDocument,
       None,
       addLast = false,
+      isTrash = true,
       propertyResolver
     )
 
-    json.fields.keySet should contain theSameElementsAs Set("projectId", "title", "addLast")
+    json.fields.keySet should contain theSameElementsAs Set("projectId", "title", "addLast", "isTrash")
+    json.fields("isTrash") should be(JsBoolean(true))
   }
 
   "updateContentJson" should "build the content import request body" in {

@@ -34,6 +34,7 @@ trait DocumentService {
       document: BacklogDocument,
       optParentId: Option[String],
       addLast: Boolean,
+      isTrash: Boolean,
       propertyResolver: PropertyResolver
   ): String
 
