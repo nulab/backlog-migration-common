@@ -51,12 +51,12 @@ private[importer] class ProjectImporter @Inject() (
       fitIssueKey: Boolean,
       retryCount: Int
   )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
-    val project = BacklogUnmarshaller.project(backlogPaths)
-    projectService.create(project) match {
+    val srcProject = BacklogUnmarshaller.project(backlogPaths)
+    projectService.create(srcProject) match {
       case Right(project) =>
         for {
           _ <- preExecute()
-          _ <- contents(project, fitIssueKey, retryCount)
+          _ <- contents(project, srcProject.id, srcProject.key, fitIssueKey, retryCount)
           _ <- postExecute()
           _ <- ConsoleDSL[Task].printStream(
             ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
@@ -72,12 +72,12 @@ private[importer] class ProjectImporter @Inject() (
 
         val message =
           if (e.getMessage.contains("Project limit."))
-            Errors.limitProject(project.key)
+            Errors.limitProject(srcProject.key)
           else if (e.getMessage.contains("Duplicate entry"))
-            Errors.projectNotJoin(project.key)
+            Errors.projectNotJoin(srcProject.key)
           else {
             logger.error(e.getMessage, e)
-            Errors.failed(project.key, e.getMessage())
+            Errors.failed(srcProject.key, e.getMessage())
           }
         for {
           _ <- ConsoleDSL[Task].errorln(message)
@@ -88,6 +88,8 @@ private[importer] class ProjectImporter @Inject() (
 
   private def contents(
       project: BacklogProject,
+      srcProjectId: Long,
+      srcProjectKey: String,
       fitIssueKey: Boolean,
       retryCount: Int
   )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
@@ -105,13 +107,22 @@ private[importer] class ProjectImporter @Inject() (
       wikisImporter.execute(project, propertyResolver)
     }
 
-    if (project.useDocument) {
-      // Document
-      documentsImporter.execute(project, propertyResolver)
-    }
-
     // Issue
-    issuesImporter.execute(project, propertyResolver, fitIssueKey, retryCount)
+    issuesImporter
+      .execute(project, propertyResolver, fitIssueKey, retryCount)
+      .map { case (issueIdMap, issueKeyMap) =>
+        if (project.useDocument) {
+          // Document
+          documentsImporter.execute(
+            project,
+            propertyResolver,
+            issueIdMap,
+            issueKeyMap,
+            srcProjectId,
+            srcProjectKey
+          )
+        }
+      }
   }
 
   private def preExecute()(implicit

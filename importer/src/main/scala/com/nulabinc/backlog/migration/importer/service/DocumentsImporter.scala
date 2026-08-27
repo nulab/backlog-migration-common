@@ -27,7 +27,14 @@ private[importer] class DocumentsImporter @Inject() (
     documentService: DocumentService
 ) extends Logging {
 
-  def execute(project: BacklogProject, propertyResolver: PropertyResolver)(implicit
+  def execute(
+      project: BacklogProject,
+      propertyResolver: PropertyResolver,
+      issueIdMap: Map[Long, Long],
+      issueKeyMap: Map[String, String],
+      srcProjectId: Long,
+      srcProjectKey: String
+  )(implicit
       s: Scheduler,
       consoleDSL: ConsoleDSL[Task]
   ): Unit =
@@ -45,9 +52,43 @@ private[importer] class DocumentsImporter @Inject() (
         console(done, total)
       }
 
-      walk(tree.activeTree.children, None, isTrash = false, project, propertyResolver, progress)
-      walk(tree.trashTree.children, None, isTrash = true, project, propertyResolver, progress)
+      val issueMentionContext = IssueMentionContext(
+        issueIdMap,
+        issueKeyMap,
+        srcProjectId,
+        srcProjectKey,
+        dstProjectId = project.id,
+        dstProjectKey = project.key
+      )
+
+      walk(
+        tree.activeTree.children,
+        None,
+        isTrash = false,
+        project,
+        propertyResolver,
+        issueMentionContext,
+        progress
+      )
+      walk(
+        tree.trashTree.children,
+        None,
+        isTrash = true,
+        project,
+        propertyResolver,
+        issueMentionContext,
+        progress
+      )
     }
+
+  private[this] case class IssueMentionContext(
+      issueIdMap: Map[Long, Long],
+      issueKeyMap: Map[String, String],
+      srcProjectId: Long,
+      srcProjectKey: String,
+      dstProjectId: Long,
+      dstProjectKey: String
+  )
 
   private[this] def countNodes(nodes: Seq[BacklogDocumentTreeNode]): Int =
     nodes.map(node => 1 + countNodes(node.children)).sum
@@ -58,6 +99,7 @@ private[importer] class DocumentsImporter @Inject() (
       isTrash: Boolean,
       project: BacklogProject,
       propertyResolver: PropertyResolver,
+      issueMentionContext: IssueMentionContext,
       progress: () => Unit
   )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit =
     nodes.foreach { node =>
@@ -72,13 +114,21 @@ private[importer] class DocumentsImporter @Inject() (
           isTrash = isTrash,
           propertyResolver
         )
-        postCreate(node.id, newId, document, propertyResolver).runSyncUnsafe()
+        postCreate(node.id, newId, document, propertyResolver, issueMentionContext).runSyncUnsafe()
         newId
       }
       progress()
       // A failed/missing parent breaks the id mapping, so its children are skipped too.
       optNewId.foreach { newId =>
-        walk(node.children, Some(newId), isTrash, project, propertyResolver, progress)
+        walk(
+          node.children,
+          Some(newId),
+          isTrash,
+          project,
+          propertyResolver,
+          issueMentionContext,
+          progress
+        )
       }
     }
 
@@ -86,20 +136,28 @@ private[importer] class DocumentsImporter @Inject() (
       oldDocumentId: String,
       newDocumentId: String,
       document: BacklogDocument,
-      propertyResolver: PropertyResolver
+      propertyResolver: PropertyResolver,
+      issueMentionContext: IssueMentionContext
   )(implicit consoleDSL: ConsoleDSL[Task]): Task[Unit] =
     for {
       // Comments must be created before the content update: the body's
       // inlineComment marks reference comment ids, which only exist once
       // comments have been (re-)created at the destination.
       commentIdMap <- postComments(newDocumentId, document, propertyResolver)
-      _ <- Task(
-        documentService.updateContent(
-          newDocumentId,
-          documentService.rewriteInlineCommentIds(document, commentIdMap),
-          propertyResolver
+      _ <- Task {
+        val withRewrittenComments =
+          documentService.rewriteInlineCommentIds(document, commentIdMap)
+        val withRewrittenMentions = documentService.rewriteIssueMentions(
+          withRewrittenComments,
+          issueMentionContext.issueIdMap,
+          issueMentionContext.issueKeyMap,
+          issueMentionContext.srcProjectId,
+          issueMentionContext.srcProjectKey,
+          issueMentionContext.dstProjectId,
+          issueMentionContext.dstProjectKey
         )
-      )
+        documentService.updateContent(newDocumentId, withRewrittenMentions, propertyResolver)
+      }
       _ <- postAttachments(oldDocumentId, newDocumentId, document)
       _ <- postTags(newDocumentId, document)
     } yield ()

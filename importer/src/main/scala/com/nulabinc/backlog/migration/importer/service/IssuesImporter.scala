@@ -41,7 +41,11 @@ private[importer] class IssuesImporter(
       propertyResolver: PropertyResolver,
       fitIssueKey: Boolean,
       retryCount: Int
-  )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
+  )(implicit
+      s: Scheduler,
+      storeDSL: StoreDSL[Task],
+      consoleDSL: ConsoleDSL[Task]
+  ): Task[(Map[Long, Long], Map[String, String])] = {
 
     for {
       _ <- ConsoleDSL[Task].println("""
@@ -55,6 +59,7 @@ private[importer] class IssuesImporter(
       paths.foreach { path =>
         loadDateDirectory(project, path)
       }
+      (context.issueIdMapSnapshot, context.issueKeyMapSnapshot)
     }
 
   }
