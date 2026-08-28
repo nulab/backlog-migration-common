@@ -59,6 +59,9 @@ private[importer] class IssuesImporter(
       paths.foreach { path =>
         loadDateDirectory(project, path)
       }
+      // Clean up now — nothing downstream is guaranteed to run right after
+      // this importer (e.g. document import may follow).
+      if (console.totalSize > 0) console.finish()
       (context.issueIdMapSnapshot, context.issueKeyMapSnapshot)
     }
 

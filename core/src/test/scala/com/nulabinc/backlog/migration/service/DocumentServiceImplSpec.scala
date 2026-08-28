@@ -8,7 +8,7 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogDocumentCommentReply
 }
 import com.nulabinc.backlog.migration.common.modules.DefaultModule
-import com.nulabinc.backlog.migration.common.service.DocumentServiceImpl
+import com.nulabinc.backlog.migration.common.service.{DocumentServiceImpl, IssueMentionRewriteStats}
 import com.nulabinc.backlog.migration.{SimpleFixture, TestPropertyResolver}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -230,7 +230,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"projectKey":"SRC","projectId":100,"issueId":200}}]}""".stripMargin
     val documentWithBody = document.copy(optJson = Some(body))
 
-    val rewritten = documentService().rewriteIssueMentions(
+    val (rewritten, stats) = documentService().rewriteIssueMentions(
       documentWithBody,
       issueIdMap = Map(200L -> 201L),
       issueKeyMap = Map("SRC-85" -> "DST-1"),
@@ -255,6 +255,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     attrs.fields("projectKey") should be(JsString("DST"))
     attrs.fields("label") should be(JsString("emoji test"))
     attrs.fields("mentionType") should be(JsString("inline"))
+    stats should be(IssueMentionRewriteStats(total = 1, rewritten = 1, skippedExternalProject = 0, unresolved = 0))
   }
 
   it should "rewrite a same-project issue mention missing issueId/projectId via key-only fallback" in {
@@ -264,7 +265,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"projectKey":"SRC"}}]}""".stripMargin
     val documentWithBody = document.copy(optJson = Some(body))
 
-    val rewritten = documentService().rewriteIssueMentions(
+    val (rewritten, stats) = documentService().rewriteIssueMentions(
       documentWithBody,
       issueIdMap = Map.empty,
       issueKeyMap = Map("SRC-84" -> "DST-2"),
@@ -287,6 +288,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     attrs.fields("projectKey") should be(JsString("DST"))
     attrs.fields.keySet should not contain "issueId"
     attrs.fields.keySet should not contain "projectId"
+    stats should be(IssueMentionRewriteStats(total = 1, rewritten = 1, skippedExternalProject = 0, unresolved = 0))
   }
 
   it should "leave a same-project mention untouched when the issue isn't in either map" in {
@@ -296,7 +298,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"projectKey":"SRC","projectId":100,"issueId":999}}]}""".stripMargin
     val documentWithBody = document.copy(optJson = Some(body))
 
-    val rewritten = documentService().rewriteIssueMentions(
+    val (rewritten, stats) = documentService().rewriteIssueMentions(
       documentWithBody,
       issueIdMap = Map(200L -> 201L),
       issueKeyMap = Map("SRC-85" -> "DST-1"),
@@ -307,6 +309,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     )
 
     rewritten.optJson.get.parseJson should be(body.parseJson)
+    stats should be(IssueMentionRewriteStats(total = 1, rewritten = 0, skippedExternalProject = 0, unresolved = 1))
   }
 
   it should "leave a mention pointing at a different project completely untouched" in {
@@ -316,7 +319,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"projectKey":"OTHER","projectId":300,"issueId":400}}]}""".stripMargin
     val documentWithBody = document.copy(optJson = Some(body))
 
-    val rewritten = documentService().rewriteIssueMentions(
+    val (rewritten, stats) = documentService().rewriteIssueMentions(
       documentWithBody,
       issueIdMap = Map(400L -> 401L),
       issueKeyMap = Map("OTHER-1" -> "DST-9"),
@@ -327,6 +330,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     )
 
     rewritten.optJson.get.parseJson should be(body.parseJson)
+    stats should be(IssueMentionRewriteStats(total = 1, rewritten = 0, skippedExternalProject = 1, unresolved = 0))
   }
 
   it should "return the document unchanged (no parse round-trip) when both maps are empty" in {
@@ -336,7 +340,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"projectKey":"SRC","projectId":100,"issueId":200}}]}""".stripMargin
     val documentWithBody = document.copy(optJson = Some(body))
 
-    val rewritten = documentService().rewriteIssueMentions(
+    val (rewritten, stats) = documentService().rewriteIssueMentions(
       documentWithBody,
       issueIdMap = Map.empty,
       issueKeyMap = Map.empty,
@@ -347,6 +351,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     )
 
     rewritten.optJson should be theSameInstanceAs documentWithBody.optJson
+    stats should be(IssueMentionRewriteStats(total = 0, rewritten = 0, skippedExternalProject = 0, unresolved = 0))
   }
 
   it should "rewrite the matching bracket tag in optPlain for a fully-resolved same-project mention" in {
@@ -359,7 +364,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     val documentWithBody =
       document.copy(optJson = Some(body), optPlain = Some(s"before $oldTag after"))
 
-    val rewritten = documentService().rewriteIssueMentions(
+    val (rewritten, _) = documentService().rewriteIssueMentions(
       documentWithBody,
       issueIdMap = Map(200L -> 201L),
       issueKeyMap = Map("SRC-85" -> "DST-1"),
@@ -382,7 +387,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     val documentWithBody =
       document.copy(optJson = Some(body), optPlain = Some(s"text $oldTag more"))
 
-    val rewritten = documentService().rewriteIssueMentions(
+    val (rewritten, _) = documentService().rewriteIssueMentions(
       documentWithBody,
       issueIdMap = Map.empty,
       issueKeyMap = Map("SRC-84" -> "DST-2"),
@@ -404,7 +409,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     val documentWithBody =
       document.copy(optJson = Some(body), optPlain = Some(drifitngPlain))
 
-    val rewritten = documentService().rewriteIssueMentions(
+    val (rewritten, _) = documentService().rewriteIssueMentions(
       documentWithBody,
       issueIdMap = Map(200L -> 201L),
       issueKeyMap = Map("SRC-85" -> "DST-1"),
@@ -449,7 +454,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         "SRCPROJ-3" -> "DST-3"
       )
 
-      val rewritten = documentService().rewriteIssueMentions(
+      val (rewritten, _) = documentService().rewriteIssueMentions(
         documentWithBody,
         issueIdMap = issueIdMap,
         issueKeyMap = issueKeyMap,

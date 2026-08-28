@@ -115,7 +115,14 @@ class DocumentServiceImpl @Inject() (implicit
       propertyResolver: PropertyResolver
   ): String = {
     val jsonBody =
-      createDocumentJson(projectId, document, optParentId, addLast, isTrash, propertyResolver).compactPrint
+      createDocumentJson(
+        projectId,
+        document,
+        optParentId,
+        addLast,
+        isTrash,
+        propertyResolver
+      ).compactPrint
     val response = backlog.importDocument(jsonBody)
     JsonParser(response).asJsObject.fields("id").convertTo[String]
   }
@@ -338,12 +345,13 @@ class DocumentServiceImpl @Inject() (implicit
       srcProjectKey: String,
       dstProjectId: Long,
       dstProjectKey: String
-  ): BacklogDocument =
-    if (issueIdMap.isEmpty && issueKeyMap.isEmpty) document
+  ): (BacklogDocument, IssueMentionRewriteStats) =
+    if (issueIdMap.isEmpty && issueKeyMap.isEmpty) (document, IssueMentionRewriteStats(0, 0, 0, 0))
     else
       document.optJson match {
         case Some(json) =>
-          val plainTextReplacements = scala.collection.mutable.ArrayBuffer.empty[(String, String, String)]
+          val plainTextReplacements =
+            scala.collection.mutable.ArrayBuffer.empty[(String, String, String)]
           val ctx = IssueMentionContext(
             issueIdMap,
             issueKeyMap,
@@ -352,10 +360,17 @@ class DocumentServiceImpl @Inject() (implicit
             dstProjectKey,
             plainTextReplacements
           )
-          val newJson  = rewriteIssueMentionJsValue(json.parseJson, ctx).compactPrint
-          val newPlain = document.optPlain.map(rewritePlainTextIssueMentions(_, plainTextReplacements.toSeq))
-          document.copy(optJson = Some(newJson), optPlain = newPlain)
-        case None => document
+          val newJson = rewriteIssueMentionJsValue(json.parseJson, ctx).compactPrint
+          val newPlain =
+            document.optPlain.map(rewritePlainTextIssueMentions(_, plainTextReplacements.toSeq))
+          val stats = IssueMentionRewriteStats(
+            total = ctx.rewrittenCount + ctx.skippedExternalProjectCount + ctx.unresolvedCount,
+            rewritten = ctx.rewrittenCount,
+            skippedExternalProject = ctx.skippedExternalProjectCount,
+            unresolved = ctx.unresolvedCount
+          )
+          (document.copy(optJson = Some(newJson), optPlain = newPlain), stats)
+        case None => (document, IssueMentionRewriteStats(0, 0, 0, 0))
       }
 
   private[this] case class IssueMentionContext(
@@ -366,21 +381,26 @@ class DocumentServiceImpl @Inject() (implicit
       dstProjectKey: String,
       // (oldId, old tag text, new tag text) captured for each resolved mention, applied to optPlain afterwards
       plainTextReplacements: scala.collection.mutable.ArrayBuffer[(String, String, String)]
-  )
+  ) {
+    var rewrittenCount: Int              = 0
+    var skippedExternalProjectCount: Int = 0
+    var unresolvedCount: Int             = 0
+  }
 
   private[this] def rewritePlainTextIssueMentions(
       plain: String,
       replacements: Seq[(String, String, String)]
   ): String =
-    replacements.foldLeft(plain) { case (text, (oldId, oldTag, newTag)) =>
-      if (text.contains(oldTag)) {
-        text.replace(oldTag, newTag)
-      } else {
-        logger.warn(
-          s"Could not find expected issue mention text in document plain text (id=$oldId) — plain text left unchanged for this mention"
-        )
-        text
-      }
+    replacements.foldLeft(plain) {
+      case (text, (oldId, oldTag, newTag)) =>
+        if (text.contains(oldTag)) {
+          text.replace(oldTag, newTag)
+        } else {
+          logger.warn(
+            s"Could not find expected issue mention text in document plain text (id=$oldId) — plain text left unchanged for this mention"
+          )
+          text
+        }
     }
 
   private[this] def issueMentionTagText(fields: Map[String, JsValue]): Option[String] =
@@ -426,7 +446,10 @@ class DocumentServiceImpl @Inject() (implicit
       case other             => other
     }
 
-  private[this] def rewriteIssueMentionAttrs(attrs: JsObject, ctx: IssueMentionContext): JsObject = {
+  private[this] def rewriteIssueMentionAttrs(
+      attrs: JsObject,
+      ctx: IssueMentionContext
+  ): JsObject = {
     val optOldId      = attrs.fields.get("id").collect { case JsString(id) => id }
     val optProjectKey = attrs.fields.get("projectKey").collect { case JsString(pk) => pk }
 
@@ -434,6 +457,7 @@ class DocumentServiceImpl @Inject() (implicit
       case (Some(oldId), Some(projectKey)) if projectKey == ctx.srcProjectKey =>
         resolveAndRewriteIssueMentionAttrs(attrs, oldId, ctx)
       case (Some(oldId), Some(projectKey)) =>
+        ctx.skippedExternalProjectCount += 1
         logger.warn(
           s"Skipping issue mention for external project (projectKey=$projectKey, id=$oldId) — not part of this migration"
         )
@@ -449,17 +473,22 @@ class DocumentServiceImpl @Inject() (implicit
   ): JsObject = {
     val optOldIssueId = attrs.fields.get("issueId").collect { case JsNumber(n) => n.toLong }
     val optNewIssueId = optOldIssueId.flatMap(ctx.issueIdMap.get)
-    val optNewKey      = ctx.issueKeyMap.get(oldId)
+    val optNewKey     = ctx.issueKeyMap.get(oldId)
 
     if (optNewIssueId.isEmpty && optNewKey.isEmpty) {
+      ctx.unresolvedCount += 1
       logger.warn(
         s"No migrated issue found for issue mention (id=$oldId, issueId=$optOldIssueId) — leaving reference unresolved"
       )
       attrs
     } else {
+      ctx.rewrittenCount += 1
       var fields = attrs.fields.updated("id", JsString(optNewKey.getOrElse(oldId)))
       if (attrs.fields.contains("issueId")) {
-        fields = fields.updated("issueId", optNewIssueId.map(JsNumber(_)).getOrElse(attrs.fields("issueId")))
+        fields = fields.updated(
+          "issueId",
+          optNewIssueId.map(JsNumber(_)).getOrElse(attrs.fields("issueId"))
+        )
       }
       if (attrs.fields.contains("projectId")) {
         fields = fields.updated("projectId", JsNumber(ctx.dstProjectId))
