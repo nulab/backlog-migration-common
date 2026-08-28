@@ -8,7 +8,10 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogDocumentCommentReply
 }
 import com.nulabinc.backlog.migration.common.modules.DefaultModule
-import com.nulabinc.backlog.migration.common.service.{DocumentServiceImpl, IssueMentionRewriteStats}
+import com.nulabinc.backlog.migration.common.service.{
+  DocumentServiceImpl,
+  IssueMentionRewriteStats
+}
 import com.nulabinc.backlog.migration.{SimpleFixture, TestPropertyResolver}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -90,7 +93,12 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
       propertyResolver
     )
 
-    json.fields.keySet should contain theSameElementsAs Set("projectId", "title", "addLast", "isTrash")
+    json.fields.keySet should contain theSameElementsAs Set(
+      "projectId",
+      "title",
+      "addLast",
+      "isTrash"
+    )
     json.fields("isTrash") should be(JsBoolean(true))
   }
 
@@ -255,7 +263,14 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     attrs.fields("projectKey") should be(JsString("DST"))
     attrs.fields("label") should be(JsString("emoji test"))
     attrs.fields("mentionType") should be(JsString("inline"))
-    stats should be(IssueMentionRewriteStats(total = 1, rewritten = 1, skippedExternalProject = 0, unresolved = 0))
+    stats should be(
+      IssueMentionRewriteStats(
+        total = 1,
+        rewritten = 1,
+        skippedExternalProject = 0,
+        unresolved = 0
+      )
+    )
   }
 
   it should "rewrite a same-project issue mention missing issueId/projectId via key-only fallback" in {
@@ -288,7 +303,14 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     attrs.fields("projectKey") should be(JsString("DST"))
     attrs.fields.keySet should not contain "issueId"
     attrs.fields.keySet should not contain "projectId"
-    stats should be(IssueMentionRewriteStats(total = 1, rewritten = 1, skippedExternalProject = 0, unresolved = 0))
+    stats should be(
+      IssueMentionRewriteStats(
+        total = 1,
+        rewritten = 1,
+        skippedExternalProject = 0,
+        unresolved = 0
+      )
+    )
   }
 
   it should "leave a same-project mention untouched when the issue isn't in either map" in {
@@ -309,7 +331,14 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     )
 
     rewritten.optJson.get.parseJson should be(body.parseJson)
-    stats should be(IssueMentionRewriteStats(total = 1, rewritten = 0, skippedExternalProject = 0, unresolved = 1))
+    stats should be(
+      IssueMentionRewriteStats(
+        total = 1,
+        rewritten = 0,
+        skippedExternalProject = 0,
+        unresolved = 1
+      )
+    )
   }
 
   it should "leave a mention pointing at a different project completely untouched" in {
@@ -330,7 +359,14 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     )
 
     rewritten.optJson.get.parseJson should be(body.parseJson)
-    stats should be(IssueMentionRewriteStats(total = 1, rewritten = 0, skippedExternalProject = 1, unresolved = 0))
+    stats should be(
+      IssueMentionRewriteStats(
+        total = 1,
+        rewritten = 0,
+        skippedExternalProject = 1,
+        unresolved = 0
+      )
+    )
   }
 
   it should "return the document unchanged (no parse round-trip) when both maps are empty" in {
@@ -351,7 +387,14 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     )
 
     rewritten.optJson should be theSameInstanceAs documentWithBody.optJson
-    stats should be(IssueMentionRewriteStats(total = 0, rewritten = 0, skippedExternalProject = 0, unresolved = 0))
+    stats should be(
+      IssueMentionRewriteStats(
+        total = 0,
+        rewritten = 0,
+        skippedExternalProject = 0,
+        unresolved = 0
+      )
+    )
   }
 
   it should "rewrite the matching bracket tag in optPlain for a fully-resolved same-project mention" in {
@@ -359,8 +402,10 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
       """{"type":"doc","content":[{"type":"issueMention","attrs":{
         |"id":"SRC-85","label":"emoji test","mentionType":"inline",
         |"projectKey":"SRC","projectId":100,"issueId":200}}]}""".stripMargin
-    val oldTag = """[issueMention id="SRC-85" label="emoji test" mentionType="inline" projectKey="SRC" projectId="100" issueId="200"]"""
-    val newTag = """[issueMention id="DST-1" label="emoji test" mentionType="inline" projectKey="DST" projectId="101" issueId="201"]"""
+    val oldTag =
+      """[issueMention id="SRC-85" label="emoji test" mentionType="inline" projectKey="SRC" projectId="100" issueId="200"]"""
+    val newTag =
+      """[issueMention id="DST-1" label="emoji test" mentionType="inline" projectKey="DST" projectId="101" issueId="201"]"""
     val documentWithBody =
       document.copy(optJson = Some(body), optPlain = Some(s"before $oldTag after"))
 
@@ -382,8 +427,10 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
       """{"type":"doc","content":[{"type":"issueMention","attrs":{
         |"id":"SRC-84","label":"label missing ids","mentionType":"inline",
         |"projectKey":"SRC"}}]}""".stripMargin
-    val oldTag = """[issueMention id="SRC-84" label="label missing ids" mentionType="inline" projectKey="SRC"]"""
-    val newTag = """[issueMention id="DST-2" label="label missing ids" mentionType="inline" projectKey="DST"]"""
+    val oldTag =
+      """[issueMention id="SRC-84" label="label missing ids" mentionType="inline" projectKey="SRC"]"""
+    val newTag =
+      """[issueMention id="DST-2" label="label missing ids" mentionType="inline" projectKey="DST"]"""
     val documentWithBody =
       document.copy(optJson = Some(body), optPlain = Some(s"text $oldTag more"))
 
@@ -423,78 +470,85 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
   }
 
   it should "rewrite every issueMention tag in optPlain across label edge cases " +
-    "(missing ids, brackets, encoded quotes)" in {
-      val jsonBody =
-        """{"type":"doc","content":[{"type":"paragraph"},{"type":"paragraph","content":[{"type":"text","text":"text one"}]},{"type":"paragraph","content":[{"type":"issueMention","attrs":{"id":"SRCPROJ-1","label":"label one","mentionType":"inline","projectKey":"SRCPROJ","projectId":1000,"issueId":100001}},{"type":"text","text":" "}]},{"type":"paragraph"},{"type":"paragraph","content":[{"type":"text","text":"text two"}]},{"type":"paragraph","content":[{"type":"issueMention","attrs":{"id":"SRCPROJ-2","label":"label missing ids","mentionType":"inline","projectKey":"SRCPROJ"}},{"type":"text","text":" "}]},{"type":"paragraph"},{"type":"paragraph","content":[{"type":"text","text":"“stray quote“and[escaped]"}]},{"type":"paragraph","content":[{"type":"issueMention","attrs":{"id":"SRCPROJ-3","label":"label with &quot;quote&quot; and [brackets]","mentionType":"inline","projectKey":"SRCPROJ","projectId":1000,"issueId":100003}},{"type":"text","text":" "}]},{"type":"paragraph"}]}"""
+  "(missing ids, brackets, encoded quotes)" in {
+    val jsonBody =
+      """{"type":"doc","content":[{"type":"paragraph"},{"type":"paragraph","content":[{"type":"text","text":"text one"}]},{"type":"paragraph","content":[{"type":"issueMention","attrs":{"id":"SRCPROJ-1","label":"label one","mentionType":"inline","projectKey":"SRCPROJ","projectId":1000,"issueId":100001}},{"type":"text","text":" "}]},{"type":"paragraph"},{"type":"paragraph","content":[{"type":"text","text":"text two"}]},{"type":"paragraph","content":[{"type":"issueMention","attrs":{"id":"SRCPROJ-2","label":"label missing ids","mentionType":"inline","projectKey":"SRCPROJ"}},{"type":"text","text":" "}]},{"type":"paragraph"},{"type":"paragraph","content":[{"type":"text","text":"“stray quote“and[escaped]"}]},{"type":"paragraph","content":[{"type":"issueMention","attrs":{"id":"SRCPROJ-3","label":"label with &quot;quote&quot; and [brackets]","mentionType":"inline","projectKey":"SRCPROJ","projectId":1000,"issueId":100003}},{"type":"text","text":" "}]},{"type":"paragraph"}]}"""
 
-      val oldTag1 =
-        """[issueMention id="SRCPROJ-1" label="label one" mentionType="inline" projectKey="SRCPROJ" projectId="1000" issueId="100001"]"""
-      val oldTag2 =
-        """[issueMention id="SRCPROJ-2" label="label missing ids" mentionType="inline" projectKey="SRCPROJ"]"""
-      val oldTag3 =
-        """[issueMention id="SRCPROJ-3" label="label with &quot;quote&quot; and [brackets]" mentionType="inline" projectKey="SRCPROJ" projectId="1000" issueId="100003"]"""
+    val oldTag1 =
+      """[issueMention id="SRCPROJ-1" label="label one" mentionType="inline" projectKey="SRCPROJ" projectId="1000" issueId="100001"]"""
+    val oldTag2 =
+      """[issueMention id="SRCPROJ-2" label="label missing ids" mentionType="inline" projectKey="SRCPROJ"]"""
+    val oldTag3 =
+      """[issueMention id="SRCPROJ-3" label="label with &quot;quote&quot; and [brackets]" mentionType="inline" projectKey="SRCPROJ" projectId="1000" issueId="100003"]"""
 
-      val filler1 = "\n\ntext one\n\n"
-      val filler2 = " \n\n\n\ntext two\n\n"
-      val filler3 = " \n\n\n\n“stray quote“and\\[escaped\\]\n\n"
-      val filler4 = " \n\n"
+    val filler1 = "\n\ntext one\n\n"
+    val filler2 = " \n\n\n\ntext two\n\n"
+    val filler3 = " \n\n\n\n“stray quote“and\\[escaped\\]\n\n"
+    val filler4 = " \n\n"
 
-      val plainBody =
-        filler1 + oldTag1 + filler2 + oldTag2 + filler3 + oldTag3 + filler4
+    val plainBody =
+      filler1 + oldTag1 + filler2 + oldTag2 + filler3 + oldTag3 + filler4
 
-      val documentWithBody = document.copy(optJson = Some(jsonBody), optPlain = Some(plainBody))
+    val documentWithBody = document.copy(optJson = Some(jsonBody), optPlain = Some(plainBody))
 
-      val issueIdMap = Map(
-        100001L -> 200001L,
-        100003L -> 200003L
-      )
-      val issueKeyMap = Map(
-        "SRCPROJ-1" -> "DST-1",
-        "SRCPROJ-2" -> "DST-2",
-        "SRCPROJ-3" -> "DST-3"
-      )
+    val issueIdMap = Map(
+      100001L -> 200001L,
+      100003L -> 200003L
+    )
+    val issueKeyMap = Map(
+      "SRCPROJ-1" -> "DST-1",
+      "SRCPROJ-2" -> "DST-2",
+      "SRCPROJ-3" -> "DST-3"
+    )
 
-      val (rewritten, _) = documentService().rewriteIssueMentions(
-        documentWithBody,
-        issueIdMap = issueIdMap,
-        issueKeyMap = issueKeyMap,
-        srcProjectId = 1000L,
-        srcProjectKey = "SRCPROJ",
-        dstProjectId = 2000L,
-        dstProjectKey = "DSTPROJ"
-      )
+    val (rewritten, _) = documentService().rewriteIssueMentions(
+      documentWithBody,
+      issueIdMap = issueIdMap,
+      issueKeyMap = issueKeyMap,
+      srcProjectId = 1000L,
+      srcProjectKey = "SRCPROJ",
+      dstProjectId = 2000L,
+      dstProjectKey = "DSTPROJ"
+    )
 
-      val newTag1 =
-        """[issueMention id="DST-1" label="label one" mentionType="inline" projectKey="DSTPROJ" projectId="2000" issueId="200001"]"""
-      val newTag2 =
-        """[issueMention id="DST-2" label="label missing ids" mentionType="inline" projectKey="DSTPROJ"]"""
-      val newTag3 =
-        """[issueMention id="DST-3" label="label with &quot;quote&quot; and [brackets]" mentionType="inline" projectKey="DSTPROJ" projectId="2000" issueId="200003"]"""
+    val newTag1 =
+      """[issueMention id="DST-1" label="label one" mentionType="inline" projectKey="DSTPROJ" projectId="2000" issueId="200001"]"""
+    val newTag2 =
+      """[issueMention id="DST-2" label="label missing ids" mentionType="inline" projectKey="DSTPROJ"]"""
+    val newTag3 =
+      """[issueMention id="DST-3" label="label with &quot;quote&quot; and [brackets]" mentionType="inline" projectKey="DSTPROJ" projectId="2000" issueId="200003"]"""
 
-      val expectedPlainBody =
-        filler1 + newTag1 + filler2 + newTag2 + filler3 + newTag3 + filler4
+    val expectedPlainBody =
+      filler1 + newTag1 + filler2 + newTag2 + filler3 + newTag3 + filler4
 
-      rewritten.optPlain should be(Some(expectedPlainBody))
+    rewritten.optPlain should be(Some(expectedPlainBody))
 
-      def collectIssueMentionIds(value: JsValue): Seq[String] = value match {
-        case obj: JsObject =>
-          val here = obj.fields.get("type") match {
-            case Some(JsString("issueMention")) =>
-              obj.fields.get("attrs").toSeq.collect { case attrs: JsObject =>
-                attrs.fields("id")
-              }.collect { case JsString(id) => id }
-            case _ => Seq.empty
-          }
-          here ++ obj.fields.values.flatMap(collectIssueMentionIds)
-        case JsArray(elements) => elements.flatMap(collectIssueMentionIds)
-        case _                 => Seq.empty
-      }
-
-      collectIssueMentionIds(rewritten.optJson.get.parseJson) should contain theSameElementsInOrderAs Seq(
-        "DST-1",
-        "DST-2",
-        "DST-3"
-      )
+    def collectIssueMentionIds(value: JsValue): Seq[String] = value match {
+      case obj: JsObject =>
+        val here = obj.fields.get("type") match {
+          case Some(JsString("issueMention")) =>
+            obj.fields
+              .get("attrs")
+              .toSeq
+              .collect {
+                case attrs: JsObject =>
+                  attrs.fields("id")
+              }
+              .collect { case JsString(id) => id }
+          case _ => Seq.empty
+        }
+        here ++ obj.fields.values.flatMap(collectIssueMentionIds)
+      case JsArray(elements) => elements.flatMap(collectIssueMentionIds)
+      case _                 => Seq.empty
     }
+
+    collectIssueMentionIds(
+      rewritten.optJson.get.parseJson
+    ) should contain theSameElementsInOrderAs Seq(
+      "DST-1",
+      "DST-2",
+      "DST-3"
+    )
+  }
 
 }
