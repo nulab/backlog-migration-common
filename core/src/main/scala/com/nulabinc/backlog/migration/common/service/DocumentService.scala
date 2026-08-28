@@ -10,6 +10,15 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogDocumentTree
 }
 
+// Counts of what rewriteIssueMentions did to the issueMention nodes in one
+// document. total = rewritten + skippedExternalProject + unresolved.
+final case class IssueMentionRewriteStats(
+    total: Int,
+    rewritten: Int,
+    skippedExternalProject: Int,
+    unresolved: Int
+)
+
 /**
  * @author
  *   nulab
@@ -106,6 +115,6 @@ trait DocumentService {
       srcProjectKey: String,
       dstProjectId: Long,
       dstProjectKey: String
-  ): BacklogDocument
+  ): (BacklogDocument, IssueMentionRewriteStats)
 
 }

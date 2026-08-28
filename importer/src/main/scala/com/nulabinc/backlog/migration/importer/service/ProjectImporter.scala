@@ -17,8 +17,6 @@ import com.nulabinc.backlog4j.BacklogAPIException
 import com.osinka.i18n.Messages
 import monix.eval.Task
 import monix.execution.Scheduler
-import org.fusesource.jansi.Ansi
-import org.fusesource.jansi.Ansi.ansi
 
 import scala.util.Try
 
@@ -58,13 +56,6 @@ private[importer] class ProjectImporter @Inject() (
           _ <- preExecute()
           _ <- contents(project, srcProject.id, srcProject.key, fitIssueKey, retryCount)
           _ <- postExecute()
-          _ <- ConsoleDSL[Task].printStream(
-            ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
-          )
-          _ <- ConsoleDSL[Task].printStream(
-            ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
-          )
-          _ <- ConsoleDSL[Task].flush()
           _ <- ConsoleDSL[Task].println(ConsoleMessages.Imports.finish)
         } yield ()
       case Left(e) =>

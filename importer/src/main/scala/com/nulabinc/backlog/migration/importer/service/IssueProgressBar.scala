@@ -87,6 +87,18 @@ private[importer] class IssueProgressBar() extends Logging {
     newLine = false
   }
 
+  // Removes the last call's extra separator/remaining-time lines, leaving
+  // just the summary. Callers must call this when done — nothing else knows
+  // how many filler lines to clean up.
+  def finish(): Unit = {
+    (0 until 2).foreach { _ =>
+      ConsoleOut.outStream.print(
+        ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
+      )
+    }
+    ConsoleOut.outStream.flush()
+  }
+
   private[this] def current(indexOfDate: Int, totalOfDate: Int): String = {
     val progressBar = ProgressBar.progressBar(indexOfDate, totalOfDate)
     val resultString =
