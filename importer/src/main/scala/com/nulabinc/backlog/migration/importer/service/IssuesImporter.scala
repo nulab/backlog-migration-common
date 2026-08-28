@@ -85,8 +85,23 @@ private[importer] class IssuesImporter(
     BacklogUnmarshaller.issue(backlogPaths.issueJson(path)) match {
       case Some(issue: BacklogIssue) =>
         createTemporaryIssues(project, issue)
-        retryBacklogAPIException(ctx.retryCount, retryInterval) {
-          createIssue(project, issue, path, index, size)
+        try {
+          retryBacklogAPIException(ctx.retryCount, retryInterval) {
+            createIssue(project, issue, path, index, size)
+          }
+        } catch {
+          // createIssue used to swallow a failed create, so the retry wrapper never saw it
+          // and the issue silently became a key gap. It throws now; when the retries are
+          // also exhausted, record the failure and continue with the remaining issues.
+          case e @ (_: RetryException | _: BacklogAPIException) =>
+            logger.error(e.getMessage, e)
+            console.error(
+              index + 1,
+              size,
+              Messages("import.error.failed.issue", issue.issueKey, e.getMessage)
+            )
+            console.failed += 1
+            console.progress(index + 1, size)
         }
       case Some(comment: BacklogComment) =>
         createComment(comment, path, index, size)
@@ -147,8 +162,10 @@ private[importer] class IssuesImporter(
               "[StoreDSL] skip storing new imported issue keys(--fitIssueKey option is not specified)"
             )
           }
-        case _ =>
-          console.failed += 1
+        case Left(e) =>
+          // Let it reach retryBacklogAPIException in loadJson; the exists() check above
+          // keeps the retry idempotent when the server processed the request after all.
+          throw e
       }
       console.progress(index + 1, size)
     }
