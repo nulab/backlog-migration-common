@@ -23,7 +23,7 @@ private[importer] case class IssueContext(
   private[this] val issueKeyMap: mutable.Map[String, String] = mutable.Map()
 
   def addIssueId(backlogIssue: BacklogIssue, remoteIssue: BacklogIssue) = {
-    issueIdMap += backlogIssue.id -> remoteIssue.id
+    issueIdMap += backlogIssue.id        -> remoteIssue.id
     issueKeyMap += backlogIssue.issueKey -> remoteIssue.issueKey
   }
 

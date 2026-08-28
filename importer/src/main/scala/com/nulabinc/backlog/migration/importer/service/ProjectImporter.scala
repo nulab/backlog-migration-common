@@ -101,18 +101,19 @@ private[importer] class ProjectImporter @Inject() (
     // Issue
     issuesImporter
       .execute(project, propertyResolver, fitIssueKey, retryCount)
-      .map { case (issueIdMap, issueKeyMap) =>
-        if (project.useDocument) {
-          // Document
-          documentsImporter.execute(
-            project,
-            propertyResolver,
-            issueIdMap,
-            issueKeyMap,
-            srcProjectId,
-            srcProjectKey
-          )
-        }
+      .map {
+        case (issueIdMap, issueKeyMap) =>
+          if (project.useDocument) {
+            // Document
+            documentsImporter.execute(
+              project,
+              propertyResolver,
+              issueIdMap,
+              issueKeyMap,
+              srcProjectId,
+              srcProjectKey
+            )
+          }
       }
   }
 
