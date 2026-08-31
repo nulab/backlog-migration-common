@@ -1,6 +1,6 @@
 lazy val commonSettings = Seq(
   organization := "com.nulabinc",
-  version      := "0.7.2",
+  version      := "0.8.0-SNAPSHOT",
   scalaVersion := "2.13.6",
   scalacOptions ++= List(
     "-feature",
