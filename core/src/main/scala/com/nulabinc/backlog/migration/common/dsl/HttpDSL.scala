@@ -1,8 +1,5 @@
 package com.nulabinc.backlog.migration.common.dsl
 
-import simulacrum.typeclass
-
-@typeclass
 trait HttpDSL[F[_]] {
   type Response = Either[HttpError, Array[Byte]]
 
@@ -19,4 +16,8 @@ case class HttpQuery(path: String, baseUrl: String)
 object HttpQuery {
   def apply(baseUrl: String): HttpQuery =
     new HttpQuery(baseUrl = baseUrl, path = "")
+}
+
+object HttpDSL {
+  def apply[F[_]](implicit ev: HttpDSL[F]): HttpDSL[F] = ev
 }

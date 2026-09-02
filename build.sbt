@@ -1,14 +1,13 @@
 lazy val commonSettings = Seq(
   organization := "com.nulabinc",
   version      := "0.8.0-SNAPSHOT",
-  scalaVersion := "2.13.6",
+  scalaVersion := "2.13.18",
   scalacOptions ++= List(
     "-feature",
     "-unchecked",
     "-deprecation",
     "-language:higherKinds",
     "-language:implicitConversions",
-    "-Ymacro-annotations",
     "-Ywarn-unused"
   ),
   javacOptions ++= Seq("-encoding", "UTF-8", "-source", "11", "-target", "11"),
@@ -32,7 +31,6 @@ lazy val commonSettings = Seq(
       "org.apache.pekko"     %% "pekko-http"       % pekkoHttpVersion,
       "org.xerial"            % "sqlite-jdbc"      % "3.36.0.3",
       "com.nulab-inc"         % "backlog4j"        % "2.10.0",
-      "org.typelevel"        %% "simulacrum"       % "1.0.0",
       "org.fusesource.jansi"  % "jansi"            % "2.4.0",
       "com.osinka.i18n"      %% "scala-i18n"       % "1.0.3",
       "ch.qos.logback"        % "logback-classic"  % "1.5.38",

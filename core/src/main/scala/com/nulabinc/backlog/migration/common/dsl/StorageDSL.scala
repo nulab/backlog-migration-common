@@ -4,9 +4,7 @@ import java.io.InputStream
 import java.nio.file.Path
 
 import monix.reactive.Observable
-import simulacrum.typeclass
 
-@typeclass
 trait StorageDSL[F[_]] {
 
   def read[A](path: Path, f: InputStream => A): F[A]
@@ -23,4 +21,8 @@ trait StorageDSL[F[_]] {
 
   def delete(path: Path): F[Unit]
 
+}
+
+object StorageDSL {
+  def apply[F[_]](implicit ev: StorageDSL[F]): StorageDSL[F] = ev
 }
