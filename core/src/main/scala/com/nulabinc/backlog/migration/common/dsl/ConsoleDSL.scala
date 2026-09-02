@@ -2,9 +2,7 @@ package com.nulabinc.backlog.migration.common.dsl
 
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.Color.BLACK
-import simulacrum.typeclass
 
-@typeclass
 trait ConsoleDSL[F[_]] {
   def infoln(value: String, space: Int = 0): F[Unit]
   def println(value: String, space: Int = 0, color: Ansi.Color = BLACK): F[Unit]
@@ -18,4 +16,8 @@ trait ConsoleDSL[F[_]] {
   def success(value: String, space: Int = 0): F[Unit]
   def warning(value: String, space: Int = 0): F[Unit]
   def overwrite(value: String, space: Int = 0): F[Unit]
+}
+
+object ConsoleDSL {
+  def apply[F[_]](implicit ev: ConsoleDSL[F]): ConsoleDSL[F] = ev
 }
