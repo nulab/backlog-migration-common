@@ -19,6 +19,15 @@ final case class IssueMentionRewriteStats(
     unresolved: Int
 )
 
+// Counts of what rewriteDocumentMentions did to the documentMention nodes in
+// one document. total = rewritten + skippedExternalProject + unresolved.
+final case class DocumentMentionRewriteStats(
+    total: Int,
+    rewritten: Int,
+    skippedExternalProject: Int,
+    unresolved: Int
+)
+
 /**
  * @author
  *   nulab
@@ -116,5 +125,34 @@ trait DocumentService {
       dstProjectId: Long,
       dstProjectKey: String
   ): (BacklogDocument, IssueMentionRewriteStats)
+
+  // Like rewriteIssueMentions, but for `documentMention` nodes (which also
+  // carry a `url` snapshot, rewritten only when it matches the expected
+  // `.../document/{projectKey}/[e/]{documentId}` shape). The key difference:
+  // a mentioned document may not be created yet when this is called, so
+  // `documentIdMap` must come from a complete pass over the whole document
+  // tree first, not just the documents processed so far.
+  def rewriteDocumentMentions(
+      document: BacklogDocument,
+      documentIdMap: Map[String, String],
+      srcProjectKey: String,
+      dstProjectId: Long,
+      dstProjectKey: String
+  ): (BacklogDocument, DocumentMentionRewriteStats)
+
+  // Combines rewriteIssueMentions and rewriteDocumentMentions into a single
+  // parse + tree-walk + serialize pass over the document body, instead of
+  // running each independently back-to-back. Behaves identically to calling
+  // rewriteIssueMentions followed by rewriteDocumentMentions on its result.
+  def rewriteMentions(
+      document: BacklogDocument,
+      issueIdMap: Map[Long, Long],
+      issueKeyMap: Map[String, String],
+      documentIdMap: Map[String, String],
+      srcProjectId: Long,
+      srcProjectKey: String,
+      dstProjectId: Long,
+      dstProjectKey: String
+  ): (BacklogDocument, IssueMentionRewriteStats, DocumentMentionRewriteStats)
 
 }

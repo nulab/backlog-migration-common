@@ -393,15 +393,28 @@ class DocumentServiceImpl @Inject() (implicit
   ): String =
     replacements.foldLeft(plain) {
       case (text, (oldId, oldTag, newTag)) =>
-        if (text.contains(oldTag)) {
-          text.replace(oldTag, newTag)
-        } else {
-          logger.warn(
-            s"Could not find expected issue mention text in document plain text (id=$oldId) — plain text left unchanged for this mention"
-          )
-          text
+        replaceFirstOccurrence(text, oldTag, newTag) match {
+          case Some(newText) => newText
+          case None =>
+            logger.warn(
+              s"Could not find expected issue mention text in document plain text (id=$oldId) — plain text left unchanged for this mention"
+            )
+            text
         }
     }
+
+  // Replaces only the first remaining occurrence of oldTag, so that N
+  // identical mentions consume exactly N occurrences in order rather than
+  // String.replace's all-at-once semantics collapsing them into one.
+  private[this] def replaceFirstOccurrence(
+      text: String,
+      oldTag: String,
+      newTag: String
+  ): Option[String] = {
+    val idx = text.indexOf(oldTag)
+    if (idx < 0) None
+    else Some(text.substring(0, idx) + newTag + text.substring(idx + oldTag.length))
+  }
 
   private[this] def issueMentionTagText(fields: Map[String, JsValue]): Option[String] =
     for {
@@ -503,6 +516,305 @@ class DocumentServiceImpl @Inject() (implicit
       JsObject(fields)
     }
   }
+
+  private[this] val documentMentionUrlPattern =
+    """^(https?://[^/]+/document/)([^/]+)(/e)?/([A-Za-z0-9]+)$""".r
+
+  override def rewriteDocumentMentions(
+      document: BacklogDocument,
+      documentIdMap: Map[String, String],
+      srcProjectKey: String,
+      dstProjectId: Long,
+      dstProjectKey: String
+  ): (BacklogDocument, DocumentMentionRewriteStats) =
+    if (documentIdMap.isEmpty) (document, DocumentMentionRewriteStats(0, 0, 0, 0))
+    else
+      document.optJson match {
+        case Some(json) =>
+          val plainTextReplacements =
+            scala.collection.mutable.ArrayBuffer.empty[(String, String, String)]
+          val ctx = DocumentMentionContext(
+            documentIdMap,
+            srcProjectKey,
+            dstProjectId,
+            dstProjectKey,
+            plainTextReplacements
+          )
+          val newJson = rewriteDocumentMentionJsValue(json.parseJson, ctx).compactPrint
+          val newPlain =
+            document.optPlain.map(rewritePlainTextDocumentMentions(_, plainTextReplacements.toSeq))
+          val stats = DocumentMentionRewriteStats(
+            total = ctx.rewrittenCount + ctx.skippedExternalProjectCount + ctx.unresolvedCount,
+            rewritten = ctx.rewrittenCount,
+            skippedExternalProject = ctx.skippedExternalProjectCount,
+            unresolved = ctx.unresolvedCount
+          )
+          (document.copy(optJson = Some(newJson), optPlain = newPlain), stats)
+        case None => (document, DocumentMentionRewriteStats(0, 0, 0, 0))
+      }
+
+  private[this] case class DocumentMentionContext(
+      documentIdMap: Map[String, String],
+      srcProjectKey: String,
+      dstProjectId: Long,
+      dstProjectKey: String,
+      // (oldId, old tag text, new tag text) captured for each resolved mention, applied to optPlain afterwards
+      plainTextReplacements: scala.collection.mutable.ArrayBuffer[(String, String, String)]
+  ) {
+    var rewrittenCount: Int              = 0
+    var skippedExternalProjectCount: Int = 0
+    var unresolvedCount: Int             = 0
+  }
+
+  private[this] def rewritePlainTextDocumentMentions(
+      plain: String,
+      replacements: Seq[(String, String, String)]
+  ): String =
+    replacements.foldLeft(plain) {
+      case (text, (oldId, oldTag, newTag)) =>
+        replaceFirstOccurrence(text, oldTag, newTag) match {
+          case Some(newText) => newText
+          case None =>
+            logger.warn(
+              s"Could not find expected document mention text in document plain text (id=$oldId) — plain text left unchanged for this mention"
+            )
+            text
+        }
+    }
+
+  private[this] def documentMentionTagText(fields: Map[String, JsValue]): Option[String] =
+    for {
+      id          <- fields.get("id").collect { case JsString(s) => s }
+      label       <- fields.get("label").collect { case JsString(s) => s }
+      mentionType <- fields.get("mentionType").collect { case JsString(s) => s }
+      projectKey  <- fields.get("projectKey").collect { case JsString(s) => s }
+    } yield {
+      val sb = new StringBuilder("[documentMention id=\"")
+        .append(id)
+        .append("\" label=\"")
+        .append(label)
+        .append("\" mentionType=\"")
+        .append(mentionType)
+        .append("\" projectKey=\"")
+        .append(projectKey)
+        .append("\"")
+      fields.get("projectId").collect { case JsNumber(n) => n }.foreach { n =>
+        sb.append(" projectId=\"").append(n.toString).append("\"")
+      }
+      fields.get("url").collect { case JsString(s) => s }.foreach { u =>
+        sb.append(" url=\"").append(u).append("\"")
+      }
+      sb.append("]")
+      sb.toString
+    }
+
+  private[this] def rewriteDocumentMentionJsValue(
+      value: JsValue,
+      ctx: DocumentMentionContext
+  ): JsValue =
+    value match {
+      case JsObject(fields) =>
+        val rewritten = fields.map {
+          case (key, v) => key -> rewriteDocumentMentionJsValue(v, ctx)
+        }
+        rewritten.get("type") match {
+          case Some(JsString("documentMention")) =>
+            rewritten.get("attrs") match {
+              case Some(attrs: JsObject) =>
+                JsObject(rewritten.updated("attrs", rewriteDocumentMentionAttrs(attrs, ctx)))
+              case _ => JsObject(rewritten)
+            }
+          case _ => JsObject(rewritten)
+        }
+      case JsArray(elements) => JsArray(elements.map(rewriteDocumentMentionJsValue(_, ctx)))
+      case other             => other
+    }
+
+  private[this] def rewriteDocumentMentionAttrs(
+      attrs: JsObject,
+      ctx: DocumentMentionContext
+  ): JsObject = {
+    val optOldId      = attrs.fields.get("id").collect { case JsString(id) => id }
+    val optProjectKey = attrs.fields.get("projectKey").collect { case JsString(pk) => pk }
+
+    (optOldId, optProjectKey) match {
+      case (Some(oldId), Some(projectKey)) if projectKey == ctx.srcProjectKey =>
+        resolveAndRewriteDocumentMentionAttrs(attrs, oldId, ctx)
+      case (Some(oldId), Some(projectKey)) =>
+        ctx.skippedExternalProjectCount += 1
+        logger.warn(
+          s"Skipping document mention for external project (projectKey=$projectKey, id=$oldId) — not part of this migration"
+        )
+        attrs
+      case _ => attrs
+    }
+  }
+
+  private[this] def resolveAndRewriteDocumentMentionAttrs(
+      attrs: JsObject,
+      oldId: String,
+      ctx: DocumentMentionContext
+  ): JsObject =
+    ctx.documentIdMap.get(oldId) match {
+      case None =>
+        ctx.unresolvedCount += 1
+        logger.warn(
+          s"No migrated document found for document mention (id=$oldId) — leaving reference unresolved"
+        )
+        attrs
+      case Some(newId) =>
+        ctx.rewrittenCount += 1
+        var fields = attrs.fields.updated("id", JsString(newId))
+        if (fields.contains("projectId")) {
+          fields = fields.updated("projectId", JsNumber(ctx.dstProjectId))
+        }
+        fields = fields.updated("projectKey", JsString(ctx.dstProjectKey))
+        fields.get("url").collect { case JsString(url) => url }.filter(_.nonEmpty).foreach { url =>
+          rewriteDocumentMentionUrl(url, ctx.dstProjectKey, newId) match {
+            case Some(newUrl) => fields = fields.updated("url", JsString(newUrl))
+            case None =>
+              logger.warn(
+                s"Document mention url did not match the expected format (id=$oldId, url=$url) — url left unchanged"
+              )
+          }
+        }
+
+        (documentMentionTagText(attrs.fields), documentMentionTagText(fields)) match {
+          case (Some(oldTag), Some(newTag)) =>
+            ctx.plainTextReplacements += ((oldId, oldTag, newTag))
+          case _ => ()
+        }
+
+        JsObject(fields)
+    }
+
+  private[this] def rewriteDocumentMentionUrl(
+      url: String,
+      dstProjectKey: String,
+      newDocumentId: String
+  ): Option[String] =
+    url match {
+      case documentMentionUrlPattern(prefix, _, eSegment, _) =>
+        Some(s"$prefix$dstProjectKey${Option(eSegment).getOrElse("")}/$newDocumentId")
+      case _ => None
+    }
+
+  override def rewriteMentions(
+      document: BacklogDocument,
+      issueIdMap: Map[Long, Long],
+      issueKeyMap: Map[String, String],
+      documentIdMap: Map[String, String],
+      srcProjectId: Long,
+      srcProjectKey: String,
+      dstProjectId: Long,
+      dstProjectKey: String
+  ): (BacklogDocument, IssueMentionRewriteStats, DocumentMentionRewriteStats) = {
+    val doIssueRewrite    = issueIdMap.nonEmpty || issueKeyMap.nonEmpty
+    val doDocumentRewrite = documentIdMap.nonEmpty
+
+    if (!doIssueRewrite && !doDocumentRewrite) {
+      (document, IssueMentionRewriteStats(0, 0, 0, 0), DocumentMentionRewriteStats(0, 0, 0, 0))
+    } else
+      document.optJson match {
+        case Some(json) =>
+          val issuePlainTextReplacements =
+            scala.collection.mutable.ArrayBuffer.empty[(String, String, String)]
+          val documentPlainTextReplacements =
+            scala.collection.mutable.ArrayBuffer.empty[(String, String, String)]
+
+          val optIssueCtx =
+            if (doIssueRewrite)
+              Some(
+                IssueMentionContext(
+                  issueIdMap,
+                  issueKeyMap,
+                  srcProjectKey,
+                  dstProjectId,
+                  dstProjectKey,
+                  issuePlainTextReplacements
+                )
+              )
+            else None
+          val optDocumentCtx =
+            if (doDocumentRewrite)
+              Some(
+                DocumentMentionContext(
+                  documentIdMap,
+                  srcProjectKey,
+                  dstProjectId,
+                  dstProjectKey,
+                  documentPlainTextReplacements
+                )
+              )
+            else None
+
+          val newJson =
+            rewriteMentionsJsValue(json.parseJson, optIssueCtx, optDocumentCtx).compactPrint
+          val newPlain = document.optPlain
+            .map(rewritePlainTextIssueMentions(_, issuePlainTextReplacements.toSeq))
+            .map(rewritePlainTextDocumentMentions(_, documentPlainTextReplacements.toSeq))
+
+          val issueStats = optIssueCtx match {
+            case Some(ctx) =>
+              IssueMentionRewriteStats(
+                total = ctx.rewrittenCount + ctx.skippedExternalProjectCount + ctx.unresolvedCount,
+                rewritten = ctx.rewrittenCount,
+                skippedExternalProject = ctx.skippedExternalProjectCount,
+                unresolved = ctx.unresolvedCount
+              )
+            case None => IssueMentionRewriteStats(0, 0, 0, 0)
+          }
+          val documentStats = optDocumentCtx match {
+            case Some(ctx) =>
+              DocumentMentionRewriteStats(
+                total = ctx.rewrittenCount + ctx.skippedExternalProjectCount + ctx.unresolvedCount,
+                rewritten = ctx.rewrittenCount,
+                skippedExternalProject = ctx.skippedExternalProjectCount,
+                unresolved = ctx.unresolvedCount
+              )
+            case None => DocumentMentionRewriteStats(0, 0, 0, 0)
+          }
+
+          (document.copy(optJson = Some(newJson), optPlain = newPlain), issueStats, documentStats)
+        case None =>
+          (document, IssueMentionRewriteStats(0, 0, 0, 0), DocumentMentionRewriteStats(0, 0, 0, 0))
+      }
+  }
+
+  private[this] def rewriteMentionsJsValue(
+      value: JsValue,
+      optIssueCtx: Option[IssueMentionContext],
+      optDocumentCtx: Option[DocumentMentionContext]
+  ): JsValue =
+    value match {
+      case JsObject(fields) =>
+        val rewritten = fields.map {
+          case (key, v) => key -> rewriteMentionsJsValue(v, optIssueCtx, optDocumentCtx)
+        }
+        rewritten.get("type") match {
+          case Some(JsString("issueMention")) if optIssueCtx.isDefined =>
+            rewritten.get("attrs") match {
+              case Some(attrs: JsObject) =>
+                JsObject(
+                  rewritten.updated("attrs", rewriteIssueMentionAttrs(attrs, optIssueCtx.get))
+                )
+              case _ => JsObject(rewritten)
+            }
+          case Some(JsString("documentMention")) if optDocumentCtx.isDefined =>
+            rewritten.get("attrs") match {
+              case Some(attrs: JsObject) =>
+                JsObject(
+                  rewritten
+                    .updated("attrs", rewriteDocumentMentionAttrs(attrs, optDocumentCtx.get))
+                )
+              case _ => JsObject(rewritten)
+            }
+          case _ => JsObject(rewritten)
+        }
+      case JsArray(elements) =>
+        JsArray(elements.map(rewriteMentionsJsValue(_, optIssueCtx, optDocumentCtx)))
+      case other => other
+    }
 
   private[this] def withComments(document: BacklogDocument): BacklogDocument = {
     val comments =
