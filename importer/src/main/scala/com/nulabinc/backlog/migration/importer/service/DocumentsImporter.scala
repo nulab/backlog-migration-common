@@ -13,6 +13,7 @@ import com.nulabinc.backlog.migration.common.domain.{
 }
 import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
 import com.nulabinc.backlog.migration.common.service.{
+  DocumentMentionRewriteStats,
   DocumentService,
   IssueMentionRewriteStats,
   PropertyResolver
@@ -22,6 +23,8 @@ import com.osinka.i18n.Messages
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.fusesource.jansi.Ansi.Color.GREEN
+
+import scala.collection.mutable
 
 /**
  * @author
@@ -44,7 +47,31 @@ private[importer] class DocumentsImporter @Inject() (
       consoleDSL: ConsoleDSL[Task]
   ): Unit =
     BacklogUnmarshaller.documentTree(backlogPaths).foreach { tree =>
-      val issueMentionContext = IssueMentionContext(
+      val documentIdMap = mutable.Map.empty[String, String]
+      val pending       = mutable.ArrayBuffer.empty[PendingDocument]
+
+      // Phase 1: create every document across both trees first, since a
+      // document's body may mention a sibling created later in tree order.
+      createAll(
+        tree.activeTree.children,
+        None,
+        isTrash = false,
+        project,
+        propertyResolver,
+        documentIdMap,
+        pending
+      )
+      createAll(
+        tree.trashTree.children,
+        None,
+        isTrash = true,
+        project,
+        propertyResolver,
+        documentIdMap,
+        pending
+      )
+
+      val mentionRewriteContext = MentionRewriteContext(
         issueIdMap,
         issueKeyMap,
         srcProjectId,
@@ -52,26 +79,20 @@ private[importer] class DocumentsImporter @Inject() (
         dstProjectId = project.id,
         dstProjectKey = project.key
       )
+      val resolvedDocumentIdMap = documentIdMap.toMap
 
-      walk(
-        tree.activeTree.children,
-        None,
-        isTrash = false,
-        project,
-        propertyResolver,
-        issueMentionContext
-      )
-      walk(
-        tree.trashTree.children,
-        None,
-        isTrash = true,
-        project,
-        propertyResolver,
-        issueMentionContext
-      )
+      // Phase 2: documentIdMap is now complete, so mentions can be resolved.
+      pending.foreach { pendingDocument =>
+        finalizeContent(
+          pendingDocument,
+          mentionRewriteContext,
+          resolvedDocumentIdMap,
+          propertyResolver
+        ).runSyncUnsafe()
+      }
     }
 
-  private[this] case class IssueMentionContext(
+  private[this] case class MentionRewriteContext(
       issueIdMap: Map[Long, Long],
       issueKeyMap: Map[String, String],
       srcProjectId: Long,
@@ -80,13 +101,22 @@ private[importer] class DocumentsImporter @Inject() (
       dstProjectKey: String
   )
 
-  private[this] def walk(
+  // A created document awaiting phase 2's mention rewrite + content update.
+  // `document` already has inlineComment marks rewritten (phase-1-local).
+  private[this] case class PendingDocument(
+      oldDocumentId: String,
+      newDocumentId: String,
+      document: BacklogDocument
+  )
+
+  private[this] def createAll(
       nodes: Seq[BacklogDocumentTreeNode],
       optNewParentId: Option[String],
       isTrash: Boolean,
       project: BacklogProject,
       propertyResolver: PropertyResolver,
-      issueMentionContext: IssueMentionContext
+      documentIdMap: mutable.Map[String, String],
+      pending: mutable.ArrayBuffer[PendingDocument]
   )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit =
     nodes.foreach { node =>
       val optNewId = unmarshal(node.id).map { document =>
@@ -100,12 +130,21 @@ private[importer] class DocumentsImporter @Inject() (
           isTrash = isTrash,
           propertyResolver
         )
-        postCreate(node.id, newId, document, propertyResolver, issueMentionContext).runSyncUnsafe()
+        documentIdMap += node.id -> newId
+        postCreate(node.id, newId, document, propertyResolver, pending).runSyncUnsafe()
         newId
       }
       // A failed/missing parent breaks the id mapping, so its children are skipped too.
       optNewId.foreach { newId =>
-        walk(node.children, Some(newId), isTrash, project, propertyResolver, issueMentionContext)
+        createAll(
+          node.children,
+          Some(newId),
+          isTrash,
+          project,
+          propertyResolver,
+          documentIdMap,
+          pending
+        )
       }
     }
 
@@ -114,7 +153,7 @@ private[importer] class DocumentsImporter @Inject() (
       newDocumentId: String,
       document: BacklogDocument,
       propertyResolver: PropertyResolver,
-      issueMentionContext: IssueMentionContext
+      pending: mutable.ArrayBuffer[PendingDocument]
   )(implicit consoleDSL: ConsoleDSL[Task]): Task[Unit] =
     for {
       _ <- ConsoleDSL[Task].println(s"[Document id=$newDocumentId]")
@@ -124,23 +163,9 @@ private[importer] class DocumentsImporter @Inject() (
       // comments have been (re-)created at the destination.
       commentIdMap <- postComments(newDocumentId, document, propertyResolver)
       _            <- logStepCount("Comments imported", commentIdMap.size, document.comments.size)
-      rewriteResult <- Task {
-        val withRewrittenComments =
-          documentService.rewriteInlineCommentIds(document, commentIdMap)
-        documentService.rewriteIssueMentions(
-          withRewrittenComments,
-          issueMentionContext.issueIdMap,
-          issueMentionContext.issueKeyMap,
-          issueMentionContext.srcProjectId,
-          issueMentionContext.srcProjectKey,
-          issueMentionContext.dstProjectId,
-          issueMentionContext.dstProjectKey
-        )
-      }
-      _ <- logStep("Document content rewritten", ok = true)
-      _ <- logIssueMentionStep(rewriteResult._2)
-      _ <- Task(documentService.updateContent(newDocumentId, rewriteResult._1, propertyResolver))
-      _ <- logStep("Document content updated", ok = true)
+      withRewrittenComments <- Task(
+        documentService.rewriteInlineCommentIds(document, commentIdMap)
+      )
       tagsResult        <- postTags(newDocumentId, document)
       _                 <- logStepCount("Tags added", tagsResult._1, tagsResult._2)
       attachmentsResult <- postAttachments(oldDocumentId, newDocumentId, document)
@@ -149,6 +174,40 @@ private[importer] class DocumentsImporter @Inject() (
         attachmentsResult._1,
         attachmentsResult._2
       )
+      _ <- Task(pending += PendingDocument(oldDocumentId, newDocumentId, withRewrittenComments))
+    } yield ()
+
+  private[this] def finalizeContent(
+      pendingDocument: PendingDocument,
+      ctx: MentionRewriteContext,
+      documentIdMap: Map[String, String],
+      propertyResolver: PropertyResolver
+  )(implicit consoleDSL: ConsoleDSL[Task]): Task[Unit] =
+    for {
+      _ <- ConsoleDSL[Task].println(s"[Document id=${pendingDocument.newDocumentId}]")
+      mentionRewriteResult <- Task {
+        documentService.rewriteMentions(
+          pendingDocument.document,
+          ctx.issueIdMap,
+          ctx.issueKeyMap,
+          documentIdMap,
+          ctx.srcProjectId,
+          ctx.srcProjectKey,
+          ctx.dstProjectId,
+          ctx.dstProjectKey
+        )
+      }
+      _ <- logStep("Document content rewritten", ok = true)
+      _ <- logIssueMentionStep(mentionRewriteResult._2)
+      _ <- logDocumentMentionStep(mentionRewriteResult._3)
+      _ <- Task(
+        documentService.updateContent(
+          pendingDocument.newDocumentId,
+          mentionRewriteResult._1,
+          propertyResolver
+        )
+      )
+      _ <- logStep("Document content updated", ok = true)
     } yield ()
 
   // Always OK: reaching this call means the step didn't throw.
@@ -184,6 +243,26 @@ private[importer] class DocumentsImporter @Inject() (
       )
     else
       ConsoleDSL[Task].errorln(s"Issue mentions rewritten: NG ($countText)", space = 2)
+  }
+
+  // Skipped mentions aren't failures; only unresolved ones make this NG.
+  private[this] def logDocumentMentionStep(stats: DocumentMentionRewriteStats)(implicit
+      consoleDSL: ConsoleDSL[Task]
+  ): Task[Unit] = {
+    val details = Seq(
+      Option.when(stats.skippedExternalProject > 0)(s"${stats.skippedExternalProject} skipped"),
+      Option.when(stats.unresolved > 0)(s"${stats.unresolved} unresolved")
+    ).flatten
+    val suffix    = if (details.isEmpty) "" else s", ${details.mkString(", ")}"
+    val countText = s"${stats.rewritten}/${stats.total}$suffix"
+    if (stats.unresolved == 0)
+      ConsoleDSL[Task].println(
+        s"Document mentions rewritten: OK ($countText)",
+        space = 2,
+        color = GREEN
+      )
+    else
+      ConsoleDSL[Task].errorln(s"Document mentions rewritten: NG ($countText)", space = 2)
   }
 
   private[this] def postAttachments(
