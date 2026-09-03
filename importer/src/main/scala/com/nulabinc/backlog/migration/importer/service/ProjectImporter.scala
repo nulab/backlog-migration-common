@@ -110,11 +110,35 @@ private[importer] class ProjectImporter @Inject() (
               propertyResolver,
               issueIdMap,
               issueKeyMap,
+              userMentionMap,
               srcProjectId,
               srcProjectKey
             )
           }
       }
+  }
+
+  // Project member's source user id -> (destination id, destination display
+  // name), for rewriting peopleMention nodes. projectUsersJson's numeric ids
+  // are dropped by the convert step, so we zip it against the preserved
+  // pre-convert projectUsersSourceJson (same order/count — convert derives
+  // one from the other via a plain `.map`) to recover the source id.
+  private def userMentionMap: Map[Long, (Long, String)] = {
+    val dstUsersByUsername =
+      userService.allUsers().flatMap(user => user.optUserId.map(_ -> user)).toMap
+    val sourceProjectUsers    = BacklogUnmarshaller.projectUsersSource(backlogPaths)
+    val convertedProjectUsers = BacklogUnmarshaller.projectUsers(backlogPaths)
+    sourceProjectUsers
+      .zip(convertedProjectUsers)
+      .flatMap {
+        case (sourceUser, convertedUser) =>
+          for {
+            sourceId    <- sourceUser.optId
+            dstUsername <- convertedUser.optUserId
+            dstUser     <- dstUsersByUsername.get(dstUsername)
+          } yield sourceId -> (dstUser.id, dstUser.name)
+      }
+      .toMap
   }
 
   private def preExecute()(implicit

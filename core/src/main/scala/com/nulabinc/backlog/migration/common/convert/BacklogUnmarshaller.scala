@@ -43,6 +43,17 @@ object BacklogUnmarshaller {
       })
       .getOrElse(Seq.empty[BacklogUser])
 
+  // Same shape as projectUsers, but read before convert dropped its ids.
+  def projectUsersSource(backlogPaths: BacklogPaths): Seq[BacklogUser] =
+    IOUtil
+      .input(backlogPaths.projectUsersSourceJson)
+      .map(json => {
+        val wrapper: BacklogProjectUsersWrapper =
+          JsonParser(json).convertTo[BacklogProjectUsersWrapper]
+        wrapper.users
+      })
+      .getOrElse(Seq.empty[BacklogUser])
+
   def project(backlogPaths: BacklogPaths): BacklogProject =
     IOUtil
       .input(backlogPaths.projectJson)

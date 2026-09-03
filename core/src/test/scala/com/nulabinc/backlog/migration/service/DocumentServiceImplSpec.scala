@@ -11,7 +11,8 @@ import com.nulabinc.backlog.migration.common.modules.DefaultModule
 import com.nulabinc.backlog.migration.common.service.{
   DocumentMentionRewriteStats,
   DocumentServiceImpl,
-  IssueMentionRewriteStats
+  IssueMentionRewriteStats,
+  PeopleMentionRewriteStats
 }
 import com.nulabinc.backlog.migration.{SimpleFixture, TestPropertyResolver}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -842,7 +843,114 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     rewritten.optPlain should be(Some(s"$newTag and again $newTag"))
   }
 
-  "rewriteMentions" should "apply both issue and document mention rewrites in a single pass" in {
+  "rewritePeopleMentions" should "rewrite a resolved people mention's id and label" in {
+    val body =
+      """{"type":"doc","content":[{"type":"peopleMention","attrs":{
+        |"id":500001,"label":"test.user"}}]}""".stripMargin
+    val documentWithBody = document.copy(optJson = Some(body))
+
+    val (rewritten, stats) = documentService().rewritePeopleMentions(
+      documentWithBody,
+      userMentionMap = Map(500001L -> (600001L, "Test User"))
+    )
+
+    val attrs = rewritten.optJson.get.parseJson.asJsObject
+      .fields("content")
+      .asInstanceOf[JsArray]
+      .elements
+      .head
+      .asJsObject
+      .fields("attrs")
+      .asJsObject
+
+    attrs.fields("id") should be(JsNumber(600001L))
+    attrs.fields("label") should be(JsString("Test User"))
+    stats should be(PeopleMentionRewriteStats(total = 1, rewritten = 1, unresolved = 0))
+  }
+
+  it should "leave a people mention untouched when the user isn't in the map" in {
+    val body =
+      """{"type":"doc","content":[{"type":"peopleMention","attrs":{
+        |"id":999999,"label":"other.user"}}]}""".stripMargin
+    val documentWithBody = document.copy(optJson = Some(body))
+
+    val (rewritten, stats) = documentService().rewritePeopleMentions(
+      documentWithBody,
+      userMentionMap = Map(500001L -> (600001L, "Test User"))
+    )
+
+    rewritten.optJson.get.parseJson should be(body.parseJson)
+    stats should be(PeopleMentionRewriteStats(total = 1, rewritten = 0, unresolved = 1))
+  }
+
+  it should "return the document unchanged (no parse round-trip) when userMentionMap is empty" in {
+    val body =
+      """{"type":"doc","content":[{"type":"peopleMention","attrs":{
+        |"id":500001,"label":"test.user"}}]}""".stripMargin
+    val documentWithBody = document.copy(optJson = Some(body))
+
+    val (rewritten, stats) = documentService().rewritePeopleMentions(
+      documentWithBody,
+      userMentionMap = Map.empty
+    )
+
+    rewritten.optJson should be theSameInstanceAs documentWithBody.optJson
+    stats should be(PeopleMentionRewriteStats(total = 0, rewritten = 0, unresolved = 0))
+  }
+
+  it should "rewrite the matching bracket tag in optPlain for a resolved people mention" in {
+    val body =
+      """{"type":"doc","content":[{"type":"peopleMention","attrs":{
+        |"id":500001,"label":"test.user"}}]}""".stripMargin
+    val oldTag = """[peopleMention id="500001" label="test.user"]"""
+    val newTag = """[peopleMention id="600001" label="Test User"]"""
+    val documentWithBody =
+      document.copy(optJson = Some(body), optPlain = Some(s"before $oldTag after"))
+
+    val (rewritten, _) = documentService().rewritePeopleMentions(
+      documentWithBody,
+      userMentionMap = Map(500001L -> (600001L, "Test User"))
+    )
+
+    rewritten.optPlain should be(Some(s"before $newTag after"))
+  }
+
+  it should "leave optPlain unchanged and not throw when the expected old tag text can't be found" in {
+    val body =
+      """{"type":"doc","content":[{"type":"peopleMention","attrs":{
+        |"id":500001,"label":"test.user"}}]}""".stripMargin
+    val drifitngPlain = "this plain text has drifted and no longer contains the mention tag"
+    val documentWithBody =
+      document.copy(optJson = Some(body), optPlain = Some(drifitngPlain))
+
+    val (rewritten, _) = documentService().rewritePeopleMentions(
+      documentWithBody,
+      userMentionMap = Map(500001L -> (600001L, "Test User"))
+    )
+
+    rewritten.optPlain should be(Some(drifitngPlain))
+  }
+
+  it should "rewrite both occurrences of a duplicated mention tag in optPlain without warning" in {
+    val body =
+      """{"type":"doc","content":[
+        |{"type":"peopleMention","attrs":{"id":500001,"label":"test.user"}},
+        |{"type":"peopleMention","attrs":{"id":500001,"label":"test.user"}}
+        |]}""".stripMargin
+    val oldTag = """[peopleMention id="500001" label="test.user"]"""
+    val newTag = """[peopleMention id="600001" label="Test User"]"""
+    val documentWithBody =
+      document.copy(optJson = Some(body), optPlain = Some(s"$oldTag and again $oldTag"))
+
+    val (rewritten, _) = documentService().rewritePeopleMentions(
+      documentWithBody,
+      userMentionMap = Map(500001L -> (600001L, "Test User"))
+    )
+
+    rewritten.optPlain should be(Some(s"$newTag and again $newTag"))
+  }
+
+  "rewriteMentions" should "apply issue, document, and people mention rewrites in a single pass" in {
     val body =
       """{"type":"doc","content":[
         |{"type":"issueMention","attrs":{
@@ -850,15 +958,17 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"projectKey":"SRC","projectId":100,"issueId":200}},
         |{"type":"documentMention","attrs":{
         |"id":"019ec9abb04b71daa47ebacb9f79ea48","label":"n1","mentionType":"inline",
-        |"projectKey":"SRC","projectId":100,"url":""}}
+        |"projectKey":"SRC","projectId":100,"url":""}},
+        |{"type":"peopleMention","attrs":{"id":500001,"label":"test.user"}}
         |]}""".stripMargin
     val documentWithBody = document.copy(optJson = Some(body))
 
-    val (rewritten, issueStats, documentStats) = documentService().rewriteMentions(
+    val (rewritten, issueStats, documentStats, peopleStats) = documentService().rewriteMentions(
       documentWithBody,
       issueIdMap = Map(200L -> 201L),
       issueKeyMap = Map("SRC-85" -> "DST-1"),
       documentIdMap = Map("019ec9abb04b71daa47ebacb9f79ea48" -> "newDocId1"),
+      userMentionMap = Map(500001L -> (600001L, "Test User")),
       srcProjectId = 100L,
       srcProjectKey = "SRC",
       dstProjectId = 101L,
@@ -873,6 +983,8 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
 
     attrsList.head.fields("id") should be(JsString("DST-1"))
     attrsList(1).fields("id") should be(JsString("newDocId1"))
+    attrsList(2).fields("id") should be(JsNumber(600001L))
+    attrsList(2).fields("label") should be(JsString("Test User"))
     issueStats should be(
       IssueMentionRewriteStats(
         total = 1,
@@ -889,20 +1001,22 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         unresolved = 0
       )
     )
+    peopleStats should be(PeopleMentionRewriteStats(total = 1, rewritten = 1, unresolved = 0))
   }
 
-  it should "return the document unchanged (no parse round-trip) when both maps are empty" in {
+  it should "return the document unchanged (no parse round-trip) when all maps are empty" in {
     val body =
       """{"type":"doc","content":[{"type":"issueMention","attrs":{
         |"id":"SRC-85","label":"emoji test","mentionType":"inline",
         |"projectKey":"SRC","projectId":100,"issueId":200}}]}""".stripMargin
     val documentWithBody = document.copy(optJson = Some(body))
 
-    val (rewritten, issueStats, documentStats) = documentService().rewriteMentions(
+    val (rewritten, issueStats, documentStats, peopleStats) = documentService().rewriteMentions(
       documentWithBody,
       issueIdMap = Map.empty,
       issueKeyMap = Map.empty,
       documentIdMap = Map.empty,
+      userMentionMap = Map.empty,
       srcProjectId = 100L,
       srcProjectKey = "SRC",
       dstProjectId = 101L,
@@ -912,9 +1026,10 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     rewritten.optJson should be theSameInstanceAs documentWithBody.optJson
     issueStats should be(IssueMentionRewriteStats(0, 0, 0, 0))
     documentStats should be(DocumentMentionRewriteStats(0, 0, 0, 0))
+    peopleStats should be(PeopleMentionRewriteStats(0, 0, 0))
   }
 
-  it should "leave issueMention nodes untouched when only documentIdMap is populated" in {
+  it should "leave issueMention and peopleMention nodes untouched when only documentIdMap is populated" in {
     val body =
       """{"type":"doc","content":[
         |{"type":"issueMention","attrs":{
@@ -922,15 +1037,17 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"projectKey":"SRC","projectId":100,"issueId":200}},
         |{"type":"documentMention","attrs":{
         |"id":"019ec9abb04b71daa47ebacb9f79ea48","label":"n1","mentionType":"inline",
-        |"projectKey":"SRC","projectId":100,"url":""}}
+        |"projectKey":"SRC","projectId":100,"url":""}},
+        |{"type":"peopleMention","attrs":{"id":500001,"label":"test.user"}}
         |]}""".stripMargin
     val documentWithBody = document.copy(optJson = Some(body))
 
-    val (rewritten, issueStats, documentStats) = documentService().rewriteMentions(
+    val (rewritten, issueStats, documentStats, peopleStats) = documentService().rewriteMentions(
       documentWithBody,
       issueIdMap = Map.empty,
       issueKeyMap = Map.empty,
       documentIdMap = Map("019ec9abb04b71daa47ebacb9f79ea48" -> "newDocId1"),
+      userMentionMap = Map.empty,
       srcProjectId = 100L,
       srcProjectKey = "SRC",
       dstProjectId = 101L,
@@ -945,6 +1062,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
 
     attrsList.head.fields("id") should be(JsString("SRC-85"))
     attrsList(1).fields("id") should be(JsString("newDocId1"))
+    attrsList(2).fields("id") should be(JsNumber(500001L))
     issueStats should be(IssueMentionRewriteStats(0, 0, 0, 0))
     documentStats should be(
       DocumentMentionRewriteStats(
@@ -954,6 +1072,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         unresolved = 0
       )
     )
+    peopleStats should be(PeopleMentionRewriteStats(0, 0, 0))
   }
 
 }
