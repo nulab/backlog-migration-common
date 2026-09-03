@@ -28,6 +28,14 @@ final case class DocumentMentionRewriteStats(
     unresolved: Int
 )
 
+// Counts of what rewritePeopleMentions did to the peopleMention nodes in one
+// document. total = rewritten + unresolved (no project scoping applies).
+final case class PeopleMentionRewriteStats(
+    total: Int,
+    rewritten: Int,
+    unresolved: Int
+)
+
 /**
  * @author
  *   nulab
@@ -140,19 +148,35 @@ trait DocumentService {
       dstProjectKey: String
   ): (BacklogDocument, DocumentMentionRewriteStats)
 
-  // Combines rewriteIssueMentions and rewriteDocumentMentions into a single
-  // parse + tree-walk + serialize pass over the document body, instead of
-  // running each independently back-to-back. Behaves identically to calling
-  // rewriteIssueMentions followed by rewriteDocumentMentions on its result.
+  // Like rewriteIssueMentions, but for `peopleMention` nodes (a user
+  // reference by source-space numeric id). No project scoping applies; a
+  // mention resolves via `userMentionMap` (source user id -> (destination
+  // user id, destination display name)) or is left untouched. Both `id` and
+  // `label` are rewritten, since the label is that person's display name.
+  def rewritePeopleMentions(
+      document: BacklogDocument,
+      userMentionMap: Map[Long, (Long, String)]
+  ): (BacklogDocument, PeopleMentionRewriteStats)
+
+  // Combines rewriteIssueMentions, rewriteDocumentMentions, and
+  // rewritePeopleMentions into a single parse + tree-walk + serialize pass
+  // over the document body, instead of running each independently
+  // back-to-back. Behaves identically to calling all three in sequence.
   def rewriteMentions(
       document: BacklogDocument,
       issueIdMap: Map[Long, Long],
       issueKeyMap: Map[String, String],
       documentIdMap: Map[String, String],
+      userMentionMap: Map[Long, (Long, String)],
       srcProjectId: Long,
       srcProjectKey: String,
       dstProjectId: Long,
       dstProjectKey: String
-  ): (BacklogDocument, IssueMentionRewriteStats, DocumentMentionRewriteStats)
+  ): (
+      BacklogDocument,
+      IssueMentionRewriteStats,
+      DocumentMentionRewriteStats,
+      PeopleMentionRewriteStats
+  )
 
 }

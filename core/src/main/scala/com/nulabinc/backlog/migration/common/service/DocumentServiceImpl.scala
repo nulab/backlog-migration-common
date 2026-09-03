@@ -699,27 +699,145 @@ class DocumentServiceImpl @Inject() (implicit
       case _ => None
     }
 
+  override def rewritePeopleMentions(
+      document: BacklogDocument,
+      userMentionMap: Map[Long, (Long, String)]
+  ): (BacklogDocument, PeopleMentionRewriteStats) =
+    if (userMentionMap.isEmpty) (document, PeopleMentionRewriteStats(0, 0, 0))
+    else
+      document.optJson match {
+        case Some(json) =>
+          val plainTextReplacements =
+            scala.collection.mutable.ArrayBuffer.empty[(String, String, String)]
+          val ctx     = PeopleMentionContext(userMentionMap, plainTextReplacements)
+          val newJson = rewritePeopleMentionJsValue(json.parseJson, ctx).compactPrint
+          val newPlain =
+            document.optPlain.map(rewritePlainTextPeopleMentions(_, plainTextReplacements.toSeq))
+          val stats = PeopleMentionRewriteStats(
+            total = ctx.rewrittenCount + ctx.unresolvedCount,
+            rewritten = ctx.rewrittenCount,
+            unresolved = ctx.unresolvedCount
+          )
+          (document.copy(optJson = Some(newJson), optPlain = newPlain), stats)
+        case None => (document, PeopleMentionRewriteStats(0, 0, 0))
+      }
+
+  private[this] case class PeopleMentionContext(
+      userMentionMap: Map[Long, (Long, String)],
+      // (oldId, old tag text, new tag text) captured for each resolved mention, applied to optPlain afterwards
+      plainTextReplacements: scala.collection.mutable.ArrayBuffer[(String, String, String)]
+  ) {
+    var rewrittenCount: Int  = 0
+    var unresolvedCount: Int = 0
+  }
+
+  private[this] def rewritePlainTextPeopleMentions(
+      plain: String,
+      replacements: Seq[(String, String, String)]
+  ): String =
+    replacements.foldLeft(plain) {
+      case (text, (oldId, oldTag, newTag)) =>
+        replaceFirstOccurrence(text, oldTag, newTag) match {
+          case Some(newText) => newText
+          case None =>
+            logger.warn(
+              s"Could not find expected people mention text in document plain text (id=$oldId) — plain text left unchanged for this mention"
+            )
+            text
+        }
+    }
+
+  private[this] def peopleMentionTagText(fields: Map[String, JsValue]): Option[String] =
+    for {
+      id    <- fields.get("id").collect { case JsNumber(n) => n }
+      label <- fields.get("label").collect { case JsString(s) => s }
+    } yield s"""[peopleMention id="${id.toString}" label="$label"]"""
+
+  private[this] def rewritePeopleMentionJsValue(
+      value: JsValue,
+      ctx: PeopleMentionContext
+  ): JsValue =
+    value match {
+      case JsObject(fields) =>
+        val rewritten = fields.map { case (key, v) => key -> rewritePeopleMentionJsValue(v, ctx) }
+        rewritten.get("type") match {
+          case Some(JsString("peopleMention")) =>
+            rewritten.get("attrs") match {
+              case Some(attrs: JsObject) =>
+                JsObject(rewritten.updated("attrs", rewritePeopleMentionAttrs(attrs, ctx)))
+              case _ => JsObject(rewritten)
+            }
+          case _ => JsObject(rewritten)
+        }
+      case JsArray(elements) => JsArray(elements.map(rewritePeopleMentionJsValue(_, ctx)))
+      case other             => other
+    }
+
+  private[this] def rewritePeopleMentionAttrs(
+      attrs: JsObject,
+      ctx: PeopleMentionContext
+  ): JsObject =
+    attrs.fields.get("id").collect { case JsNumber(n) => n.toLong } match {
+      case Some(oldId) =>
+        ctx.userMentionMap.get(oldId) match {
+          case None =>
+            ctx.unresolvedCount += 1
+            logger.warn(
+              s"No migrated user found for people mention (id=$oldId) — leaving reference unresolved"
+            )
+            attrs
+          case Some((newId, newLabel)) =>
+            ctx.rewrittenCount += 1
+            val fields = attrs.fields
+              .updated("id", JsNumber(newId))
+              .updated("label", JsString(newLabel))
+
+            (peopleMentionTagText(attrs.fields), peopleMentionTagText(fields)) match {
+              case (Some(oldTag), Some(newTag)) =>
+                ctx.plainTextReplacements += ((oldId.toString, oldTag, newTag))
+              case _ => ()
+            }
+
+            JsObject(fields)
+        }
+      case None => attrs
+    }
+
   override def rewriteMentions(
       document: BacklogDocument,
       issueIdMap: Map[Long, Long],
       issueKeyMap: Map[String, String],
       documentIdMap: Map[String, String],
+      userMentionMap: Map[Long, (Long, String)],
       srcProjectId: Long,
       srcProjectKey: String,
       dstProjectId: Long,
       dstProjectKey: String
-  ): (BacklogDocument, IssueMentionRewriteStats, DocumentMentionRewriteStats) = {
+  ): (
+      BacklogDocument,
+      IssueMentionRewriteStats,
+      DocumentMentionRewriteStats,
+      PeopleMentionRewriteStats
+  ) = {
     val doIssueRewrite    = issueIdMap.nonEmpty || issueKeyMap.nonEmpty
     val doDocumentRewrite = documentIdMap.nonEmpty
+    val doPeopleRewrite   = userMentionMap.nonEmpty
 
-    if (!doIssueRewrite && !doDocumentRewrite) {
-      (document, IssueMentionRewriteStats(0, 0, 0, 0), DocumentMentionRewriteStats(0, 0, 0, 0))
+    if (!doIssueRewrite && !doDocumentRewrite && !doPeopleRewrite) {
+      (
+        document,
+        IssueMentionRewriteStats(0, 0, 0, 0),
+        DocumentMentionRewriteStats(0, 0, 0, 0),
+        PeopleMentionRewriteStats(0, 0, 0)
+      )
     } else
       document.optJson match {
         case Some(json) =>
           val issuePlainTextReplacements =
             scala.collection.mutable.ArrayBuffer.empty[(String, String, String)]
           val documentPlainTextReplacements =
+            scala.collection.mutable.ArrayBuffer.empty[(String, String, String)]
+          val peoplePlainTextReplacements =
             scala.collection.mutable.ArrayBuffer.empty[(String, String, String)]
 
           val optIssueCtx =
@@ -747,12 +865,22 @@ class DocumentServiceImpl @Inject() (implicit
                 )
               )
             else None
+          val optPeopleCtx =
+            if (doPeopleRewrite)
+              Some(PeopleMentionContext(userMentionMap, peoplePlainTextReplacements))
+            else None
 
           val newJson =
-            rewriteMentionsJsValue(json.parseJson, optIssueCtx, optDocumentCtx).compactPrint
+            rewriteMentionsJsValue(
+              json.parseJson,
+              optIssueCtx,
+              optDocumentCtx,
+              optPeopleCtx
+            ).compactPrint
           val newPlain = document.optPlain
             .map(rewritePlainTextIssueMentions(_, issuePlainTextReplacements.toSeq))
             .map(rewritePlainTextDocumentMentions(_, documentPlainTextReplacements.toSeq))
+            .map(rewritePlainTextPeopleMentions(_, peoplePlainTextReplacements.toSeq))
 
           val issueStats = optIssueCtx match {
             case Some(ctx) =>
@@ -774,22 +902,43 @@ class DocumentServiceImpl @Inject() (implicit
               )
             case None => DocumentMentionRewriteStats(0, 0, 0, 0)
           }
+          val peopleStats = optPeopleCtx match {
+            case Some(ctx) =>
+              PeopleMentionRewriteStats(
+                total = ctx.rewrittenCount + ctx.unresolvedCount,
+                rewritten = ctx.rewrittenCount,
+                unresolved = ctx.unresolvedCount
+              )
+            case None => PeopleMentionRewriteStats(0, 0, 0)
+          }
 
-          (document.copy(optJson = Some(newJson), optPlain = newPlain), issueStats, documentStats)
+          (
+            document.copy(optJson = Some(newJson), optPlain = newPlain),
+            issueStats,
+            documentStats,
+            peopleStats
+          )
         case None =>
-          (document, IssueMentionRewriteStats(0, 0, 0, 0), DocumentMentionRewriteStats(0, 0, 0, 0))
+          (
+            document,
+            IssueMentionRewriteStats(0, 0, 0, 0),
+            DocumentMentionRewriteStats(0, 0, 0, 0),
+            PeopleMentionRewriteStats(0, 0, 0)
+          )
       }
   }
 
   private[this] def rewriteMentionsJsValue(
       value: JsValue,
       optIssueCtx: Option[IssueMentionContext],
-      optDocumentCtx: Option[DocumentMentionContext]
+      optDocumentCtx: Option[DocumentMentionContext],
+      optPeopleCtx: Option[PeopleMentionContext]
   ): JsValue =
     value match {
       case JsObject(fields) =>
         val rewritten = fields.map {
-          case (key, v) => key -> rewriteMentionsJsValue(v, optIssueCtx, optDocumentCtx)
+          case (key, v) =>
+            key -> rewriteMentionsJsValue(v, optIssueCtx, optDocumentCtx, optPeopleCtx)
         }
         rewritten.get("type") match {
           case Some(JsString("issueMention")) if optIssueCtx.isDefined =>
@@ -809,10 +958,18 @@ class DocumentServiceImpl @Inject() (implicit
                 )
               case _ => JsObject(rewritten)
             }
+          case Some(JsString("peopleMention")) if optPeopleCtx.isDefined =>
+            rewritten.get("attrs") match {
+              case Some(attrs: JsObject) =>
+                JsObject(
+                  rewritten.updated("attrs", rewritePeopleMentionAttrs(attrs, optPeopleCtx.get))
+                )
+              case _ => JsObject(rewritten)
+            }
           case _ => JsObject(rewritten)
         }
       case JsArray(elements) =>
-        JsArray(elements.map(rewriteMentionsJsValue(_, optIssueCtx, optDocumentCtx)))
+        JsArray(elements.map(rewriteMentionsJsValue(_, optIssueCtx, optDocumentCtx, optPeopleCtx)))
       case other => other
     }
 

@@ -16,6 +16,7 @@ import com.nulabinc.backlog.migration.common.service.{
   DocumentMentionRewriteStats,
   DocumentService,
   IssueMentionRewriteStats,
+  PeopleMentionRewriteStats,
   PropertyResolver
 }
 import com.nulabinc.backlog.migration.common.utils.Logging
@@ -40,6 +41,7 @@ private[importer] class DocumentsImporter @Inject() (
       propertyResolver: PropertyResolver,
       issueIdMap: Map[Long, Long],
       issueKeyMap: Map[String, String],
+      userMentionMap: Map[Long, (Long, String)],
       srcProjectId: Long,
       srcProjectKey: String
   )(implicit
@@ -74,6 +76,7 @@ private[importer] class DocumentsImporter @Inject() (
       val mentionRewriteContext = MentionRewriteContext(
         issueIdMap,
         issueKeyMap,
+        userMentionMap,
         srcProjectId,
         srcProjectKey,
         dstProjectId = project.id,
@@ -95,6 +98,7 @@ private[importer] class DocumentsImporter @Inject() (
   private[this] case class MentionRewriteContext(
       issueIdMap: Map[Long, Long],
       issueKeyMap: Map[String, String],
+      userMentionMap: Map[Long, (Long, String)],
       srcProjectId: Long,
       srcProjectKey: String,
       dstProjectId: Long,
@@ -191,6 +195,7 @@ private[importer] class DocumentsImporter @Inject() (
           ctx.issueIdMap,
           ctx.issueKeyMap,
           documentIdMap,
+          ctx.userMentionMap,
           ctx.srcProjectId,
           ctx.srcProjectKey,
           ctx.dstProjectId,
@@ -200,6 +205,7 @@ private[importer] class DocumentsImporter @Inject() (
       _ <- logStep("Document content rewritten", ok = true)
       _ <- logIssueMentionStep(mentionRewriteResult._2)
       _ <- logDocumentMentionStep(mentionRewriteResult._3)
+      _ <- logPeopleMentionStep(mentionRewriteResult._4)
       _ <- Task(
         documentService.updateContent(
           pendingDocument.newDocumentId,
@@ -263,6 +269,22 @@ private[importer] class DocumentsImporter @Inject() (
       )
     else
       ConsoleDSL[Task].errorln(s"Document mentions rewritten: NG ($countText)", space = 2)
+  }
+
+  // No project scoping for people mentions, so there's no "skipped" bucket.
+  private[this] def logPeopleMentionStep(stats: PeopleMentionRewriteStats)(implicit
+      consoleDSL: ConsoleDSL[Task]
+  ): Task[Unit] = {
+    val suffix    = if (stats.unresolved > 0) s", ${stats.unresolved} unresolved" else ""
+    val countText = s"${stats.rewritten}/${stats.total}$suffix"
+    if (stats.unresolved == 0)
+      ConsoleDSL[Task].println(
+        s"People mentions rewritten: OK ($countText)",
+        space = 2,
+        color = GREEN
+      )
+    else
+      ConsoleDSL[Task].errorln(s"People mentions rewritten: NG ($countText)", space = 2)
   }
 
   private[this] def postAttachments(
