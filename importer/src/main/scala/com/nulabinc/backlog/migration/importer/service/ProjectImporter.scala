@@ -47,14 +47,15 @@ private[importer] class ProjectImporter @Inject() (
 
   def execute[A](
       fitIssueKey: Boolean,
-      retryCount: Int
+      retryCount: Int,
+      actualSrcProjectKey: String
   )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
     val srcProject = BacklogUnmarshaller.project(backlogPaths)
     projectService.create(srcProject) match {
       case Right(project) =>
         for {
           _ <- preExecute()
-          _ <- contents(project, srcProject.id, srcProject.key, fitIssueKey, retryCount)
+          _ <- contents(project, srcProject.id, actualSrcProjectKey, fitIssueKey, retryCount)
           _ <- postExecute()
           _ <- ConsoleDSL[Task].println(ConsoleMessages.Imports.finish)
         } yield ()
