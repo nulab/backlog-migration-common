@@ -17,8 +17,6 @@ import com.nulabinc.backlog4j.BacklogAPIException
 import com.osinka.i18n.Messages
 import monix.eval.Task
 import monix.execution.Scheduler
-import org.fusesource.jansi.Ansi
-import org.fusesource.jansi.Ansi.ansi
 
 import scala.util.Try
 
@@ -39,6 +37,7 @@ private[importer] class ProjectImporter @Inject() (
     issueCategoryService: IssueCategoryService,
     customFieldSettingService: CustomFieldSettingService,
     wikisImporter: WikisImporter,
+    documentsImporter: DocumentsImporter,
     resolutionService: ResolutionService,
     userService: UserService,
     sharedFileService: SharedFileService,
@@ -48,22 +47,16 @@ private[importer] class ProjectImporter @Inject() (
 
   def execute[A](
       fitIssueKey: Boolean,
-      retryCount: Int
+      retryCount: Int,
+      actualSrcProjectKey: String
   )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
-    val project = BacklogUnmarshaller.project(backlogPaths)
-    projectService.create(project) match {
+    val srcProject = BacklogUnmarshaller.project(backlogPaths)
+    projectService.create(srcProject) match {
       case Right(project) =>
         for {
           _ <- preExecute()
-          _ <- contents(project, fitIssueKey, retryCount)
+          _ <- contents(project, srcProject.id, actualSrcProjectKey, fitIssueKey, retryCount)
           _ <- postExecute()
-          _ <- ConsoleDSL[Task].printStream(
-            ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
-          )
-          _ <- ConsoleDSL[Task].printStream(
-            ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
-          )
-          _ <- ConsoleDSL[Task].flush()
           _ <- ConsoleDSL[Task].println(ConsoleMessages.Imports.finish)
         } yield ()
       case Left(e) =>
@@ -71,12 +64,12 @@ private[importer] class ProjectImporter @Inject() (
 
         val message =
           if (e.getMessage.contains("Project limit."))
-            Errors.limitProject(project.key)
+            Errors.limitProject(srcProject.key)
           else if (e.getMessage.contains("Duplicate entry"))
-            Errors.projectNotJoin(project.key)
+            Errors.projectNotJoin(srcProject.key)
           else {
             logger.error(e.getMessage, e)
-            Errors.failed(project.key, e.getMessage())
+            Errors.failed(srcProject.key, e.getMessage())
           }
         for {
           _ <- ConsoleDSL[Task].errorln(message)
@@ -87,6 +80,8 @@ private[importer] class ProjectImporter @Inject() (
 
   private def contents(
       project: BacklogProject,
+      srcProjectId: Long,
+      srcProjectKey: String,
       fitIssueKey: Boolean,
       retryCount: Int
   )(implicit s: Scheduler, storeDSL: StoreDSL[Task], consoleDSL: ConsoleDSL[Task]): Task[Unit] = {
@@ -105,7 +100,46 @@ private[importer] class ProjectImporter @Inject() (
     }
 
     // Issue
-    issuesImporter.execute(project, propertyResolver, fitIssueKey, retryCount)
+    issuesImporter
+      .execute(project, propertyResolver, fitIssueKey, retryCount)
+      .map {
+        case (issueIdMap, issueKeyMap) =>
+          if (project.useDocument) {
+            // Document
+            documentsImporter.execute(
+              project,
+              propertyResolver,
+              issueIdMap,
+              issueKeyMap,
+              userMentionMap,
+              srcProjectId,
+              srcProjectKey
+            )
+          }
+      }
+  }
+
+  // Project member's source user id -> (destination id, destination display
+  // name), for rewriting peopleMention nodes. projectUsersJson's numeric ids
+  // are dropped by the convert step, so we zip it against the preserved
+  // pre-convert projectUsersSourceJson (same order/count — convert derives
+  // one from the other via a plain `.map`) to recover the source id.
+  private def userMentionMap: Map[Long, (Long, String)] = {
+    val dstUsersByUsername =
+      userService.allUsers().flatMap(user => user.optUserId.map(_ -> user)).toMap
+    val sourceProjectUsers    = BacklogUnmarshaller.projectUsersSource(backlogPaths)
+    val convertedProjectUsers = BacklogUnmarshaller.projectUsers(backlogPaths)
+    sourceProjectUsers
+      .zip(convertedProjectUsers)
+      .flatMap {
+        case (sourceUser, convertedUser) =>
+          for {
+            sourceId    <- sourceUser.optId
+            dstUsername <- convertedUser.optUserId
+            dstUser     <- dstUsersByUsername.get(dstUsername)
+          } yield sourceId -> (dstUser.id, dstUser.name)
+      }
+      .toMap
   }
 
   private def preExecute()(implicit
