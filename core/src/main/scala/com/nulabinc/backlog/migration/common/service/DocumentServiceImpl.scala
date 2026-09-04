@@ -284,44 +284,55 @@ class DocumentServiceImpl @Inject() (implicit
   override def rewriteInlineCommentIds(
       document: BacklogDocument,
       commentIdMap: Map[String, String]
-  ): BacklogDocument =
-    if (commentIdMap.isEmpty) document
+  ): (BacklogDocument, InlineCommentRewriteStats) =
+    if (commentIdMap.isEmpty) (document, InlineCommentRewriteStats(0, 0, 0))
     else
       document.optJson match {
         case Some(json) =>
-          document.copy(optJson = Some(rewriteJsValue(json.parseJson, commentIdMap).compactPrint))
-        case None => document
+          val ctx     = InlineCommentContext(commentIdMap)
+          val newJson = rewriteJsValue(json.parseJson, ctx).compactPrint
+          val stats = InlineCommentRewriteStats(
+            total = ctx.rewrittenCount + ctx.unresolvedCount,
+            rewritten = ctx.rewrittenCount,
+            unresolved = ctx.unresolvedCount
+          )
+          (document.copy(optJson = Some(newJson)), stats)
+        case None => (document, InlineCommentRewriteStats(0, 0, 0))
       }
 
-  private[this] def rewriteJsValue(value: JsValue, commentIdMap: Map[String, String]): JsValue =
+  private[this] case class InlineCommentContext(commentIdMap: Map[String, String]) {
+    var rewrittenCount: Int  = 0
+    var unresolvedCount: Int = 0
+  }
+
+  private[this] def rewriteJsValue(value: JsValue, ctx: InlineCommentContext): JsValue =
     value match {
       case JsObject(fields) =>
-        val rewritten = fields.map { case (key, v) => key -> rewriteJsValue(v, commentIdMap) }
+        val rewritten = fields.map { case (key, v) => key -> rewriteJsValue(v, ctx) }
         rewritten.get("type") match {
           case Some(JsString("inlineComment")) =>
             rewritten.get("attrs") match {
               case Some(attrs: JsObject) =>
-                JsObject(
-                  rewritten.updated("attrs", rewriteInlineCommentAttrs(attrs, commentIdMap))
-                )
+                JsObject(rewritten.updated("attrs", rewriteInlineCommentAttrs(attrs, ctx)))
               case _ => JsObject(rewritten)
             }
           case _ => JsObject(rewritten)
         }
-      case JsArray(elements) => JsArray(elements.map(rewriteJsValue(_, commentIdMap)))
+      case JsArray(elements) => JsArray(elements.map(rewriteJsValue(_, ctx)))
       case other             => other
     }
 
   private[this] def rewriteInlineCommentAttrs(
       attrs: JsObject,
-      commentIdMap: Map[String, String]
+      ctx: InlineCommentContext
   ): JsObject =
     attrs.fields.get("comment") match {
       case Some(comment: JsObject) =>
         comment.fields.get("id") match {
           case Some(JsString(oldCommentId)) =>
-            commentIdMap.get(oldCommentId) match {
+            ctx.commentIdMap.get(oldCommentId) match {
               case Some(newCommentId) =>
+                ctx.rewrittenCount += 1
                 JsObject(
                   attrs.fields.updated(
                     "comment",
@@ -329,6 +340,7 @@ class DocumentServiceImpl @Inject() (implicit
                   )
                 )
               case None =>
+                ctx.unresolvedCount += 1
                 logger.warn(
                   s"No migrated comment id found for inline comment mark (id=$oldCommentId)"
                 )

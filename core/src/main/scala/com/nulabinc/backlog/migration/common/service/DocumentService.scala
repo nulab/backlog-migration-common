@@ -10,6 +10,14 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogDocumentTree
 }
 
+// Counts of what rewriteInlineCommentIds did to the inlineComment marks in
+// one document. total = rewritten + unresolved.
+final case class InlineCommentRewriteStats(
+    total: Int,
+    rewritten: Int,
+    unresolved: Int
+)
+
 // Counts of what rewriteIssueMentions did to the issueMention nodes in one
 // document. total = rewritten + skippedExternalProject + unresolved.
 final case class IssueMentionRewriteStats(
@@ -96,7 +104,7 @@ trait DocumentService {
   def rewriteInlineCommentIds(
       document: BacklogDocument,
       commentIdMap: Map[String, String]
-  ): BacklogDocument
+  ): (BacklogDocument, InlineCommentRewriteStats)
 
   // The document body (ProseMirror JSON) can embed an `issueMention` node
   // carrying a snapshot of a referenced issue's source-space key, numeric

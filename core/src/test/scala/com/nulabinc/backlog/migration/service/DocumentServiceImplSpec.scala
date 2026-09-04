@@ -11,6 +11,7 @@ import com.nulabinc.backlog.migration.common.modules.DefaultModule
 import com.nulabinc.backlog.migration.common.service.{
   DocumentMentionRewriteStats,
   DocumentServiceImpl,
+  InlineCommentRewriteStats,
   IssueMentionRewriteStats,
   PeopleMentionRewriteStats
 }
@@ -197,7 +198,8 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     val documentWithBody = document.copy(optJson = Some(body))
     val commentIdMap     = Map("old-1" -> "new-1", "old-2" -> "new-2")
 
-    val rewritten = documentService().rewriteInlineCommentIds(documentWithBody, commentIdMap)
+    val (rewritten, stats) =
+      documentService().rewriteInlineCommentIds(documentWithBody, commentIdMap)
 
     val marks = rewritten.optJson.get.parseJson.asJsObject
       .fields("content")
@@ -208,6 +210,7 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
       .map(_.asJsObject.fields("attrs").asJsObject.fields("comment").asJsObject.fields("id"))
 
     marks should contain theSameElementsInOrderAs Seq(JsString("new-1"), JsString("new-2"))
+    stats should be(InlineCommentRewriteStats(total = 2, rewritten = 2, unresolved = 0))
   }
 
   it should "leave the id untouched when no mapping exists for it" in {
@@ -216,9 +219,11 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"marks":[{"type":"inlineComment","attrs":{"comment":{"id":"unmapped","statusId":0}}}]}]}]}""".stripMargin
     val documentWithBody = document.copy(optJson = Some(body))
 
-    val rewritten = documentService().rewriteInlineCommentIds(documentWithBody, Map.empty)
+    val (rewritten, stats) =
+      documentService().rewriteInlineCommentIds(documentWithBody, Map("other" -> "new"))
 
-    rewritten.optJson should be(Some(body))
+    rewritten.optJson.get.parseJson should be(body.parseJson)
+    stats should be(InlineCommentRewriteStats(total = 1, rewritten = 0, unresolved = 1))
   }
 
   it should "not touch marks other than inlineComment" in {
@@ -227,10 +232,23 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"marks":[{"type":"bold"}]}]}]}""".stripMargin
     val documentWithBody = document.copy(optJson = Some(body))
 
-    val rewritten =
+    val (rewritten, stats) =
       documentService().rewriteInlineCommentIds(documentWithBody, Map("old" -> "new"))
 
     rewritten.optJson.get.parseJson should be(body.parseJson)
+    stats should be(InlineCommentRewriteStats(total = 0, rewritten = 0, unresolved = 0))
+  }
+
+  it should "return the document unchanged (no parse round-trip) when commentIdMap is empty" in {
+    val body =
+      """{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"test",
+        |"marks":[{"type":"inlineComment","attrs":{"comment":{"id":"old-1","statusId":0}}}]}]}]}""".stripMargin
+    val documentWithBody = document.copy(optJson = Some(body))
+
+    val (rewritten, stats) = documentService().rewriteInlineCommentIds(documentWithBody, Map.empty)
+
+    rewritten.optJson should be theSameInstanceAs documentWithBody.optJson
+    stats should be(InlineCommentRewriteStats(0, 0, 0))
   }
 
   "rewriteIssueMentions" should "rewrite a same-project issue mention that has issueId and projectId" in {

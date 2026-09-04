@@ -15,6 +15,7 @@ import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
 import com.nulabinc.backlog.migration.common.service.{
   DocumentMentionRewriteStats,
   DocumentService,
+  InlineCommentRewriteStats,
   IssueMentionRewriteStats,
   PeopleMentionRewriteStats,
   PropertyResolver
@@ -167,9 +168,10 @@ private[importer] class DocumentsImporter @Inject() (
       // comments have been (re-)created at the destination.
       commentIdMap <- postComments(newDocumentId, document, propertyResolver)
       _            <- logStepCount("Comments imported", commentIdMap.size, document.comments.size)
-      withRewrittenComments <- Task(
+      inlineCommentRewriteResult <- Task(
         documentService.rewriteInlineCommentIds(document, commentIdMap)
       )
+      _                 <- logInlineCommentStep(inlineCommentRewriteResult._2)
       tagsResult        <- postTags(newDocumentId, document)
       _                 <- logStepCount("Tags added", tagsResult._1, tagsResult._2)
       attachmentsResult <- postAttachments(oldDocumentId, newDocumentId, document)
@@ -178,7 +180,9 @@ private[importer] class DocumentsImporter @Inject() (
         attachmentsResult._1,
         attachmentsResult._2
       )
-      _ <- Task(pending += PendingDocument(oldDocumentId, newDocumentId, withRewrittenComments))
+      _ <- Task(
+        pending += PendingDocument(oldDocumentId, newDocumentId, inlineCommentRewriteResult._1)
+      )
     } yield ()
 
   private[this] def finalizeContent(
@@ -230,6 +234,17 @@ private[importer] class DocumentsImporter @Inject() (
     if (success == total)
       ConsoleDSL[Task].println(s"$label: OK ($total)", space = 2, color = GREEN)
     else ConsoleDSL[Task].errorln(s"$label: NG ($success/$total)", space = 2)
+
+  private[this] def logInlineCommentStep(stats: InlineCommentRewriteStats)(implicit
+      consoleDSL: ConsoleDSL[Task]
+  ): Task[Unit] = {
+    val suffix    = if (stats.unresolved > 0) s", ${stats.unresolved} unresolved" else ""
+    val countText = s"${stats.rewritten}/${stats.total}$suffix"
+    if (stats.unresolved == 0)
+      ConsoleDSL[Task].println(s"Comment ids rewritten: OK ($countText)", space = 2, color = GREEN)
+    else
+      ConsoleDSL[Task].errorln(s"Comment ids rewritten: NG ($countText)", space = 2)
+  }
 
   // Skipped mentions aren't failures; only unresolved ones make this NG.
   private[this] def logIssueMentionStep(stats: IssueMentionRewriteStats)(implicit
