@@ -107,31 +107,16 @@ trait DocumentService {
   ): (BacklogDocument, InlineCommentRewriteStats)
 
   // The document body (ProseMirror JSON) can embed an `issueMention` node
-  // carrying a snapshot of a referenced issue's source-space key, numeric
-  // id, and project key/id
+  // referencing an issue by source-space key/numeric id and project key/id
   // (`{"type":"issueMention","attrs":{"id":"PROJ-1","label":"...",
   // "mentionType":"inline","projectKey":"PROJ","projectId":1,"issueId":2}}`;
-  // `issueId`/`projectId` are sometimes absent from real data). Mentions of
-  // issues in the source project must be rewritten to the key/id assigned
-  // when that issue was recreated at the destination, and to the
-  // destination project's key/id, otherwise the app can't resolve the
-  // mention. Mentions of any other project are left completely untouched,
-  // since this tool migrates one project per run and has no mapping data
-  // for other projects. When a same-project mention can't be resolved (the
-  // issue wasn't found in either map, e.g. it was deleted at the source or
-  // failed to migrate), the mention is left as-is and a warning is logged
-  // rather than failing the migration.
-  //
-  // The same snapshot is duplicated as a bracket tag in the document's plain
-  // text mirror (`optPlain`), e.g. `[issueMention id="PROJ-1" label="..."
-  // mentionType="inline" projectKey="PROJ" projectId="1" issueId="2"]`. Every
-  // mention actually rewritten in the JSON has its exact old/new tag text
-  // substituted into `optPlain` too (via literal substring replacement, not
-  // regex, since labels may contain unescaped `[`/`]`), so the plain-text
-  // mirror doesn't keep pointing at the source space after migration. If the
-  // expected old tag text can't be found in `optPlain` (e.g. it drifted from
-  // the JSON), that mention's plain text is left unchanged and a warning is
-  // logged, again without failing the migration.
+  // `issueId`/`projectId` are sometimes absent). Same-project mentions are
+  // rewritten via `issueIdMap`/`issueKeyMap`; other projects are left
+  // untouched (no mapping data, one project per run); an unresolved
+  // same-project mention is left as-is with a warning (fail-soft). The same
+  // snapshot is mirrored as a bracket tag in `optPlain` and kept in sync via
+  // literal substring replacement (not regex, since labels can contain raw
+  // `[`/`]`); a tag that can't be found is left unchanged with a warning.
   def rewriteIssueMentions(
       document: BacklogDocument,
       issueIdMap: Map[Long, Long],
