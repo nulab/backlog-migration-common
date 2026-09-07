@@ -3,7 +3,7 @@ package com.nulabinc.backlog.migration.importer.service
 import javax.inject.Inject
 
 import better.files.{File => Path}
-import com.nulabinc.backlog.migration.common.conf.BacklogPaths
+import com.nulabinc.backlog.migration.common.conf.{BacklogConfiguration, BacklogPaths}
 import com.nulabinc.backlog.migration.common.convert.BacklogUnmarshaller
 import com.nulabinc.backlog.migration.common.domain.{
   BacklogAttachment,
@@ -35,7 +35,8 @@ import scala.collection.mutable
 private[importer] class DocumentsImporter @Inject() (
     backlogPaths: BacklogPaths,
     documentService: DocumentService
-) extends Logging {
+) extends Logging
+    with BacklogConfiguration {
 
   def execute(
       project: BacklogProject,
@@ -50,8 +51,9 @@ private[importer] class DocumentsImporter @Inject() (
       consoleDSL: ConsoleDSL[Task]
   ): Unit =
     BacklogUnmarshaller.documentTree(backlogPaths).foreach { tree =>
-      val documentIdMap = mutable.Map.empty[String, String]
-      val pending       = mutable.ArrayBuffer.empty[PendingDocument]
+      val documentIdMap     = mutable.Map.empty[String, String]
+      val pending           = mutable.ArrayBuffer.empty[PendingDocument]
+      val existingDocuments = existingDocumentsByTitleAndCreated(project.id)
 
       // Phase 1: create every document across both trees first, since a
       // document's body may mention a sibling created later in tree order.
@@ -62,7 +64,8 @@ private[importer] class DocumentsImporter @Inject() (
         project,
         propertyResolver,
         documentIdMap,
-        pending
+        pending,
+        existingDocuments
       )
       createAll(
         tree.trashTree.children,
@@ -71,7 +74,8 @@ private[importer] class DocumentsImporter @Inject() (
         project,
         propertyResolver,
         documentIdMap,
-        pending
+        pending,
+        existingDocuments
       )
 
       val mentionRewriteContext = MentionRewriteContext(
@@ -121,22 +125,32 @@ private[importer] class DocumentsImporter @Inject() (
       project: BacklogProject,
       propertyResolver: PropertyResolver,
       documentIdMap: mutable.Map[String, String],
-      pending: mutable.ArrayBuffer[PendingDocument]
+      pending: mutable.ArrayBuffer[PendingDocument],
+      existingDocuments: Map[(String, String), BacklogDocument]
   )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit =
     nodes.foreach { node =>
       val optNewId = unmarshal(node.id).map { document =>
-        // isTrash is only consulted by the destination when optNewParentId is
-        // empty (root of the subtree); it's harmless to pass through unconditionally.
-        val newId = documentService.create(
-          project.id,
-          document,
-          optNewParentId,
-          addLast = true,
-          isTrash = isTrash,
-          propertyResolver
-        )
+        val optExisting =
+          document.optCreated.flatMap(created => existingDocuments.get((document.title, created)))
+        val newId = optExisting match {
+          case Some(existingDocument) =>
+            logDocumentAlreadyExists(existingDocument.id).runSyncUnsafe()
+            existingDocument.id
+          case None =>
+            // isTrash is only consulted by the destination when optNewParentId
+            // is empty (root of the subtree); harmless to pass through unconditionally.
+            val createdId = documentService.create(
+              project.id,
+              document,
+              optNewParentId,
+              addLast = true,
+              isTrash = isTrash,
+              propertyResolver
+            )
+            postCreate(node.id, createdId, document, propertyResolver, pending).runSyncUnsafe()
+            createdId
+        }
         documentIdMap += node.id -> newId
-        postCreate(node.id, newId, document, propertyResolver, pending).runSyncUnsafe()
         newId
       }
       // A failed/missing parent breaks the id mapping, so its children are skipped too.
@@ -148,10 +162,41 @@ private[importer] class DocumentsImporter @Inject() (
           project,
           propertyResolver,
           documentIdMap,
-          pending
+          pending,
+          existingDocuments
         )
       }
     }
+
+  // (title, created) -> destination document, for skipping documents a
+  // previous run already migrated (this tool always sets `created` to the
+  // source value, so a match means "already imported"). Includes trash.
+  private[this] def existingDocumentsByTitleAndCreated(
+      projectId: Long
+  ): Map[(String, String), BacklogDocument] = {
+    val total = documentService.countDocuments(projectId)
+    (0 until total by exportLimitAtOnce)
+      .flatMap { offset =>
+        val count = math.min(exportLimitAtOnce, total - offset)
+        documentService.allDocuments(projectId, offset, count)
+      }
+      .flatMap(document =>
+        document.optCreated.map(created => (document.title, created) -> document)
+      )
+      .toMap
+  }
+
+  private[this] def logDocumentAlreadyExists(existingDocumentId: String)(implicit
+      consoleDSL: ConsoleDSL[Task]
+  ): Task[Unit] =
+    for {
+      _ <- ConsoleDSL[Task].println(s"[Document id=$existingDocumentId]")
+      _ <- ConsoleDSL[Task].println(
+        "Document already exists (title+created match): SKIP",
+        space = 2,
+        color = GREEN
+      )
+    } yield ()
 
   private[this] def postCreate(
       oldDocumentId: String,
