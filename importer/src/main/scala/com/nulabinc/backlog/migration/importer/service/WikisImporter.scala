@@ -71,7 +71,10 @@ private[importer] class WikisImporter @Inject() (
       }
     } catch {
       case api: BacklogAPIException if api.getStatusCode == 403 =>
-        logger.warn(s"Wiki is not available on the destination space, skip wiki import: ${api.getMessage}", api)
+        logger.warn(
+          s"Wiki is not available on the destination space, skip wiki import: ${api.getMessage}",
+          api
+        )
     }
   }
 
