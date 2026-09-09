@@ -18,6 +18,7 @@ import com.nulabinc.backlog.migration.common.service.{
   WikiService
 }
 import com.nulabinc.backlog.migration.common.utils.{IOUtil, Logging, ProgressBar}
+import com.nulabinc.backlog4j.BacklogAPIException
 import com.osinka.i18n.Messages
 import monix.eval.Task
 import monix.execution.Scheduler
@@ -37,35 +38,43 @@ private[importer] class WikisImporter @Inject() (
       s: Scheduler,
       consoleDSL: ConsoleDSL[Task]
   ) = {
-    val paths    = IOUtil.directoryPaths(backlogPaths.wikiDirectoryPath)
-    val allWikis = wikiService.allWikis()
+    try {
+      val paths    = IOUtil.directoryPaths(backlogPaths.wikiDirectoryPath)
+      val allWikis = wikiService.allWikis()
 
-    def exists(wikiName: String): Boolean = {
-      allWikis.exists(wiki => wiki.name == wikiName)
-    }
-
-    def condition(path: Path): Boolean = {
-      unmarshal(path) match {
-        case Some(wiki) =>
-          if (wiki.name == BacklogConstantValue.WIKI_HOME_NAME) false
-          else exists(wiki.name)
-        case _ => false
+      def exists(wikiName: String): Boolean = {
+        allWikis.exists(wiki => wiki.name == wikiName)
       }
-    }
 
-    val console = (ProgressBar.progress _)(
-      Messages("common.wikis"),
-      Messages("message.importing"),
-      Messages("message.imported")
-    )
-    val wikiDirs = paths.filterNot(condition)
-    wikiDirs.zipWithIndex.foreach {
-      case (wikiDir, index) =>
-        for {
-          wiki    <- unmarshal(wikiDir)
-          created <- create(project.id, propertyResolver, wiki)
-        } yield postCreate(project, created.id, wikiDir, wiki).runSyncUnsafe()
-        console(index + 1, wikiDirs.size)
+      def condition(path: Path): Boolean = {
+        unmarshal(path) match {
+          case Some(wiki) =>
+            if (wiki.name == BacklogConstantValue.WIKI_HOME_NAME) false
+            else exists(wiki.name)
+          case _ => false
+        }
+      }
+
+      val console = (ProgressBar.progress _)(
+        Messages("common.wikis"),
+        Messages("message.importing"),
+        Messages("message.imported")
+      )
+      val wikiDirs = paths.filterNot(condition)
+      wikiDirs.zipWithIndex.foreach {
+        case (wikiDir, index) =>
+          for {
+            wiki    <- unmarshal(wikiDir)
+            created <- create(project.id, propertyResolver, wiki)
+          } yield postCreate(project, created.id, wikiDir, wiki).runSyncUnsafe()
+          console(index + 1, wikiDirs.size)
+      }
+    } catch {
+      case api: BacklogAPIException if api.getStatusCode == 403 =>
+        logger.warn(
+          s"Wiki is not available on the destination space, skip wiki import: ${api.getMessage}",
+          api
+        )
     }
   }
 
