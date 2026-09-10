@@ -1,9 +1,9 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+import com.nulabinc.backlog.migration.common.conf.WriteInterval
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.GroupWrites
 import com.nulabinc.backlog.migration.common.domain.BacklogGroup
@@ -18,7 +18,8 @@ import scala.jdk.CollectionConverters._
  */
 class GroupServiceImpl @Inject() (implicit
     val groupWrites: GroupWrites,
-    backlog: BacklogAPIClient
+    backlog: BacklogAPIClient,
+    writeInterval: WriteInterval
 ) extends GroupService
     with Logging {
 
@@ -38,7 +39,7 @@ class GroupServiceImpl @Inject() (implicit
     val memberIds = group.members.flatMap(_.optUserId).flatMap(propertyResolver.optResolvedUserId)
     val params    = new CreateGroupParams(group.name)
     params.members(memberIds.asJava)
-    sleep(500)
+    writeInterval.pause()
     backlog.createGroup(params)
   }
 

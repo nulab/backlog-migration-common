@@ -1,9 +1,9 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+import com.nulabinc.backlog.migration.common.conf.WriteInterval
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.UserWrites
 import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, BacklogUser}
@@ -19,7 +19,8 @@ import scala.jdk.CollectionConverters._
 class ProjectUserServiceImpl @Inject() (implicit
     val userWrites: UserWrites,
     projectKey: BacklogProjectKey,
-    backlog: BacklogAPIClient
+    backlog: BacklogAPIClient,
+    writeInterval: WriteInterval
 ) extends ProjectUserService
     with Logging {
 
@@ -34,7 +35,7 @@ class ProjectUserServiceImpl @Inject() (implicit
   }
 
   override def add(userId: Long) = {
-    sleep(500)
+    writeInterval.pause()
     backlog.addProjectUser(projectKey.value, userId)
   }
 

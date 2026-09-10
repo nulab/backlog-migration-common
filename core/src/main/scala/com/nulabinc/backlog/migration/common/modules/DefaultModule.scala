@@ -2,7 +2,11 @@ package com.nulabinc.backlog.migration.common.modules
 
 import com.google.inject.{AbstractModule, TypeLiteral}
 import com.nulabinc.backlog.migration.common.client.{BacklogAPIClient, BacklogAPIClientImpl, IAAH}
-import com.nulabinc.backlog.migration.common.conf.{BacklogApiConfiguration, BacklogPaths}
+import com.nulabinc.backlog.migration.common.conf.{
+  BacklogApiConfiguration,
+  BacklogPaths,
+  WriteInterval
+}
 import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, PropertyValue}
 import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
 import com.nulabinc.backlog.migration.common.interpreters.JansiConsoleDSL
@@ -30,6 +34,7 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
       new BacklogPaths(apiConfig.projectKey, apiConfig.backlogOutputPath)
     )
     bind(classOf[PropertyValue]).toInstance(createPropertyValue())
+    bind(classOf[WriteInterval]).toInstance(new WriteInterval(apiConfig.writeInterval))
 
     bind(classOf[CommentService]).to(classOf[CommentServiceImpl])
     bind(classOf[CustomFieldSettingService]).to(classOf[CustomFieldSettingServiceImpl])

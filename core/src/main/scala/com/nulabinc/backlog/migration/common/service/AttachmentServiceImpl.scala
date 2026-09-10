@@ -1,10 +1,10 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.{File, FileInputStream}
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+import com.nulabinc.backlog.migration.common.conf.WriteInterval
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.AttachmentWrites
 import com.nulabinc.backlog.migration.common.domain.BacklogAttachment
@@ -19,14 +19,15 @@ import scala.jdk.CollectionConverters._
  */
 class AttachmentServiceImpl @Inject() (implicit
     val attachmentWrites: AttachmentWrites,
-    backlog: BacklogAPIClient
+    backlog: BacklogAPIClient,
+    writeInterval: WriteInterval
 ) extends AttachmentService
     with Logging {
 
   override def postAttachment(
       path: String
   ): Either[Throwable, BacklogAttachment] = {
-    sleep(500)
+    writeInterval.pause()
     val file = new File(path)
     val attachmentData =
       new AttachmentDataImpl(file.getName, new FileInputStream(file))

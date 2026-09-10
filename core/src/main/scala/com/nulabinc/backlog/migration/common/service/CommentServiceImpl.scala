@@ -5,7 +5,7 @@ import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.client.params._
-import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
+import com.nulabinc.backlog.migration.common.conf.{BacklogConstantValue, WriteInterval}
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.{CommentWrites, IssueWrites}
 import com.nulabinc.backlog.migration.common.domain.IssueTags.SourceIssue
@@ -31,7 +31,8 @@ class CommentServiceImpl @Inject() (
     implicit val s: Scheduler,
     implicit val consoleDSL: ConsoleDSL[Task],
     backlog: BacklogAPIClient,
-    issueService: IssueService
+    issueService: IssueService,
+    writeInterval: WriteInterval
 ) extends CommentService
     with Logging {
 
@@ -158,7 +159,7 @@ class CommentServiceImpl @Inject() (
       logger.warn("No update item")
       true
     } else {
-      sleep(500)
+      writeInterval.pause()
       Convert.toBacklog(backlog.importUpdateIssue(params))
       false
     }

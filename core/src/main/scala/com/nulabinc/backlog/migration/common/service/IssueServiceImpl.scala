@@ -9,6 +9,7 @@ import com.nulabinc.backlog.migration.common.client.params.{
   ImportDeleteAttachmentParams,
   ImportIssueParams
 }
+import com.nulabinc.backlog.migration.common.conf.WriteInterval
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.IssueWrites
 import com.nulabinc.backlog.migration.common.domain._
@@ -28,7 +29,8 @@ import scala.jdk.CollectionConverters._
  */
 class IssueServiceImpl @Inject() (implicit
     issueWrites: IssueWrites,
-    backlog: BacklogAPIClient
+    backlog: BacklogAPIClient,
+    writeInterval: WriteInterval
 ) extends IssueService
     with Logging {
 
@@ -167,7 +169,7 @@ class IssueServiceImpl @Inject() (implicit
       params.getParamList.asScala.foreach(p =>
         logger.debug(s"        [Issue Parameter]:${p.getName}:${p.getValue}")
       )
-      sleep(500)
+      writeInterval.pause()
       Right(Convert.toBacklog(backlog.importIssue(params)))
     } catch {
       case e: Throwable =>
@@ -317,7 +319,7 @@ class IssueServiceImpl @Inject() (implicit
       propertyResolver.tryDefaultIssueTypeId(),
       PriorityType.Normal
     )
-    sleep(500)
+    writeInterval.pause()
     val issue = backlog.importIssue(params)
     logger.debug(
       s"[Success Finish Create Dummy Issue]:${issue.getId}----------------------------"
