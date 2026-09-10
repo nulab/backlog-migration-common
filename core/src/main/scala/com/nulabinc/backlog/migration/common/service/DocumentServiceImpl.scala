@@ -437,9 +437,9 @@ class DocumentServiceImpl @Inject() (implicit
       mentionType <- fields.get("mentionType").collect { case JsString(s) => s }
       projectKey  <- fields.get("projectKey").collect { case JsString(s) => s }
     } yield {
-      val sb = new StringBuilder("[issueMention id=\"")
+      val sb = new StringBuilder("[issueMention #")
         .append(id)
-        .append("\" label=\"")
+        .append(" label=\"")
         .append(label)
         .append("\" mentionType=\"")
         .append(mentionType)
@@ -603,9 +603,9 @@ class DocumentServiceImpl @Inject() (implicit
       mentionType <- fields.get("mentionType").collect { case JsString(s) => s }
       projectKey  <- fields.get("projectKey").collect { case JsString(s) => s }
     } yield {
-      val sb = new StringBuilder("[documentMention id=\"")
+      val sb = new StringBuilder("[documentMention #")
         .append(id)
-        .append("\" label=\"")
+        .append(" label=\"")
         .append(label)
         .append("\" mentionType=\"")
         .append(mentionType)
@@ -765,7 +765,7 @@ class DocumentServiceImpl @Inject() (implicit
     for {
       id    <- fields.get("id").collect { case JsNumber(n) => n }
       label <- fields.get("label").collect { case JsString(s) => s }
-    } yield s"""[peopleMention id="${id.toString}" label="$label"]"""
+    } yield s"""[peopleMention #${id.toString} label="$label"]"""
 
   private[this] def rewritePeopleMentionJsValue(
       value: JsValue,

@@ -423,9 +423,9 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"id":"SRC-85","label":"emoji test","mentionType":"inline",
         |"projectKey":"SRC","projectId":100,"issueId":200}}]}""".stripMargin
     val oldTag =
-      """[issueMention id="SRC-85" label="emoji test" mentionType="inline" projectKey="SRC" projectId="100" issueId="200"]"""
+      """[issueMention #SRC-85 label="emoji test" mentionType="inline" projectKey="SRC" projectId="100" issueId="200"]"""
     val newTag =
-      """[issueMention id="DST-1" label="emoji test" mentionType="inline" projectKey="DST" projectId="101" issueId="201"]"""
+      """[issueMention #DST-1 label="emoji test" mentionType="inline" projectKey="DST" projectId="101" issueId="201"]"""
     val documentWithBody =
       document.copy(optJson = Some(body), optPlain = Some(s"before $oldTag after"))
 
@@ -448,9 +448,9 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"id":"SRC-84","label":"label missing ids","mentionType":"inline",
         |"projectKey":"SRC"}}]}""".stripMargin
     val oldTag =
-      """[issueMention id="SRC-84" label="label missing ids" mentionType="inline" projectKey="SRC"]"""
+      """[issueMention #SRC-84 label="label missing ids" mentionType="inline" projectKey="SRC"]"""
     val newTag =
-      """[issueMention id="DST-2" label="label missing ids" mentionType="inline" projectKey="DST"]"""
+      """[issueMention #DST-2 label="label missing ids" mentionType="inline" projectKey="DST"]"""
     val documentWithBody =
       document.copy(optJson = Some(body), optPlain = Some(s"text $oldTag more"))
 
@@ -500,9 +500,9 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"projectKey":"SRC","projectId":100,"issueId":200}}
         |]}""".stripMargin
     val oldTag =
-      """[issueMention id="SRC-85" label="emoji test" mentionType="inline" projectKey="SRC" projectId="100" issueId="200"]"""
+      """[issueMention #SRC-85 label="emoji test" mentionType="inline" projectKey="SRC" projectId="100" issueId="200"]"""
     val newTag =
-      """[issueMention id="DST-1" label="emoji test" mentionType="inline" projectKey="DST" projectId="101" issueId="201"]"""
+      """[issueMention #DST-1 label="emoji test" mentionType="inline" projectKey="DST" projectId="101" issueId="201"]"""
     val documentWithBody =
       document.copy(optJson = Some(body), optPlain = Some(s"$oldTag and again $oldTag"))
 
@@ -525,11 +525,11 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
       """{"type":"doc","content":[{"type":"paragraph"},{"type":"paragraph","content":[{"type":"text","text":"text one"}]},{"type":"paragraph","content":[{"type":"issueMention","attrs":{"id":"SRCPROJ-1","label":"label one","mentionType":"inline","projectKey":"SRCPROJ","projectId":1000,"issueId":100001}},{"type":"text","text":" "}]},{"type":"paragraph"},{"type":"paragraph","content":[{"type":"text","text":"text two"}]},{"type":"paragraph","content":[{"type":"issueMention","attrs":{"id":"SRCPROJ-2","label":"label missing ids","mentionType":"inline","projectKey":"SRCPROJ"}},{"type":"text","text":" "}]},{"type":"paragraph"},{"type":"paragraph","content":[{"type":"text","text":"“stray quote“and[escaped]"}]},{"type":"paragraph","content":[{"type":"issueMention","attrs":{"id":"SRCPROJ-3","label":"label with &quot;quote&quot; and [brackets]","mentionType":"inline","projectKey":"SRCPROJ","projectId":1000,"issueId":100003}},{"type":"text","text":" "}]},{"type":"paragraph"}]}"""
 
     val oldTag1 =
-      """[issueMention id="SRCPROJ-1" label="label one" mentionType="inline" projectKey="SRCPROJ" projectId="1000" issueId="100001"]"""
+      """[issueMention #SRCPROJ-1 label="label one" mentionType="inline" projectKey="SRCPROJ" projectId="1000" issueId="100001"]"""
     val oldTag2 =
-      """[issueMention id="SRCPROJ-2" label="label missing ids" mentionType="inline" projectKey="SRCPROJ"]"""
+      """[issueMention #SRCPROJ-2 label="label missing ids" mentionType="inline" projectKey="SRCPROJ"]"""
     val oldTag3 =
-      """[issueMention id="SRCPROJ-3" label="label with &quot;quote&quot; and [brackets]" mentionType="inline" projectKey="SRCPROJ" projectId="1000" issueId="100003"]"""
+      """[issueMention #SRCPROJ-3 label="label with &quot;quote&quot; and [brackets]" mentionType="inline" projectKey="SRCPROJ" projectId="1000" issueId="100003"]"""
 
     val filler1 = "\n\ntext one\n\n"
     val filler2 = " \n\n\n\ntext two\n\n"
@@ -562,11 +562,11 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     )
 
     val newTag1 =
-      """[issueMention id="DST-1" label="label one" mentionType="inline" projectKey="DSTPROJ" projectId="2000" issueId="200001"]"""
+      """[issueMention #DST-1 label="label one" mentionType="inline" projectKey="DSTPROJ" projectId="2000" issueId="200001"]"""
     val newTag2 =
-      """[issueMention id="DST-2" label="label missing ids" mentionType="inline" projectKey="DSTPROJ"]"""
+      """[issueMention #DST-2 label="label missing ids" mentionType="inline" projectKey="DSTPROJ"]"""
     val newTag3 =
-      """[issueMention id="DST-3" label="label with &quot;quote&quot; and [brackets]" mentionType="inline" projectKey="DSTPROJ" projectId="2000" issueId="200003"]"""
+      """[issueMention #DST-3 label="label with &quot;quote&quot; and [brackets]" mentionType="inline" projectKey="DSTPROJ" projectId="2000" issueId="200003"]"""
 
     val expectedPlainBody =
       filler1 + newTag1 + filler2 + newTag2 + filler3 + newTag3 + filler4
@@ -796,9 +796,9 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"id":"019ec9abb04b71daa47ebacb9f79ea48","label":"n1","mentionType":"inline",
         |"projectKey":"SRC","projectId":100,"url":""}}]}""".stripMargin
     val oldTag =
-      """[documentMention id="019ec9abb04b71daa47ebacb9f79ea48" label="n1" mentionType="inline" projectKey="SRC" projectId="100" url=""]"""
+      """[documentMention #019ec9abb04b71daa47ebacb9f79ea48 label="n1" mentionType="inline" projectKey="SRC" projectId="100" url=""]"""
     val newTag =
-      """[documentMention id="newDocId1" label="n1" mentionType="inline" projectKey="DST" projectId="101" url=""]"""
+      """[documentMention #newDocId1 label="n1" mentionType="inline" projectKey="DST" projectId="101" url=""]"""
     val documentWithBody =
       document.copy(optJson = Some(body), optPlain = Some(s"before $oldTag after"))
 
@@ -844,9 +844,9 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |"projectKey":"SRC","projectId":100,"url":""}}
         |]}""".stripMargin
     val oldTag =
-      """[documentMention id="019ec9abb04b71daa47ebacb9f79ea48" label="n1" mentionType="inline" projectKey="SRC" projectId="100" url=""]"""
+      """[documentMention #019ec9abb04b71daa47ebacb9f79ea48 label="n1" mentionType="inline" projectKey="SRC" projectId="100" url=""]"""
     val newTag =
-      """[documentMention id="newDocId1" label="n1" mentionType="inline" projectKey="DST" projectId="101" url=""]"""
+      """[documentMention #newDocId1 label="n1" mentionType="inline" projectKey="DST" projectId="101" url=""]"""
     val documentWithBody =
       document.copy(optJson = Some(body), optPlain = Some(s"$oldTag and again $oldTag"))
 
@@ -920,8 +920,8 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     val body =
       """{"type":"doc","content":[{"type":"peopleMention","attrs":{
         |"id":500001,"label":"test.user"}}]}""".stripMargin
-    val oldTag = """[peopleMention id="500001" label="test.user"]"""
-    val newTag = """[peopleMention id="600001" label="Test User"]"""
+    val oldTag = """[peopleMention #500001 label="test.user"]"""
+    val newTag = """[peopleMention #600001 label="Test User"]"""
     val documentWithBody =
       document.copy(optJson = Some(body), optPlain = Some(s"before $oldTag after"))
 
@@ -955,8 +955,8 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
         |{"type":"peopleMention","attrs":{"id":500001,"label":"test.user"}},
         |{"type":"peopleMention","attrs":{"id":500001,"label":"test.user"}}
         |]}""".stripMargin
-    val oldTag = """[peopleMention id="500001" label="test.user"]"""
-    val newTag = """[peopleMention id="600001" label="Test User"]"""
+    val oldTag = """[peopleMention #500001 label="test.user"]"""
+    val newTag = """[peopleMention #600001 label="Test User"]"""
     val documentWithBody =
       document.copy(optJson = Some(body), optPlain = Some(s"$oldTag and again $oldTag"))
 
