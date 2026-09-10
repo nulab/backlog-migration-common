@@ -1,7 +1,6 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -9,6 +8,7 @@ import com.nulabinc.backlog.migration.common.client.params.{
   ImportDeleteAttachmentParams,
   ImportIssueParams
 }
+import com.nulabinc.backlog.migration.common.conf.RequestIntervals
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.IssueWrites
 import com.nulabinc.backlog.migration.common.domain._
@@ -28,12 +28,13 @@ import scala.jdk.CollectionConverters._
  */
 class IssueServiceImpl @Inject() (implicit
     issueWrites: IssueWrites,
-    backlog: BacklogAPIClient
+    backlog: BacklogAPIClient,
+    intervals: RequestIntervals
 ) extends IssueService
     with Logging {
 
   override def issueOfId(id: Long): BacklogIssue = {
-    sleep(500)
+    intervals.pauseBeforeRead()
     Convert.toBacklog(backlog.getIssue(id))
   }
 
@@ -167,7 +168,7 @@ class IssueServiceImpl @Inject() (implicit
       params.getParamList.asScala.foreach(p =>
         logger.debug(s"        [Issue Parameter]:${p.getName}:${p.getValue}")
       )
-      sleep(500)
+      intervals.pauseBeforeWrite()
       Right(Convert.toBacklog(backlog.importIssue(params)))
     } catch {
       case e: Throwable =>
@@ -317,7 +318,7 @@ class IssueServiceImpl @Inject() (implicit
       propertyResolver.tryDefaultIssueTypeId(),
       PriorityType.Normal
     )
-    sleep(500)
+    intervals.pauseBeforeWrite()
     val issue = backlog.importIssue(params)
     logger.debug(
       s"[Success Finish Create Dummy Issue]:${issue.getId}----------------------------"

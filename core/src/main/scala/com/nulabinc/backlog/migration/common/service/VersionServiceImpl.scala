@@ -1,9 +1,9 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+import com.nulabinc.backlog.migration.common.conf.RequestIntervals
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.VersionWrites
 import com.nulabinc.backlog.migration.common.domain.{BacklogProjectKey, BacklogVersion}
@@ -19,7 +19,8 @@ import scala.jdk.CollectionConverters._
 class VersionServiceImpl @Inject() (implicit
     val versionWrites: VersionWrites,
     projectKey: BacklogProjectKey,
-    backlog: BacklogAPIClient
+    backlog: BacklogAPIClient,
+    intervals: RequestIntervals
 ) extends VersionService
     with Logging {
 
@@ -27,7 +28,7 @@ class VersionServiceImpl @Inject() (implicit
     backlog.getVersions(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
 
   override def add(backlogVersion: BacklogVersion): Option[BacklogVersion] = {
-    sleep(500)
+    intervals.pauseBeforeWrite()
     val params = new AddVersionParams(projectKey.value, backlogVersion.name)
     params.description(backlogVersion.description)
     for { startDate <- backlogVersion.optStartDate } yield {

@@ -1,12 +1,11 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
 import com.nulabinc.backlog.migration.common.client.params.ImportWikiParams
-import com.nulabinc.backlog.migration.common.conf.BacklogConstantValue
+import com.nulabinc.backlog.migration.common.conf.{BacklogConstantValue, RequestIntervals}
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.WikiWrites
 import com.nulabinc.backlog.migration.common.domain.{
@@ -31,7 +30,8 @@ import scala.jdk.CollectionConverters._
 class WikiServiceImpl @Inject() (implicit
     val wikiWrites: WikiWrites,
     projectKey: BacklogProjectKey,
-    backlog: BacklogAPIClient
+    backlog: BacklogAPIClient,
+    intervals: RequestIntervals
 ) extends WikiService
     with Logging {
 
@@ -39,7 +39,7 @@ class WikiServiceImpl @Inject() (implicit
     backlog.getWikis(projectKey.value).asScala.toSeq.map(Convert.toBacklog(_))
 
   override def wikiOfId(wikiId: Long): BacklogWiki = {
-    sleep(500)
+    intervals.pauseBeforeRead()
     Convert.toBacklog(backlog.getWiki(wikiId))
   }
 

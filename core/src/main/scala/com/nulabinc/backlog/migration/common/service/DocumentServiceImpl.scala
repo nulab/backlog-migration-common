@@ -1,10 +1,10 @@
 package com.nulabinc.backlog.migration.common.service
 
 import java.io.InputStream
-import java.lang.Thread.sleep
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
+import com.nulabinc.backlog.migration.common.conf.RequestIntervals
 import com.nulabinc.backlog.migration.common.convert.Convert
 import com.nulabinc.backlog.migration.common.convert.writes.{
   DocumentCommentWrites,
@@ -29,7 +29,8 @@ class DocumentServiceImpl @Inject() (implicit
     val documentWrites: DocumentWrites,
     val documentCommentWrites: DocumentCommentWrites,
     val documentTreeWrites: DocumentTreeWrites,
-    backlog: BacklogAPIClient
+    backlog: BacklogAPIClient,
+    intervals: RequestIntervals
 ) extends DocumentService
     with Logging {
 
@@ -67,7 +68,7 @@ class DocumentServiceImpl @Inject() (implicit
   }
 
   override def documentOfId(documentId: String): BacklogDocument = {
-    sleep(500)
+    intervals.pauseBeforeRead()
     withComments(Convert.toBacklog(backlog.getDocument(documentId)))
   }
 
