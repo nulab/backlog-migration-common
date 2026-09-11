@@ -3,7 +3,7 @@ package com.nulabinc.backlog.migration.common.client
 import java.util
 
 import com.nulabinc.backlog.migration.common.client.params._
-import com.nulabinc.backlog.migration.common.conf.BacklogConfiguration
+import com.nulabinc.backlog.migration.common.conf.{BacklogConfiguration, RequestIntervals}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option.{GetParams, QueryParams}
@@ -15,12 +15,17 @@ import scala.jdk.CollectionConverters._
 import scala.language.reflectiveCalls
 
 object BacklogAPIClientImpl extends BacklogConfiguration {
-  def create: BacklogHttpClient = {
+
+  /**
+   * In adaptive mode both clients in `BacklogAPIClientImpl` share one limiter; in fixed mode the
+   * client is bare.
+   */
+  def create(limiter: BacklogRateLimiter): BacklogHttpClient = {
     val client = new HttpClientBacklogHttpClient()
     client.setUserAgent(
       s"backlog4j/${backlog4jVersion}-$productName/$productVersion"
     )
-    client
+    if (limiter.adaptive) new ThrottledBacklogHttpClient(client, limiter) else client
   }
 }
 
@@ -30,20 +35,25 @@ object IAAH {
   val empty: IAAH = IAAH("")
 }
 
-class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
-    extends BacklogClientImpl(configure, BacklogAPIClientImpl.create)
+class BacklogAPIClientImpl(
+    configure: BacklogConfigure,
+    iaah: IAAH,
+    limiter: BacklogRateLimiter
+) extends BacklogClientImpl(configure, BacklogAPIClientImpl.create(limiter))
     with BacklogAPIClient
     with Logging {
+
+  def this(configure: BacklogConfigure, iaah: IAAH) =
+    this(configure, iaah, new BacklogRateLimiter(RequestIntervals.default))
 
   import scala.util.control.Exception.allCatch
 
   private val listeners = scala.collection.mutable.ArrayBuffer.empty[RateLimitEventListener]
-  private val rateLimitStatusCode    = 429
-  private val rateLimitRetryInterval = 60000
-  private val rateLimitRetryLimit    = 3
+  private val rateLimitStatusCode = 429
+  private val rateLimitRetryLimit = 3
 
   private val client =
-    new BacklogClientImpl(configure, BacklogAPIClientImpl.create) {
+    new BacklogClientImpl(configure, BacklogAPIClientImpl.create(limiter)) {
       val headers = Seq(
         new NameValuePair("iaah", iaah.value)
       ).asJava
@@ -162,7 +172,7 @@ class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
               val event = RateLimitEvent(e)
               listeners.foreach(_.fired(event))
 
-              Thread.sleep(rateLimitRetryInterval)
+              Thread.sleep(limiter.delayAfterTooManyRequests())
               retry0(e :: errors, f)
             }
             case _ => throw e
