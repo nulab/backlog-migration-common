@@ -94,29 +94,37 @@ private[importer] class ProjectImporter @Inject() (
     )
     val propertyResolver = buildPropertyResolver()
 
-    if (project.useWiki) {
-      // Wiki
-      wikisImporter.execute(project, propertyResolver)
-    }
-
-    // Issue
-    issuesImporter
-      .execute(project, propertyResolver, fitIssueKey, retryCount)
-      .map {
-        case (issueIdMap, issueKeyMap) =>
-          if (project.useDocument) {
-            // Document
-            documentsImporter.execute(
-              project,
-              propertyResolver,
-              issueIdMap,
-              issueKeyMap,
-              userMentionMap,
-              srcProjectId,
-              srcProjectKey
-            )
-          }
+    for {
+      _ <- ConsoleDSL[Task].println(ConsoleMessages.Imports.startWikiIssue)
+      _ <- Task {
+        if (project.useWiki) {
+          // Wiki
+          wikisImporter.execute(project, propertyResolver)
+        }
       }
+      _ <- issuesImporter
+        .execute(project, propertyResolver, fitIssueKey, retryCount)
+        .flatMap {
+          case (issueIdMap, issueKeyMap) =>
+            if (project.useDocument) {
+              for {
+                _ <- ConsoleDSL[Task].println(ConsoleMessages.Imports.startDocument)
+                _ <- Task {
+                  // Document
+                  documentsImporter.execute(
+                    project,
+                    propertyResolver,
+                    issueIdMap,
+                    issueKeyMap,
+                    userMentionMap,
+                    srcProjectId,
+                    srcProjectKey
+                  )
+                }
+              } yield ()
+            } else Task.unit
+        }
+    } yield ()
   }
 
   // Project member's source user id -> (destination id, destination display
