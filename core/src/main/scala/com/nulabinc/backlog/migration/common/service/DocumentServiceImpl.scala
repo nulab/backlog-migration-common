@@ -927,7 +927,10 @@ class DocumentServiceImpl @Inject() (implicit
       case other             => other
     }
 
-  private[this] def rewriteAttachmentBadgeAttrs(attrs: JsObject, ctx: AttachmentContext): JsObject =
+  private[this] def rewriteAttachmentBadgeAttrs(
+      attrs: JsObject,
+      ctx: AttachmentContext
+  ): JsObject =
     attrs.fields.get("id").collect { case JsString(id) => id } match {
       case Some(oldId) =>
         ctx.attachmentIdMap.get(oldId) match {
