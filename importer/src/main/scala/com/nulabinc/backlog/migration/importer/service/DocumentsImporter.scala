@@ -13,6 +13,7 @@ import com.nulabinc.backlog.migration.common.domain.{
 }
 import com.nulabinc.backlog.migration.common.dsl.ConsoleDSL
 import com.nulabinc.backlog.migration.common.service.{
+  AttachmentRewriteStats,
   DocumentMentionRewriteStats,
   DocumentService,
   InlineCommentRewriteStats,
@@ -147,7 +148,8 @@ private[importer] class DocumentsImporter @Inject() (
               isTrash = isTrash,
               propertyResolver
             )
-            postCreate(node.id, createdId, document, propertyResolver, pending).runSyncUnsafe()
+            postCreate(node.id, createdId, document, project.key, propertyResolver, pending)
+              .runSyncUnsafe()
             createdId
         }
         documentIdMap += node.id -> newId
@@ -202,6 +204,7 @@ private[importer] class DocumentsImporter @Inject() (
       oldDocumentId: String,
       newDocumentId: String,
       document: BacklogDocument,
+      dstProjectKey: String,
       propertyResolver: PropertyResolver,
       pending: mutable.ArrayBuffer[PendingDocument]
   )(implicit consoleDSL: ConsoleDSL[Task]): Task[Unit] =
@@ -225,8 +228,19 @@ private[importer] class DocumentsImporter @Inject() (
         attachmentsResult._1,
         attachmentsResult._2
       )
+      // Attachments only ever point at this same document, so unlike
+      // mentions this doesn't need to wait for phase 2.
+      attachmentRewriteResult <- Task(
+        documentService.rewriteAttachments(
+          inlineCommentRewriteResult._1,
+          attachmentsResult._3,
+          dstProjectKey,
+          newDocumentId
+        )
+      )
+      _ <- logAttachmentRewriteStep(attachmentRewriteResult._2)
       _ <- Task(
-        pending += PendingDocument(oldDocumentId, newDocumentId, inlineCommentRewriteResult._1)
+        pending += PendingDocument(oldDocumentId, newDocumentId, attachmentRewriteResult._1)
       )
     } yield ()
 
@@ -347,31 +361,59 @@ private[importer] class DocumentsImporter @Inject() (
       ConsoleDSL[Task].errorln(s"People mentions rewritten: NG ($countText)", space = 2)
   }
 
+  // No project scoping for attachments, so there's no "skipped" bucket.
+  private[this] def logAttachmentRewriteStep(stats: AttachmentRewriteStats)(implicit
+      consoleDSL: ConsoleDSL[Task]
+  ): Task[Unit] = {
+    val suffix    = if (stats.unresolved > 0) s", ${stats.unresolved} unresolved" else ""
+    val countText = s"${stats.rewritten}/${stats.total}$suffix"
+    if (stats.unresolved == 0)
+      ConsoleDSL[Task].println(
+        s"Attachment references rewritten: OK ($countText)",
+        space = 2,
+        color = GREEN
+      )
+    else
+      ConsoleDSL[Task].errorln(s"Attachment references rewritten: NG ($countText)", space = 2)
+  }
+
+  // Returns (success count, total, old attachment id -> new attachment id).
   private[this] def postAttachments(
       oldDocumentId: String,
       newDocumentId: String,
       document: BacklogDocument
-  )(implicit consoleDSL: ConsoleDSL[Task]): Task[(Int, Int)] = {
+  )(implicit consoleDSL: ConsoleDSL[Task]): Task[(Int, Int, Map[String, String])] = {
     val total = document.attachments.size
     Task
       .sequence(document.attachments.map { attachment =>
         toPath(oldDocumentId, attachment) match {
           case Some(path) =>
             documentService.addAttachment(newDocumentId, path.pathAsString) match {
-              case Right(_) => Task(true)
+              case Right(newAttachment) =>
+                Task(
+                  (
+                    true,
+                    for {
+                      oldId <- attachment.optId
+                      newId <- newAttachment.optId
+                    } yield oldId.toString -> newId.toString
+                  )
+                )
               case Left(e) =>
                 ConsoleDSL[Task]
                   .errorln(
                     Messages("import.error.document.attachment", attachment.name, e.getMessage)
                   )
-                  .map(_ => false)
+                  .map(_ => (false, None))
             }
           case None =>
             logger.warn(s"${attachment.name} does not exist")
-            Task(false)
+            Task((false, None))
         }
       })
-      .map(results => (results.count(identity), total))
+      .map { results =>
+        (results.count(_._1), total, results.flatMap(_._2).toMap)
+      }
   }
 
   private[this] def toPath(oldDocumentId: String, attachment: BacklogAttachment): Option[Path] =

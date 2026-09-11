@@ -817,6 +817,181 @@ class DocumentServiceImpl @Inject() (implicit
       case None => attrs
     }
 
+  private[this] val attachmentUrlPattern =
+    """^(/document/backend/)([^/]+)/([^/]+)(/file/)([^/]+)$""".r
+
+  private[this] def attachmentUrl(
+      dstProjectKey: String,
+      dstDocumentId: String,
+      attachmentId: String
+  ): String = s"/document/backend/$dstProjectKey/$dstDocumentId/file/$attachmentId"
+
+  override def rewriteAttachments(
+      document: BacklogDocument,
+      attachmentIdMap: Map[String, String],
+      dstProjectKey: String,
+      dstDocumentId: String
+  ): (BacklogDocument, AttachmentRewriteStats) =
+    if (attachmentIdMap.isEmpty) (document, AttachmentRewriteStats(0, 0, 0))
+    else
+      document.optJson match {
+        case Some(json) =>
+          val plainTextReplacements =
+            scala.collection.mutable.ArrayBuffer.empty[(String, String, String)]
+          val ctx = AttachmentContext(
+            attachmentIdMap,
+            dstProjectKey,
+            dstDocumentId,
+            plainTextReplacements
+          )
+          val newJson = rewriteAttachmentJsValue(json.parseJson, ctx).compactPrint
+          val newPlain =
+            document.optPlain.map(rewritePlainTextAttachments(_, plainTextReplacements.toSeq))
+          val stats = AttachmentRewriteStats(
+            total = ctx.rewrittenCount + ctx.unresolvedCount,
+            rewritten = ctx.rewrittenCount,
+            unresolved = ctx.unresolvedCount
+          )
+          (document.copy(optJson = Some(newJson), optPlain = newPlain), stats)
+        case None => (document, AttachmentRewriteStats(0, 0, 0))
+      }
+
+  private[this] case class AttachmentContext(
+      attachmentIdMap: Map[String, String],
+      dstProjectKey: String,
+      dstDocumentId: String,
+      // (oldId, old tag text, new tag text) captured for each resolved attachment, applied to optPlain afterwards
+      plainTextReplacements: scala.collection.mutable.ArrayBuffer[(String, String, String)]
+  ) {
+    var rewrittenCount: Int  = 0
+    var unresolvedCount: Int = 0
+  }
+
+  private[this] def rewritePlainTextAttachments(
+      plain: String,
+      replacements: Seq[(String, String, String)]
+  ): String =
+    replacements.foldLeft(plain) {
+      case (text, (oldId, oldTag, newTag)) =>
+        replaceFirstOccurrence(text, oldTag, newTag) match {
+          case Some(newText) => newText
+          case None =>
+            logger.warn(
+              s"Could not find expected attachment text in document plain text (id=$oldId) — plain text left unchanged for this attachment"
+            )
+            text
+        }
+    }
+
+  private[this] def attachmentBadgeTagText(fields: Map[String, JsValue]): Option[String] =
+    for {
+      id            <- fields.get("id").collect { case JsString(s) => s }
+      projectKey    <- fields.get("projectKey").collect { case JsString(s) => s }
+      documentId    <- fields.get("documentId").collect { case JsString(s) => s }
+      uuid          <- fields.get("uuid").collect { case JsString(s) => s }
+      attachmentUrl <- fields.get("attachmentUrl").collect { case JsString(s) => s }
+      filename      <- fields.get("filename").collect { case JsString(s) => s }
+      size          <- fields.get("size").collect { case JsNumber(n) => n }
+      created       <- fields.get("created").collect { case JsString(s) => s }
+    } yield s"""[attachmentBadge #$id projectKey="$projectKey" documentId="$documentId" uuid="$uuid" attachmentUrl="$attachmentUrl" filename="$filename" size="${size.toString}" created="$created"]"""
+
+  private[this] def imageTagText(fields: Map[String, JsValue]): Option[String] =
+    for {
+      width     <- fields.get("width").collect { case JsNumber(n) => n }
+      height    <- fields.get("height").collect { case JsNumber(n) => n }
+      uuid      <- fields.get("uuid").collect { case JsString(s) => s }
+      textAlign <- fields.get("textAlign").collect { case JsString(s) => s }
+      src       <- fields.get("src").collect { case JsString(s) => s }
+    } yield s"""![]($src){width="${width.toString}" height="${height.toString}" uuid="$uuid" textAlign="$textAlign"}"""
+
+  private[this] def rewriteAttachmentJsValue(value: JsValue, ctx: AttachmentContext): JsValue =
+    value match {
+      case JsObject(fields) =>
+        val rewritten = fields.map { case (key, v) => key -> rewriteAttachmentJsValue(v, ctx) }
+        rewritten.get("type") match {
+          case Some(JsString("attachmentBadge")) =>
+            rewritten.get("attrs") match {
+              case Some(attrs: JsObject) =>
+                JsObject(rewritten.updated("attrs", rewriteAttachmentBadgeAttrs(attrs, ctx)))
+              case _ => JsObject(rewritten)
+            }
+          case Some(JsString("image")) =>
+            rewritten.get("attrs") match {
+              case Some(attrs: JsObject) =>
+                JsObject(rewritten.updated("attrs", rewriteImageAttrs(attrs, ctx)))
+              case _ => JsObject(rewritten)
+            }
+          case _ => JsObject(rewritten)
+        }
+      case JsArray(elements) => JsArray(elements.map(rewriteAttachmentJsValue(_, ctx)))
+      case other             => other
+    }
+
+  private[this] def rewriteAttachmentBadgeAttrs(attrs: JsObject, ctx: AttachmentContext): JsObject =
+    attrs.fields.get("id").collect { case JsString(id) => id } match {
+      case Some(oldId) =>
+        ctx.attachmentIdMap.get(oldId) match {
+          case None =>
+            ctx.unresolvedCount += 1
+            logger.warn(
+              s"No migrated attachment found for attachment badge (id=$oldId) — leaving reference unresolved"
+            )
+            attrs
+          case Some(newId) =>
+            ctx.rewrittenCount += 1
+            var fields = attrs.fields
+              .updated("id", JsString(newId))
+              .updated("projectKey", JsString(ctx.dstProjectKey))
+              .updated("documentId", JsString(ctx.dstDocumentId))
+            if (fields.contains("attachmentUrl")) {
+              fields = fields.updated(
+                "attachmentUrl",
+                JsString(attachmentUrl(ctx.dstProjectKey, ctx.dstDocumentId, newId))
+              )
+            }
+
+            (attachmentBadgeTagText(attrs.fields), attachmentBadgeTagText(fields)) match {
+              case (Some(oldTag), Some(newTag)) =>
+                ctx.plainTextReplacements += ((oldId, oldTag, newTag))
+              case _ => ()
+            }
+
+            JsObject(fields)
+        }
+      case None => attrs
+    }
+
+  private[this] def rewriteImageAttrs(attrs: JsObject, ctx: AttachmentContext): JsObject =
+    attrs.fields.get("src").collect { case JsString(src) => src } match {
+      case Some(attachmentUrlPattern(_, _, _, _, oldId)) =>
+        ctx.attachmentIdMap.get(oldId) match {
+          case None =>
+            ctx.unresolvedCount += 1
+            logger.warn(
+              s"No migrated attachment found for image (id=$oldId) — leaving reference unresolved"
+            )
+            attrs
+          case Some(newId) =>
+            ctx.rewrittenCount += 1
+            val fields = attrs.fields.updated(
+              "src",
+              JsString(attachmentUrl(ctx.dstProjectKey, ctx.dstDocumentId, newId))
+            )
+
+            (imageTagText(attrs.fields), imageTagText(fields)) match {
+              case (Some(oldTag), Some(newTag)) =>
+                ctx.plainTextReplacements += ((oldId, oldTag, newTag))
+              case _ => ()
+            }
+
+            JsObject(fields)
+        }
+      case Some(src) =>
+        logger.warn(s"Image src did not match the expected format (src=$src) — src left unchanged")
+        attrs
+      case None => attrs
+    }
+
   override def rewriteMentions(
       document: BacklogDocument,
       issueIdMap: Map[Long, Long],

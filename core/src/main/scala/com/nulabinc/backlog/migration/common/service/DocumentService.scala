@@ -44,6 +44,14 @@ final case class PeopleMentionRewriteStats(
     unresolved: Int
 )
 
+// Counts of what rewriteAttachments did to the attachmentBadge/image nodes in
+// one document. total = rewritten + unresolved.
+final case class AttachmentRewriteStats(
+    total: Int,
+    rewritten: Int,
+    unresolved: Int
+)
+
 /**
  * @author
  *   nulab
@@ -150,6 +158,17 @@ trait DocumentService {
       document: BacklogDocument,
       userMentionMap: Map[Long, (Long, String)]
   ): (BacklogDocument, PeopleMentionRewriteStats)
+
+  // Rewrites `attachmentBadge` (non-image) and `image` (image, id parsed out
+  // of `src`) attachment references. Both always point at this same
+  // document, so `projectKey`/`documentId` are always set to the
+  // destination; only the attachment id is looked up via `attachmentIdMap`.
+  def rewriteAttachments(
+      document: BacklogDocument,
+      attachmentIdMap: Map[String, String],
+      dstProjectKey: String,
+      dstDocumentId: String
+  ): (BacklogDocument, AttachmentRewriteStats)
 
   // Combines rewriteIssueMentions, rewriteDocumentMentions, and
   // rewritePeopleMentions into a single parse + tree-walk + serialize pass

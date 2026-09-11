@@ -9,6 +9,7 @@ import com.nulabinc.backlog.migration.common.domain.{
 }
 import com.nulabinc.backlog.migration.common.modules.DefaultModule
 import com.nulabinc.backlog.migration.common.service.{
+  AttachmentRewriteStats,
   DocumentMentionRewriteStats,
   DocumentServiceImpl,
   InlineCommentRewriteStats,
@@ -966,6 +967,188 @@ class DocumentServiceImplSpec extends AnyFlatSpec with Matchers with SimpleFixtu
     )
 
     rewritten.optPlain should be(Some(s"$newTag and again $newTag"))
+  }
+
+  "rewriteAttachments" should "rewrite a resolved attachmentBadge's id, projectKey, documentId, and url" in {
+    val body =
+      """{"type":"doc","content":[{"type":"attachmentBadge","attrs":{
+        |"projectKey":"SRC","documentId":"srcDoc1","uuid":"00000000-0000-0000-0000-000000000001",
+        |"id":"1001","attachmentUrl":"/document/backend/SRC/srcDoc1/file/1001",
+        |"filename":"sample.txt","size":6,"created":"2020-01-01T00:00:00Z"}}]}""".stripMargin
+    val documentWithBody = document.copy(optJson = Some(body))
+
+    val (rewritten, stats) = documentService().rewriteAttachments(
+      documentWithBody,
+      attachmentIdMap = Map("1001" -> "2001"),
+      dstProjectKey = "DST",
+      dstDocumentId = "dstDoc1"
+    )
+
+    val attrs = rewritten.optJson.get.parseJson.asJsObject
+      .fields("content")
+      .asInstanceOf[JsArray]
+      .elements
+      .head
+      .asJsObject
+      .fields("attrs")
+      .asJsObject
+
+    attrs.fields("id") should be(JsString("2001"))
+    attrs.fields("projectKey") should be(JsString("DST"))
+    attrs.fields("documentId") should be(JsString("dstDoc1"))
+    attrs.fields("attachmentUrl") should be(JsString("/document/backend/DST/dstDoc1/file/2001"))
+    attrs.fields("filename") should be(JsString("sample.txt"))
+    stats should be(AttachmentRewriteStats(total = 1, rewritten = 1, unresolved = 0))
+  }
+
+  it should "leave an attachmentBadge untouched when the attachment isn't in the map" in {
+    val body =
+      """{"type":"doc","content":[{"type":"attachmentBadge","attrs":{
+        |"projectKey":"SRC","documentId":"srcDoc1","uuid":"00000000-0000-0000-0000-000000000001",
+        |"id":"9999","attachmentUrl":"/document/backend/SRC/srcDoc1/file/9999",
+        |"filename":"sample.txt","size":6,"created":"2020-01-01T00:00:00Z"}}]}""".stripMargin
+    val documentWithBody = document.copy(optJson = Some(body))
+
+    val (rewritten, stats) = documentService().rewriteAttachments(
+      documentWithBody,
+      attachmentIdMap = Map("1001" -> "2001"),
+      dstProjectKey = "DST",
+      dstDocumentId = "dstDoc1"
+    )
+
+    rewritten.optJson.get.parseJson should be(body.parseJson)
+    stats should be(AttachmentRewriteStats(total = 1, rewritten = 0, unresolved = 1))
+  }
+
+  it should "return the document unchanged (no parse round-trip) when attachmentIdMap is empty" in {
+    val body =
+      """{"type":"doc","content":[{"type":"attachmentBadge","attrs":{
+        |"projectKey":"SRC","documentId":"srcDoc1","uuid":"00000000-0000-0000-0000-000000000001",
+        |"id":"1001","attachmentUrl":"/document/backend/SRC/srcDoc1/file/1001",
+        |"filename":"sample.txt","size":6,"created":"2020-01-01T00:00:00Z"}}]}""".stripMargin
+    val documentWithBody = document.copy(optJson = Some(body))
+
+    val (rewritten, stats) = documentService().rewriteAttachments(
+      documentWithBody,
+      attachmentIdMap = Map.empty,
+      dstProjectKey = "DST",
+      dstDocumentId = "dstDoc1"
+    )
+
+    rewritten.optJson should be theSameInstanceAs documentWithBody.optJson
+    stats should be(AttachmentRewriteStats(total = 0, rewritten = 0, unresolved = 0))
+  }
+
+  it should "rewrite the matching bracket tag in optPlain for a resolved attachmentBadge" in {
+    val body =
+      """{"type":"doc","content":[{"type":"attachmentBadge","attrs":{
+        |"projectKey":"SRC","documentId":"srcDoc1","uuid":"00000000-0000-0000-0000-000000000001",
+        |"id":"1001","attachmentUrl":"/document/backend/SRC/srcDoc1/file/1001",
+        |"filename":"sample.txt","size":6,"created":"2020-01-01T00:00:00Z"}}]}""".stripMargin
+    val oldTag =
+      """[attachmentBadge #1001 projectKey="SRC" documentId="srcDoc1" uuid="00000000-0000-0000-0000-000000000001" attachmentUrl="/document/backend/SRC/srcDoc1/file/1001" filename="sample.txt" size="6" created="2020-01-01T00:00:00Z"]"""
+    val newTag =
+      """[attachmentBadge #2001 projectKey="DST" documentId="dstDoc1" uuid="00000000-0000-0000-0000-000000000001" attachmentUrl="/document/backend/DST/dstDoc1/file/2001" filename="sample.txt" size="6" created="2020-01-01T00:00:00Z"]"""
+    val documentWithBody =
+      document.copy(optJson = Some(body), optPlain = Some(s"before $oldTag after"))
+
+    val (rewritten, _) = documentService().rewriteAttachments(
+      documentWithBody,
+      attachmentIdMap = Map("1001" -> "2001"),
+      dstProjectKey = "DST",
+      dstDocumentId = "dstDoc1"
+    )
+
+    rewritten.optPlain should be(Some(s"before $newTag after"))
+  }
+
+  it should "leave optPlain unchanged and not throw when the expected old tag text can't be found" in {
+    val body =
+      """{"type":"doc","content":[{"type":"attachmentBadge","attrs":{
+        |"projectKey":"SRC","documentId":"srcDoc1","uuid":"00000000-0000-0000-0000-000000000001",
+        |"id":"1001","attachmentUrl":"/document/backend/SRC/srcDoc1/file/1001",
+        |"filename":"sample.txt","size":6,"created":"2020-01-01T00:00:00Z"}}]}""".stripMargin
+    val driftingPlain = "this plain text has drifted and no longer contains the attachment tag"
+    val documentWithBody =
+      document.copy(optJson = Some(body), optPlain = Some(driftingPlain))
+
+    val (rewritten, _) = documentService().rewriteAttachments(
+      documentWithBody,
+      attachmentIdMap = Map("1001" -> "2001"),
+      dstProjectKey = "DST",
+      dstDocumentId = "dstDoc1"
+    )
+
+    rewritten.optPlain should be(Some(driftingPlain))
+  }
+
+  it should "rewrite a resolved image's src while leaving layout attrs untouched" in {
+    val body =
+      """{"type":"doc","content":[{"type":"image","attrs":{
+        |"width":100,"height":80,"uuid":"00000000-0000-0000-0000-000000000002",
+        |"textAlign":"left","src":"/document/backend/SRC/srcDoc1/file/1002"}}]}""".stripMargin
+    val documentWithBody = document.copy(optJson = Some(body))
+
+    val (rewritten, stats) = documentService().rewriteAttachments(
+      documentWithBody,
+      attachmentIdMap = Map("1002" -> "2002"),
+      dstProjectKey = "DST",
+      dstDocumentId = "dstDoc1"
+    )
+
+    val attrs = rewritten.optJson.get.parseJson.asJsObject
+      .fields("content")
+      .asInstanceOf[JsArray]
+      .elements
+      .head
+      .asJsObject
+      .fields("attrs")
+      .asJsObject
+
+    attrs.fields("src") should be(JsString("/document/backend/DST/dstDoc1/file/2002"))
+    attrs.fields("width") should be(JsNumber(100))
+    attrs.fields("height") should be(JsNumber(80))
+    stats should be(AttachmentRewriteStats(total = 1, rewritten = 1, unresolved = 0))
+  }
+
+  it should "leave an image untouched when its src doesn't match the expected shape" in {
+    val body =
+      """{"type":"doc","content":[{"type":"image","attrs":{
+        |"width":100,"height":80,"uuid":"00000000-0000-0000-0000-000000000002",
+        |"textAlign":"left","src":"https://example.com/some/other/shape/1002"}}]}""".stripMargin
+    val documentWithBody = document.copy(optJson = Some(body))
+
+    val (rewritten, stats) = documentService().rewriteAttachments(
+      documentWithBody,
+      attachmentIdMap = Map("1002" -> "2002"),
+      dstProjectKey = "DST",
+      dstDocumentId = "dstDoc1"
+    )
+
+    rewritten.optJson.get.parseJson should be(body.parseJson)
+    stats should be(AttachmentRewriteStats(total = 0, rewritten = 0, unresolved = 0))
+  }
+
+  it should "rewrite the matching markdown image tag in optPlain for a resolved image" in {
+    val body =
+      """{"type":"doc","content":[{"type":"image","attrs":{
+        |"width":100,"height":80,"uuid":"00000000-0000-0000-0000-000000000002",
+        |"textAlign":"left","src":"/document/backend/SRC/srcDoc1/file/1002"}}]}""".stripMargin
+    val oldTag =
+      """![](/document/backend/SRC/srcDoc1/file/1002){width="100" height="80" uuid="00000000-0000-0000-0000-000000000002" textAlign="left"}"""
+    val newTag =
+      """![](/document/backend/DST/dstDoc1/file/2002){width="100" height="80" uuid="00000000-0000-0000-0000-000000000002" textAlign="left"}"""
+    val documentWithBody =
+      document.copy(optJson = Some(body), optPlain = Some(s"before $oldTag after"))
+
+    val (rewritten, _) = documentService().rewriteAttachments(
+      documentWithBody,
+      attachmentIdMap = Map("1002" -> "2002"),
+      dstProjectKey = "DST",
+      dstDocumentId = "dstDoc1"
+    )
+
+    rewritten.optPlain should be(Some(s"before $newTag after"))
   }
 
   "rewriteMentions" should "apply issue, document, and people mention rewrites in a single pass" in {
