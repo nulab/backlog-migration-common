@@ -10,14 +10,12 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogDocumentTree
 }
 
-// total = rewritten + unresolved
 final case class InlineCommentRewriteStats(
     total: Int,
     rewritten: Int,
     unresolved: Int
 )
 
-// total = rewritten + skippedExternalProject + unresolved
 final case class IssueMentionRewriteStats(
     total: Int,
     rewritten: Int,
@@ -25,7 +23,6 @@ final case class IssueMentionRewriteStats(
     unresolved: Int
 )
 
-// total = rewritten + skippedExternalProject + unresolved
 final case class DocumentMentionRewriteStats(
     total: Int,
     rewritten: Int,
@@ -33,14 +30,12 @@ final case class DocumentMentionRewriteStats(
     unresolved: Int
 )
 
-// total = rewritten + unresolved
 final case class PeopleMentionRewriteStats(
     total: Int,
     rewritten: Int,
     unresolved: Int
 )
 
-// total = rewritten + unresolved
 final case class AttachmentRewriteStats(
     total: Int,
     rewritten: Int,
