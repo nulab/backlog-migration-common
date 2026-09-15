@@ -60,6 +60,10 @@ class RequestIntervalsSpec extends AnyFlatSpec with Matchers {
     ) shouldBe a[ThrottledBacklogHttpClient]
   }
 
+  it should "stay bare when created without a limiter" in {
+    BacklogAPIClientImpl.create should not be a[ThrottledBacklogHttpClient]
+  }
+
   private def millisTaken(f: => Unit): Long = {
     val started = System.nanoTime()
     f
