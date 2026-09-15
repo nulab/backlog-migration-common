@@ -65,17 +65,18 @@ object RateLimitPolicy {
 
   /**
    * Spacing is measured from when the previous request went out, so its round trip counts toward
-   * the gap.
+   * the gap. `nowMillis` is UNIX time for the reset comparison; the elapsed time comes from a
+   * monotonic source.
    */
   def delayBeforeNext(
       window: Option[RateLimitWindow],
       floorMillis: Long,
       nowMillis: Long,
-      lastRequestAt: Option[Long]
+      elapsedSinceLastMillis: Option[Long]
   ): Long = {
     val floor     = math.max(0L, floorMillis)
     val spacing   = window.map(w => math.max(spacingFor(w.limit), floor)).getOrElse(floor)
-    val sinceLast = lastRequestAt.map(at => math.max(0L, at + spacing - nowMillis)).getOrElse(0L)
+    val sinceLast = elapsedSinceLastMillis.map(e => math.max(0L, spacing - e)).getOrElse(0L)
 
     window match {
       case Some(w) if isLow(w) => math.max(millisUntil(w.resetAt, nowMillis), sinceLast)
@@ -86,6 +87,18 @@ object RateLimitPolicy {
   /** Until the window resets; a full minute when the reset time is missing or already past. */
   def delayAfterTooManyRequests(window: Option[RateLimitWindow], nowMillis: Long): Long =
     window.map(w => millisUntil(w.resetAt, nowMillis)).filter(_ > 0).getOrElse(WindowMillis)
+
+  /**
+   * The window to keep when another response arrives: a newer reset wins, an older one is ignored,
+   * and within the same window the lower remaining count stands.
+   */
+  def latest(current: Option[RateLimitWindow], observed: RateLimitWindow): RateLimitWindow =
+    current match {
+      case Some(c) if observed.resetAt < c.resetAt => c
+      case Some(c) if observed.resetAt == c.resetAt =>
+        observed.copy(remaining = math.min(c.remaining, observed.remaining))
+      case _ => observed
+    }
 
   def spacingFor(limit: Long): Long =
     if (limit <= 0) 0L
