@@ -16,6 +16,10 @@ import scala.language.reflectiveCalls
 
 object BacklogAPIClientImpl extends BacklogConfiguration {
 
+  /** A bare client with fixed-interval pacing, kept so existing callers keep compiling. */
+  def create: BacklogHttpClient =
+    create(new BacklogRateLimiter(RequestIntervals.default))
+
   /**
    * In adaptive mode both clients in `BacklogAPIClientImpl` share one limiter; in fixed mode the
    * client is bare.
