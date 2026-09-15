@@ -21,6 +21,7 @@ private[importer] class IssueProgressBar() extends Logging {
 
   private[this] var newLine       = false
   private[this] var isMessageMode = false
+  private[this] var hasStarted    = false
   private[this] val timer         = (timerFunc _)()
 
   private[this] def timerFunc() = {
@@ -78,13 +79,28 @@ private[importer] class IssueProgressBar() extends Logging {
     if (newLine && !isMessageMode) {
       ConsoleOut.outStream.println()
     }
-    (0 until 3).foreach { _ =>
+    if (hasStarted) {
+      (0 until 3).foreach { _ =>
+        ConsoleOut.outStream.print(
+          ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
+        )
+      }
+    }
+    hasStarted = true
+    ConsoleOut.outStream.flush()
+    newLine = false
+  }
+
+  // Removes the last call's extra separator/remaining-time lines, leaving
+  // just the summary. Callers must call this when done — nothing else knows
+  // how many filler lines to clean up.
+  def finish(): Unit = {
+    (0 until 2).foreach { _ =>
       ConsoleOut.outStream.print(
         ansi.cursorLeft(999).cursorUp(1).eraseLine(Ansi.Erase.ALL)
       )
     }
     ConsoleOut.outStream.flush()
-    newLine = false
   }
 
   private[this] def current(indexOfDate: Int, totalOfDate: Int): String = {

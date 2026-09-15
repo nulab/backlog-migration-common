@@ -220,6 +220,10 @@ object ConsoleMessages {
           |${Messages("import.start")}
           |--------------------------------------------------""".stripMargin
 
+    lazy val startWikiIssue: String = "(Wiki, Issue)"
+
+    lazy val startDocument: String = "(Document)"
+
     lazy val finish: String =
       s"""|--------------------------------------------------
           |${Messages("import.finish")}""".stripMargin
