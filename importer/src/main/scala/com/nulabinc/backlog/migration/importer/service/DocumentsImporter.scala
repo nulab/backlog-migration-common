@@ -22,6 +22,7 @@ import com.nulabinc.backlog.migration.common.service.{
   PropertyResolver
 }
 import com.nulabinc.backlog.migration.common.utils.Logging
+import com.nulabinc.backlog4j.BacklogAPIException
 import com.osinka.i18n.Messages
 import monix.eval.Task
 import monix.execution.Scheduler
@@ -130,30 +131,39 @@ private[importer] class DocumentsImporter @Inject() (
       existingDocuments: Map[(String, String), BacklogDocument]
   )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit =
     nodes.foreach { node =>
-      val optNewId = unmarshal(node.id).map { document =>
+      val optNewId = unmarshal(node.id).flatMap { document =>
         val optExisting =
           document.optCreated.flatMap(created => existingDocuments.get((document.title, created)))
-        val newId = optExisting match {
+        val optCreatedId = optExisting match {
           case Some(existingDocument) =>
             logDocumentAlreadyExists(existingDocument.id).runSyncUnsafe()
-            existingDocument.id
+            Some(existingDocument.id)
           case None =>
             // isTrash is only consulted by the destination when optNewParentId
             // is empty (root of the subtree); harmless to pass through unconditionally.
-            val createdId = documentService.create(
-              project.id,
-              document,
-              optNewParentId,
-              addLast = true,
-              isTrash = isTrash,
-              propertyResolver
-            )
-            postCreate(node.id, createdId, document, project.key, propertyResolver, pending)
-              .runSyncUnsafe()
-            createdId
+            try {
+              val createdId = documentService.create(
+                project.id,
+                document,
+                optNewParentId,
+                addLast = true,
+                isTrash = isTrash,
+                propertyResolver
+              )
+              postCreate(node.id, createdId, document, project.key, propertyResolver, pending)
+                .runSyncUnsafe()
+              Some(createdId)
+            } catch {
+              case e: BacklogAPIException =>
+                logger.error(
+                  s"Failed to create document (id=${node.id}, title=${document.title}): ${e.getMessage}",
+                  e
+                )
+                None
+            }
         }
-        documentIdMap += node.id -> newId
-        newId
+        optCreatedId.foreach(newId => documentIdMap += node.id -> newId)
+        optCreatedId
       }
       // A failed/missing parent breaks the id mapping, so its children are skipped too.
       optNewId.foreach { newId =>
