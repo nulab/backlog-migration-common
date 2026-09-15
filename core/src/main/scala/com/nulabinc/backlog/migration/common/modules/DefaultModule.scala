@@ -1,7 +1,12 @@
 package com.nulabinc.backlog.migration.common.modules
 
 import com.google.inject.{AbstractModule, TypeLiteral}
-import com.nulabinc.backlog.migration.common.client.{BacklogAPIClient, BacklogAPIClientImpl, IAAH}
+import com.nulabinc.backlog.migration.common.client.{
+  BacklogAPIClient,
+  BacklogAPIClientImpl,
+  BacklogRateLimiter,
+  IAAH
+}
 import com.nulabinc.backlog.migration.common.conf.{
   BacklogApiConfiguration,
   BacklogPaths,
@@ -24,6 +29,15 @@ import scala.jdk.CollectionConverters._
  */
 class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
 
+  protected val intervals: RequestIntervals =
+    new RequestIntervals(
+      apiConfig.readInterval,
+      apiConfig.writeInterval,
+      apiConfig.adaptiveRateLimit
+    )
+
+  protected val rateLimiter: BacklogRateLimiter = new BacklogRateLimiter(intervals)
+
   protected val backlog: BacklogAPIClient = createBacklogAPIClient(apiConfig.iaah)
 
   override def configure(): Unit = {
@@ -34,9 +48,8 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
       new BacklogPaths(apiConfig.projectKey, apiConfig.backlogOutputPath)
     )
     bind(classOf[PropertyValue]).toInstance(createPropertyValue())
-    bind(classOf[RequestIntervals]).toInstance(
-      new RequestIntervals(apiConfig.readInterval, apiConfig.writeInterval)
-    )
+    bind(classOf[RequestIntervals]).toInstance(intervals)
+    bind(classOf[BacklogRateLimiter]).toInstance(rateLimiter)
 
     bind(classOf[CommentService]).to(classOf[CommentServiceImpl])
     bind(classOf[CustomFieldSettingService]).to(classOf[CustomFieldSettingServiceImpl])
@@ -66,7 +79,7 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
     val backlogPackageConfigure = new BacklogPackageConfigure(apiConfig.url)
     val configure               = backlogPackageConfigure.apiKey(apiConfig.key)
 
-    new BacklogAPIClientImpl(configure, iaah)
+    new BacklogAPIClientImpl(configure, iaah, rateLimiter)
   }
 
   private[this] def createPropertyValue(): PropertyValue = {
