@@ -11,7 +11,12 @@ case class BacklogApiConfiguration(
     backlogOutputPath: Path = Paths.get("./backlog"),
     readInterval: FiniteDuration = BacklogApiConfiguration.DefaultReadInterval,
     writeInterval: FiniteDuration = BacklogApiConfiguration.DefaultWriteInterval,
-    /** True paces from the rate-limit headers instead, with the intervals above as floors. */
+    /**
+     * Opt-in. Off, the services pause for the fixed intervals above before each request, as they
+     * always have. On, the client paces every request from the `X-RateLimit-*` headers of the ones
+     * before, with the intervals above as floors, and waits for the window to reset when the
+     * allowance is nearly gone.
+     */
     adaptiveRateLimit: Boolean = false
 ) extends BacklogConfiguration {
   val isNAISpace: Boolean = url.contains(NaiSpaceDomain)

@@ -22,16 +22,25 @@ class BacklogRateLimiterSpec extends AnyFlatSpec with Matchers {
   class Fixture(
       floors: RequestIntervals = new RequestIntervals(0.millis, 0.millis, adaptive = true)
   ) {
-    var now: Long                 = start
+    var now: Long                 = start // the wall clock, compared against reset times
+    var tick: Long                = 0L    // the monotonic ticker, used for spacing
     val sleeps: ArrayBuffer[Long] = ArrayBuffer.empty
     val sent: ArrayBuffer[String] = ArrayBuffer.empty
 
     var answer: BacklogHttpResponse = response(0, 0, None)
 
-    val limiter = new BacklogRateLimiter(floors, () => now, ms => { sleeps += ms; now += ms })
-    val client  = new ThrottledBacklogHttpClient(new Underlying, limiter)
+    val limiter = new BacklogRateLimiter(
+      floors,
+      () => now,
+      () => tick,
+      ms => { sleeps += ms; now += ms; tick += ms }
+    )
+    val client = new ThrottledBacklogHttpClient(new Underlying, limiter)
 
     def resetAt(inSeconds: Long): Long = now / 1000 + inSeconds
+
+    /** Time goes by without a request. */
+    def pass_(millis: Long): Unit = { now += millis; tick += millis }
 
     def get(path: String): Unit    = client.get(s"$base/$path", null, null)
     def post(path: String): Unit   = client.post(s"$base/$path", new util.ArrayList(), null)
@@ -144,7 +153,7 @@ class BacklogRateLimiterSpec extends AnyFlatSpec with Matchers {
   it should "count the round trip toward the gap" in new Fixture {
     answer = response(150, 149, Some(resetAt(60)))
     post("issues/import")
-    now += 300 // the response took 300 ms to arrive
+    pass_(300) // the response took 300 ms to arrive
     post("issues/import")
     sleeps shouldBe Seq(140L)
   }
@@ -192,25 +201,85 @@ class BacklogRateLimiterSpec extends AnyFlatSpec with Matchers {
   it should "learn the reset time from the refusal itself" in new Fixture {
     answer = response(150, 149, Some(resetAt(60)))
     post("issues/import")
-    now += 1000 // long enough ago that the spacing asks for no wait
+    pass_(1000) // long enough ago that the spacing asks for no wait
     // Someone else spent the key's allowance; Backlog refuses with the window that is left.
     answer = response(150, 0, Some(resetAt(20)), status = 429)
     post("issues/import")
     sleeps shouldBe empty
-    limiter.delayAfterTooManyRequests() shouldBe 21000L
+    limiter.delayAfterTooManyRequests(RateLimitBucket.Update) shouldBe 21000L
   }
 
   it should "let a retry after the refusal go out as soon as the window resets" in new Fixture {
     answer = response(150, 0, Some(resetAt(20)), status = 429)
     post("issues/import")
-    now += limiter.delayAfterTooManyRequests() // what BacklogAPIClientImpl sleeps before retrying
+    pass_(limiter.delayAfterTooManyRequests(RateLimitBucket.Update)) // what the retry sleeps
     answer = response(150, 149, Some(resetAt(60)))
     post("issues/import")
     sleeps shouldBe empty // the reset has passed, so nothing more to wait for
   }
 
   it should "fall back to a full minute after a refusal that said nothing" in new Fixture {
-    limiter.delayAfterTooManyRequests() shouldBe 60000L
+    limiter.delayAfterTooManyRequests(RateLimitBucket.Update) shouldBe 60000L
+    answer = response(0, 0, None, status = 429)
+    post("issues/import")
+    limiter.delayAfterTooManyRequests(RateLimitBucket.Update) shouldBe 60000L
+  }
+
+  it should "not let an earlier success stand in for a refusal that said nothing" in new Fixture {
+    answer = response(150, 149, Some(resetAt(45)))
+    post("issues/import")
+    answer = response(0, 0, None, status = 429)
+    post("issues/import")
+    limiter.delayAfterTooManyRequests(RateLimitBucket.Update) shouldBe 60000L
+  }
+
+  it should "keep each bucket's refusal apart" in new Fixture {
+    answer = response(150, 0, Some(resetAt(20)), status = 429)
+    post("issues/import")
+    answer = response(600, 599, Some(resetAt(50)))
+    get("projects")
+    limiter.delayAfterTooManyRequests(RateLimitBucket.Update) shouldBe 21000L
+    limiter.delayAfterTooManyRequests(RateLimitBucket.Read) shouldBe 60000L
+  }
+
+  "recording" should "ignore a window older than the one already seen" in new Fixture {
+    val reset = resetAt(60)
+    answer = response(150, 5, Some(reset))
+    post("issues/import")
+    // A response from before the reset arrives late, with plenty of the old window left.
+    answer = response(150, 140, Some(reset - 60))
+    post("issues/import")
+    limiter.window(RateLimitBucket.Update) shouldBe Some(RateLimitWindow(150, 5, reset))
+  }
+
+  it should "keep the lowest remaining count seen within one window" in new Fixture {
+    val reset = resetAt(60)
+    answer = response(150, 5, Some(reset))
+    post("issues/import")
+    // An earlier request's response lands after a later one's.
+    answer = response(150, 140, Some(reset))
+    post("issues/import")
+    limiter.window(RateLimitBucket.Update) shouldBe Some(RateLimitWindow(150, 5, reset))
+  }
+
+  it should "move on to a newer window" in new Fixture {
+    val reset = resetAt(60)
+    answer = response(150, 5, Some(reset))
+    post("issues/import")
+    answer = response(150, 140, Some(reset + 60))
+    post("issues/import")
+    limiter.window(RateLimitBucket.Update) shouldBe Some(RateLimitWindow(150, 140, reset + 60))
+  }
+
+  "spacing" should "come from the ticker, not the wall clock" in new Fixture {
+    answer = response(150, 140, Some(resetAt(60)))
+    post("issues/import")
+    now -= 3600000L // the wall clock is put back an hour; nothing has really elapsed
+    post("issues/import")
+    sleeps shouldBe Seq(440L)
+    now += 2 * 3600000L // and forward an hour; still only the sleep has elapsed
+    post("issues/import")
+    sleeps shouldBe Seq(440L, 440L)
   }
 
   "the floors" should "cover reads on one side and everything else on the other" in {

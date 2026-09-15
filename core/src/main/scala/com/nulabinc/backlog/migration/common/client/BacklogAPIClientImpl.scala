@@ -49,7 +49,7 @@ class BacklogAPIClientImpl(
   import scala.util.control.Exception.allCatch
 
   private val listeners = scala.collection.mutable.ArrayBuffer.empty[RateLimitEventListener]
-  private val rateLimitStatusCode = 429
+  private val rateLimitStatusCode = BacklogRateLimiter.TooManyRequests
   private val rateLimitRetryLimit = 3
 
   private val client =
@@ -86,30 +86,33 @@ class BacklogAPIClientImpl(
         factory.importWiki(post(buildEndpoint("wikis/import"), params.getParamList, headers))
     }
 
-  override def importIssue(params: ImportIssueParams): Issue = retryRateLimit() {
-    client.importIssue(params)
-  }
+  override def importIssue(params: ImportIssueParams): Issue =
+    retryRateLimit(RateLimitBucket.Update) {
+      client.importIssue(params)
+    }
 
-  override def importUpdateIssue(params: ImportUpdateIssueParams): Issue = retryRateLimit() {
-    client.importUpdateIssue(params)
-  }
+  override def importUpdateIssue(params: ImportUpdateIssueParams): Issue =
+    retryRateLimit(RateLimitBucket.Update) {
+      client.importUpdateIssue(params)
+    }
 
   override def importDeleteAttachment(
       issueIdOrKey: Any,
       attachmentId: Any,
       params: ImportDeleteAttachmentParams
-  ): Attachment = retryRateLimit() {
+  ): Attachment = retryRateLimit(RateLimitBucket.Update) {
     client.importDeleteAttachment(issueIdOrKey, attachmentId, params)
   }
 
-  override def importWiki(params: ImportWikiParams): Wiki = retryRateLimit() {
-    client.importWiki(params)
-  }
+  override def importWiki(params: ImportWikiParams): Wiki =
+    retryRateLimit(RateLimitBucket.Update) {
+      client.importWiki(params)
+    }
 
   override def delete(
       endpoint: String,
       parameters: util.List[NameValuePair]
-  ): BacklogHttpResponse = retryRateLimit() {
+  ): BacklogHttpResponse = retryRateLimit(RateLimitBucket.of("DELETE", endpoint)) {
     super.delete(endpoint, parameters)
   }
 
@@ -117,7 +120,7 @@ class BacklogAPIClientImpl(
       endpoint: String,
       getParams: GetParams,
       queryParams: QueryParams
-  ): BacklogHttpResponse = retryRateLimit() {
+  ): BacklogHttpResponse = retryRateLimit(RateLimitBucket.of("GET", endpoint)) {
     super.get(endpoint, getParams, queryParams)
   }
 
@@ -125,7 +128,7 @@ class BacklogAPIClientImpl(
       endpoint: String,
       parameters: util.List[NameValuePair],
       headers: util.List[NameValuePair]
-  ): BacklogHttpResponse = retryRateLimit() {
+  ): BacklogHttpResponse = retryRateLimit(RateLimitBucket.of("PATCH", endpoint)) {
     super.patch(endpoint, parameters, headers)
   }
 
@@ -133,19 +136,19 @@ class BacklogAPIClientImpl(
       endpoint: String,
       parameters: util.List[NameValuePair],
       headers: util.List[NameValuePair]
-  ): BacklogHttpResponse = retryRateLimit() {
+  ): BacklogHttpResponse = retryRateLimit(RateLimitBucket.of("POST", endpoint)) {
     super.post(endpoint, parameters, headers)
   }
 
   override def postMultiPart(
       endpoint: String,
       parameters: util.Map[String, AnyRef]
-  ): BacklogHttpResponse = retryRateLimit() {
+  ): BacklogHttpResponse = retryRateLimit(RateLimitBucket.of("POST", endpoint)) {
     super.postMultiPart(endpoint, parameters)
   }
 
   override def put(endpoint: String, parameters: util.List[NameValuePair]): BacklogHttpResponse =
-    retryRateLimit() {
+    retryRateLimit(RateLimitBucket.of("PUT", endpoint)) {
       super.put(endpoint, parameters)
     }
 
@@ -155,7 +158,8 @@ class BacklogAPIClientImpl(
   override def removeRateLimitEventListener(listener: RateLimitEventListener): Unit =
     listeners -= listener
 
-  private def retryRateLimit[T]()(f: => T): T = {
+  /** `bucket` picks which refusal's window the pause before a retry waits on. */
+  private def retryRateLimit[T](bucket: RateLimitBucket)(f: => T): T = {
     @annotation.tailrec
     def retry0(errors: List[Throwable], f: => T): T = {
       allCatch.either(f) match {
@@ -172,7 +176,7 @@ class BacklogAPIClientImpl(
               val event = RateLimitEvent(e)
               listeners.foreach(_.fired(event))
 
-              Thread.sleep(limiter.delayAfterTooManyRequests())
+              Thread.sleep(limiter.delayAfterTooManyRequests(bucket))
               retry0(e :: errors, f)
             }
             case _ => throw e
