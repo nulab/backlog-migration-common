@@ -8,7 +8,8 @@ import com.nulabinc.backlog4j.http.{BacklogHttpClient, BacklogHttpResponse, Name
 /**
  * Paces every request from the rate-limit headers of the ones before. Sits under
  * `BacklogClientImpl`, so it sees each request once from either client in `BacklogAPIClientImpl`,
- * and sees a 429 before backlog4j turns it into an exception.
+ * and sees a 429 before backlog4j turns it into an exception: it raises its own, carrying the
+ * window that refusal reported, so the retry waits on exactly that reset.
  */
 class ThrottledBacklogHttpClient(underlying: BacklogHttpClient, limiter: BacklogRateLimiter)
     extends BacklogHttpClient {
@@ -69,6 +70,8 @@ class ThrottledBacklogHttpClient(underlying: BacklogHttpClient, limiter: Backlog
     limiter.throttle(bucket)
     val response = send
     limiter.record(bucket, response)
+    if (response.getStatusCode == BacklogRateLimiter.TooManyRequests)
+      throw new TooManyRequestsException(response)
     response
   }
 }

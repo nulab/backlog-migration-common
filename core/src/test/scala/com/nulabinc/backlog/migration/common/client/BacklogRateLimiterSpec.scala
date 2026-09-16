@@ -5,6 +5,7 @@ import java.util
 import java.util.Date
 
 import com.nulabinc.backlog.migration.common.conf.RequestIntervals
+import com.nulabinc.backlog4j.BacklogAPIException
 import com.nulabinc.backlog4j.api.option.{GetParams, QueryParams}
 import com.nulabinc.backlog4j.http.{BacklogHttpClient, BacklogHttpResponse, NameValuePair}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -204,42 +205,59 @@ class BacklogRateLimiterSpec extends AnyFlatSpec with Matchers {
     pass_(1000) // long enough ago that the spacing asks for no wait
     // Someone else spent the key's allowance; Backlog refuses with the window that is left.
     answer = response(150, 0, Some(resetAt(20)), status = 429)
-    post("issues/import")
+    val refused = intercept[TooManyRequestsException](post("issues/import"))
     sleeps shouldBe empty
-    limiter.delayAfterTooManyRequests(RateLimitBucket.Update) shouldBe 21000L
+    refused.getStatusCode shouldBe 429
+    refused.window shouldBe Some(RateLimitWindow(150, 0, resetAt(20)))
+    limiter.delayAfterTooManyRequests(refused) shouldBe 21000L
   }
 
   it should "let a retry after the refusal go out as soon as the window resets" in new Fixture {
     answer = response(150, 0, Some(resetAt(20)), status = 429)
-    post("issues/import")
-    pass_(limiter.delayAfterTooManyRequests(RateLimitBucket.Update)) // what the retry sleeps
+    val refused = intercept[TooManyRequestsException](post("issues/import"))
+    pass_(limiter.delayAfterTooManyRequests(refused)) // what the retry sleeps
     answer = response(150, 149, Some(resetAt(60)))
     post("issues/import")
     sleeps shouldBe empty // the reset has passed, so nothing more to wait for
   }
 
+  it should "still pace the bucket from the window a refusal reported" in new Fixture {
+    answer = response(150, 0, Some(resetAt(20)), status = 429)
+    intercept[TooManyRequestsException](post("issues/import"))
+    limiter.window(RateLimitBucket.Update) shouldBe Some(RateLimitWindow(150, 0, resetAt(20)))
+  }
+
   it should "fall back to a full minute after a refusal that said nothing" in new Fixture {
-    limiter.delayAfterTooManyRequests(RateLimitBucket.Update) shouldBe 60000L
     answer = response(0, 0, None, status = 429)
-    post("issues/import")
-    limiter.delayAfterTooManyRequests(RateLimitBucket.Update) shouldBe 60000L
+    val refused = intercept[TooManyRequestsException](post("issues/import"))
+    refused.window shouldBe None
+    limiter.delayAfterTooManyRequests(refused) shouldBe 60000L
+  }
+
+  it should "fall back to a full minute for a 429 the bare client raised" in new Fixture {
+    // In fixed mode backlog4j raises the 429 itself, and its exception carries no window.
+    val refused = new BacklogAPIException("backlog api request failed.", response(0, 0, None, 429))
+    limiter.delayAfterTooManyRequests(refused) shouldBe 60000L
   }
 
   it should "not let an earlier success stand in for a refusal that said nothing" in new Fixture {
     answer = response(150, 149, Some(resetAt(45)))
     post("issues/import")
     answer = response(0, 0, None, status = 429)
-    post("issues/import")
-    limiter.delayAfterTooManyRequests(RateLimitBucket.Update) shouldBe 60000L
+    val refused = intercept[TooManyRequestsException](post("issues/import"))
+    limiter.delayAfterTooManyRequests(refused) shouldBe 60000L
   }
 
-  it should "keep each bucket's refusal apart" in new Fixture {
-    answer = response(150, 0, Some(resetAt(20)), status = 429)
-    post("issues/import")
-    answer = response(600, 599, Some(resetAt(50)))
-    get("projects")
-    limiter.delayAfterTooManyRequests(RateLimitBucket.Update) shouldBe 21000L
-    limiter.delayAfterTooManyRequests(RateLimitBucket.Read) shouldBe 60000L
+  it should "tie each refusal to the request it answered, whatever order they land in" in new Fixture {
+    // Two requests in one bucket are both refused; the one sent later reports a later reset but
+    // its response lands first. Each retry waits on its own refusal, not on the last one recorded.
+    val later   = new TooManyRequestsException(response(150, 0, Some(resetAt(50)), status = 429))
+    val earlier = new TooManyRequestsException(response(150, 0, Some(resetAt(20)), status = 429))
+    val silent  = new TooManyRequestsException(response(0, 0, None, status = 429))
+    limiter.delayAfterTooManyRequests(later) shouldBe 51000L
+    limiter.delayAfterTooManyRequests(earlier) shouldBe 21000L
+    limiter.delayAfterTooManyRequests(silent) shouldBe 60000L
+    limiter.delayAfterTooManyRequests(later) shouldBe 51000L // the others changed nothing
   }
 
   "recording" should "ignore a window older than the one already seen" in new Fixture {

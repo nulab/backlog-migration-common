@@ -2,6 +2,7 @@ package com.nulabinc.backlog.migration.common.client
 
 import com.nulabinc.backlog.migration.common.conf.RequestIntervals
 import com.nulabinc.backlog.migration.common.utils.Logging
+import com.nulabinc.backlog4j.BacklogAPIException
 import com.nulabinc.backlog4j.http.BacklogHttpResponse
 
 /**
@@ -26,9 +27,6 @@ class BacklogRateLimiter(
 
   /** Ticker time at which the last request in each bucket was allowed to go out. */
   private var lastSentAt: Map[RateLimitBucket, Long] = Map.empty
-
-  /** The window each bucket's most recent 429 carried; `None` when it carried no headers. */
-  private var refusals: Map[RateLimitBucket, Option[RateLimitWindow]] = Map.empty
 
   /** Reads have their own floor; everything else shares the write floor. */
   def floorMillis(bucket: RateLimitBucket): Long =
@@ -61,30 +59,29 @@ class BacklogRateLimiter(
 
   /**
    * Responses can complete out of send order, so an older window never replaces a newer one. A
-   * refusal is also remembered on its own so the retry for that bucket waits on the window the
-   * refusal itself reported.
+   * refusal's own window is not kept here: it travels with the `TooManyRequestsException` for that
+   * request, so concurrent refusals in one bucket cannot overwrite each other's reset.
    */
-  def record(bucket: RateLimitBucket, response: BacklogHttpResponse): Unit = {
-    val observed = RateLimitWindow.of(response)
-    synchronized {
-      observed.foreach { window =>
+  def record(bucket: RateLimitBucket, response: BacklogHttpResponse): Unit =
+    RateLimitWindow.of(response).foreach { window =>
+      synchronized {
         windows += bucket -> RateLimitPolicy.latest(windows.get(bucket), window)
       }
-      if (response.getStatusCode == BacklogRateLimiter.TooManyRequests)
-        refusals += bucket -> observed
     }
-  }
 
   def window(bucket: RateLimitBucket): Option[RateLimitWindow] = synchronized(windows.get(bucket))
 
   /**
-   * Until the reset the bucket's last refusal reported; a full minute when that refusal carried no
-   * headers or nothing was refused in this bucket, as in fixed mode.
+   * Until the reset this refusal reported; a full minute when it carried no headers, or when it is
+   * a plain backlog4j 429 from the bare client in fixed mode.
    */
-  def delayAfterTooManyRequests(bucket: RateLimitBucket): Long =
-    synchronized(
-      RateLimitPolicy.delayAfterTooManyRequests(refusals.get(bucket).flatten, clock())
-    )
+  def delayAfterTooManyRequests(refusal: BacklogAPIException): Long = {
+    val window = refusal match {
+      case refused: TooManyRequestsException => refused.window
+      case _                                 => None
+    }
+    RateLimitPolicy.delayAfterTooManyRequests(window, clock())
+  }
 }
 
 object BacklogRateLimiter {
