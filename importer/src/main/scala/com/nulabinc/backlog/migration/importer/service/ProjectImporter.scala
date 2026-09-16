@@ -118,7 +118,8 @@ private[importer] class ProjectImporter @Inject() (
                     issueKeyMap,
                     userMentionMap,
                     srcProjectId,
-                    srcProjectKey
+                    srcProjectKey,
+                    retryCount
                   )
                 }
               } yield ()

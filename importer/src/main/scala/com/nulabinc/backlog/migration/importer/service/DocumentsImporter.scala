@@ -22,7 +22,7 @@ import com.nulabinc.backlog.migration.common.service.{
   PropertyResolver
 }
 import com.nulabinc.backlog.migration.common.utils.Logging
-import com.nulabinc.backlog4j.BacklogAPIException
+import com.nulabinc.backlog.migration.importer.core.RetryUtil._
 import com.osinka.i18n.Messages
 import monix.eval.Task
 import monix.execution.Scheduler
@@ -40,6 +40,8 @@ private[importer] class DocumentsImporter @Inject() (
 ) extends Logging
     with BacklogConfiguration {
 
+  private[this] val retryInterval = 5000
+
   def execute(
       project: BacklogProject,
       propertyResolver: PropertyResolver,
@@ -47,7 +49,8 @@ private[importer] class DocumentsImporter @Inject() (
       issueKeyMap: Map[String, String],
       userMentionMap: Map[Long, (Long, String)],
       srcProjectId: Long,
-      srcProjectKey: String
+      srcProjectKey: String,
+      retryCount: Int
   )(implicit
       s: Scheduler,
       consoleDSL: ConsoleDSL[Task]
@@ -67,7 +70,8 @@ private[importer] class DocumentsImporter @Inject() (
         propertyResolver,
         documentIdMap,
         pending,
-        existingDocuments
+        existingDocuments,
+        retryCount
       )
       createAll(
         tree.trashTree.children,
@@ -77,7 +81,8 @@ private[importer] class DocumentsImporter @Inject() (
         propertyResolver,
         documentIdMap,
         pending,
-        existingDocuments
+        existingDocuments,
+        retryCount
       )
 
       val mentionRewriteContext = MentionRewriteContext(
@@ -93,12 +98,21 @@ private[importer] class DocumentsImporter @Inject() (
 
       // Phase 2: documentIdMap is now complete, so mentions can be resolved.
       pending.foreach { pendingDocument =>
-        finalizeContent(
-          pendingDocument,
-          mentionRewriteContext,
-          resolvedDocumentIdMap,
-          propertyResolver
-        ).runSyncUnsafe()
+        try {
+          finalizeContent(
+            pendingDocument,
+            mentionRewriteContext,
+            resolvedDocumentIdMap,
+            propertyResolver,
+            retryCount
+          ).runSyncUnsafe()
+        } catch {
+          case e: Throwable =>
+            logger.error(
+              s"Failed to finalize document content (id=${pendingDocument.newDocumentId}): ${e.getMessage}",
+              e
+            )
+        }
       }
     }
 
@@ -128,7 +142,8 @@ private[importer] class DocumentsImporter @Inject() (
       propertyResolver: PropertyResolver,
       documentIdMap: mutable.Map[String, String],
       pending: mutable.ArrayBuffer[PendingDocument],
-      existingDocuments: Map[(String, String), BacklogDocument]
+      existingDocuments: Map[(String, String), BacklogDocument],
+      retryCount: Int
   )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Unit =
     nodes.foreach { node =>
       val optNewId = unmarshal(node.id).flatMap { document =>
@@ -142,19 +157,21 @@ private[importer] class DocumentsImporter @Inject() (
             // isTrash is only consulted by the destination when optNewParentId
             // is empty (root of the subtree); harmless to pass through unconditionally.
             try {
-              val createdId = documentService.create(
-                project.id,
-                document,
-                optNewParentId,
-                addLast = true,
-                isTrash = isTrash,
-                propertyResolver
-              )
+              val createdId = retryBacklogAPIException(retryCount, retryInterval) {
+                documentService.create(
+                  project.id,
+                  document,
+                  optNewParentId,
+                  addLast = true,
+                  isTrash = isTrash,
+                  propertyResolver
+                )
+              }
               postCreate(node.id, createdId, document, project.key, propertyResolver, pending)
                 .runSyncUnsafe()
               Some(createdId)
             } catch {
-              case e: BacklogAPIException =>
+              case e: Throwable =>
                 logger.error(
                   s"Failed to create document (id=${node.id}, title=${document.title}): ${e.getMessage}",
                   e
@@ -175,7 +192,8 @@ private[importer] class DocumentsImporter @Inject() (
           propertyResolver,
           documentIdMap,
           pending,
-          existingDocuments
+          existingDocuments,
+          retryCount
         )
       }
     }
@@ -258,8 +276,9 @@ private[importer] class DocumentsImporter @Inject() (
       pendingDocument: PendingDocument,
       ctx: MentionRewriteContext,
       documentIdMap: Map[String, String],
-      propertyResolver: PropertyResolver
-  )(implicit consoleDSL: ConsoleDSL[Task]): Task[Unit] =
+      propertyResolver: PropertyResolver,
+      retryCount: Int
+  )(implicit s: Scheduler, consoleDSL: ConsoleDSL[Task]): Task[Unit] =
     for {
       _ <- ConsoleDSL[Task].println(s"[Document id=${pendingDocument.newDocumentId}]")
       mentionRewriteResult <- Task {
@@ -280,11 +299,13 @@ private[importer] class DocumentsImporter @Inject() (
       _ <- logDocumentMentionStep(mentionRewriteResult._3)
       _ <- logPeopleMentionStep(mentionRewriteResult._4)
       _ <- Task(
-        documentService.updateContent(
-          pendingDocument.newDocumentId,
-          mentionRewriteResult._1,
-          propertyResolver
-        )
+        retryBacklogAPIException(retryCount, retryInterval) {
+          documentService.updateContent(
+            pendingDocument.newDocumentId,
+            mentionRewriteResult._1,
+            propertyResolver
+          )
+        }
       )
       _ <- logStep("Document content updated", ok = true)
     } yield ()
