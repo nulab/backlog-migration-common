@@ -48,6 +48,46 @@ class RateLimitPolicySpec extends AnyFlatSpec with Matchers {
     RateLimitPolicy.delayBeforeNext(window(150, 15, 30), 0L, now, Some(0L)) shouldBe 31000L
     RateLimitPolicy.delayBeforeNext(window(150, 16, 30), 0L, now, Some(0L)) shouldBe 440L
   }
+  it should "count requests still in flight against the allowance" in {
+    // 16 left reads as fine on its own, but one request already out will take one of them.
+    RateLimitPolicy.delayBeforeNext(
+      window(150, 16, 30),
+      0L,
+      now,
+      Some(0L),
+      inFlight = 0
+    ) shouldBe 440L
+    RateLimitPolicy.delayBeforeNext(
+      window(150, 16, 30),
+      0L,
+      now,
+      Some(0L),
+      inFlight = 1
+    ) shouldBe 31000L
+    RateLimitPolicy.delayBeforeNext(
+      window(150, 40, 30),
+      0L,
+      now,
+      Some(0L),
+      inFlight = 25
+    ) shouldBe 31000L
+    RateLimitPolicy.delayBeforeNext(
+      window(150, 40, 30),
+      0L,
+      now,
+      Some(0L),
+      inFlight = 24
+    ) shouldBe 440L
+  }
+  it should "not let a negative in-flight count raise the allowance" in {
+    RateLimitPolicy.delayBeforeNext(
+      window(150, 15, 30),
+      0L,
+      now,
+      Some(0L),
+      inFlight = -5
+    ) shouldBe 31000L
+  }
 
   it should "keep one request in reserve when a tenth of the limit rounds to nothing" in {
     RateLimitPolicy.delayBeforeNext(window(5, 1, 30), 0L, now, Some(0L)) shouldBe 31000L

@@ -6,9 +6,11 @@ import com.nulabinc.backlog4j.BacklogAPIException
 import com.nulabinc.backlog4j.http.BacklogHttpResponse
 
 /**
- * Pacing state for one API key: the last window seen per bucket and when the last request there
- * went out. A caller reserves its slot under the lock and sleeps outside it. Only installed in
- * adaptive mode; see `BacklogAPIClientImpl.create`.
+ * Pacing state for one API key: the last window seen per bucket, when the last request there went
+ * out, and how many requests are still in flight. A caller reserves its slot under the lock and
+ * sleeps outside it; the reservation counts against the bucket's remaining allowance until the
+ * response is recorded (or abandoned), so concurrent callers cannot all pass the low-water mark on
+ * the same stale count. Only installed in adaptive mode; see `BacklogAPIClientImpl.create`.
  *
  * `clock` is UNIX time in milliseconds and is only compared against the reset timestamps Backlog
  * reports. `ticker` is a monotonic millisecond counter used for the spacing between requests, so a
@@ -28,6 +30,9 @@ class BacklogRateLimiter(
   /** Ticker time at which the last request in each bucket was allowed to go out. */
   private var lastSentAt: Map[RateLimitBucket, Long] = Map.empty
 
+  /** Requests `throttle` has let through whose response has not been recorded or abandoned yet. */
+  private var inFlight: Map[RateLimitBucket, Int] = Map.empty
+
   /** Reads have their own floor; everything else shares the write floor. */
   def floorMillis(bucket: RateLimitBucket): Long =
     bucket match {
@@ -43,9 +48,11 @@ class BacklogRateLimiter(
         windows.get(bucket),
         floorMillis(bucket),
         now,
-        lastSentAt.get(bucket).map(tick - _)
+        lastSentAt.get(bucket).map(tick - _),
+        inFlight.getOrElse(bucket, 0)
       )
       lastSentAt += bucket -> (tick + wait)
+      inFlight += bucket   -> (inFlight.getOrElse(bucket, 0) + 1)
       wait
     }
 
@@ -58,16 +65,30 @@ class BacklogRateLimiter(
   }
 
   /**
-   * Responses can complete out of send order, so an older window never replaces a newer one. A
-   * refusal's own window is not kept here: it travels with the `TooManyRequestsException` for that
-   * request, so concurrent refusals in one bucket cannot overwrite each other's reset.
+   * Every response with headers, refusals included, updates the bucket's window used for pacing.
+   * Responses can complete out of send order, so an older window never replaces a newer one. What
+   * is not kept here is which window belonged to which refusal: that travels with the
+   * `TooManyRequestsException` for the refused request, so the retry waits on its own reset and
+   * concurrent refusals in one bucket cannot overwrite each other. Recording also settles the
+   * reservation `throttle` made for this request.
    */
-  def record(bucket: RateLimitBucket, response: BacklogHttpResponse): Unit =
-    RateLimitWindow.of(response).foreach { window =>
-      synchronized {
+  def record(bucket: RateLimitBucket, response: BacklogHttpResponse): Unit = {
+    val observed = RateLimitWindow.of(response)
+    synchronized {
+      settle(bucket)
+      observed.foreach { window =>
         windows += bucket -> RateLimitPolicy.latest(windows.get(bucket), window)
       }
     }
+  }
+
+  /** The request never got a response, so the slot `throttle` reserved for it is free again. */
+  def abandon(bucket: RateLimitBucket): Unit = synchronized(settle(bucket))
+
+  private def settle(bucket: RateLimitBucket): Unit =
+    inFlight += bucket -> math.max(0, inFlight.getOrElse(bucket, 0) - 1)
+
+  def inFlightCount(bucket: RateLimitBucket): Int = synchronized(inFlight.getOrElse(bucket, 0))
 
   def window(bucket: RateLimitBucket): Option[RateLimitWindow] = synchronized(windows.get(bucket))
 

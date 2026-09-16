@@ -68,7 +68,13 @@ class ThrottledBacklogHttpClient(underlying: BacklogHttpClient, limiter: Backlog
   ): BacklogHttpResponse = {
     val bucket = RateLimitBucket.of(method, endpoint)
     limiter.throttle(bucket)
-    val response = send
+    val response =
+      try send
+      catch {
+        case e: Throwable =>
+          limiter.abandon(bucket)
+          throw e
+      }
     limiter.record(bucket, response)
     if (response.getStatusCode == BacklogRateLimiter.TooManyRequests)
       throw new TooManyRequestsException(response)

@@ -67,20 +67,26 @@ object RateLimitPolicy {
    * Spacing is measured from when the previous request went out, so its round trip counts toward
    * the gap. `nowMillis` is UNIX time for the reset comparison; the elapsed time comes from a
    * monotonic source.
+   *
+   * `inFlight` is how many requests in the bucket have gone out since the window was reported and
+   * have not been answered yet. Each of them will take one from the allowance, so they are counted
+   * against `remaining` before the low-water mark is tested; otherwise a burst of concurrent
+   * callers could all pass on the same stale count and eat through the reserve.
    */
   def delayBeforeNext(
       window: Option[RateLimitWindow],
       floorMillis: Long,
       nowMillis: Long,
-      elapsedSinceLastMillis: Option[Long]
+      elapsedSinceLastMillis: Option[Long],
+      inFlight: Int = 0
   ): Long = {
     val floor     = math.max(0L, floorMillis)
     val spacing   = window.map(w => math.max(spacingFor(w.limit), floor)).getOrElse(floor)
     val sinceLast = elapsedSinceLastMillis.map(e => math.max(0L, spacing - e)).getOrElse(0L)
 
     window match {
-      case Some(w) if isLow(w) => math.max(millisUntil(w.resetAt, nowMillis), sinceLast)
-      case _                   => sinceLast
+      case Some(w) if isLow(w, inFlight) => math.max(millisUntil(w.resetAt, nowMillis), sinceLast)
+      case _                             => sinceLast
     }
   }
 
@@ -108,8 +114,9 @@ object RateLimitPolicy {
       (numerator + denominator - 1) / denominator
     }
 
-  private def isLow(window: RateLimitWindow): Boolean =
-    window.limit > 0 && window.remaining <= math.max(1L, (window.limit * LowWaterMark).toLong)
+  private def isLow(window: RateLimitWindow, inFlight: Int): Boolean =
+    window.limit > 0 &&
+    window.remaining - math.max(0, inFlight) <= math.max(1L, (window.limit * LowWaterMark).toLong)
 
   private def millisUntil(epochSeconds: Long, nowMillis: Long): Long = {
     val wait = (epochSeconds * 1000L) - nowMillis + 1000L // a second's grace for clock skew

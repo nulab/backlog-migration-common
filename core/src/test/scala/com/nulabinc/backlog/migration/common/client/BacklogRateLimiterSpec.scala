@@ -30,6 +30,9 @@ class BacklogRateLimiterSpec extends AnyFlatSpec with Matchers {
 
     var answer: BacklogHttpResponse = response(0, 0, None)
 
+    /** When set, the underlying client throws this instead of answering. */
+    var failWith: Option[Throwable] = None
+
     val limiter = new BacklogRateLimiter(
       floors,
       () => now,
@@ -79,6 +82,7 @@ class BacklogRateLimiterSpec extends AnyFlatSpec with Matchers {
 
       private def serve(method: String, endpoint: String): BacklogHttpResponse = {
         sent += s"$method $endpoint"
+        failWith.foreach(throw _)
         answer
       }
     }
@@ -197,6 +201,70 @@ class BacklogRateLimiterSpec extends AnyFlatSpec with Matchers {
     upload("space/attachment")
     sleeps shouldBe Seq(440L, 440L, 440L)
     limiter.window(RateLimitBucket.Update) shouldBe None
+  }
+
+  it should "hold a burst of concurrent callers at the low-water mark" in new Fixture {
+    answer = response(150, 16, Some(resetAt(30)))
+    post("issues/import")
+    pass_(1000)
+    // Three callers reserve slots before any of their responses come back. Only the first may go:
+    // with it in flight the bucket is down to the reserve, so the others wait for the reset.
+    limiter.throttle(RateLimitBucket.Update)
+    sleeps shouldBe empty
+    pass_(1000)
+    limiter.throttle(RateLimitBucket.Update)
+    sleeps shouldBe Seq(29000L) // until the reset, since two seconds went by
+    limiter.inFlightCount(RateLimitBucket.Update) shouldBe 2 // the first post was recorded
+  }
+
+  it should "free a reservation once its response is recorded" in new Fixture {
+    answer = response(150, 16, Some(resetAt(30)))
+    post("issues/import")
+    pass_(1000)
+    limiter.throttle(RateLimitBucket.Update)
+    limiter.inFlightCount(RateLimitBucket.Update) shouldBe 1
+    limiter.record(RateLimitBucket.Update, response(150, 16, Some(resetAt(30))))
+    limiter.inFlightCount(RateLimitBucket.Update) shouldBe 0
+    pass_(1000)
+    limiter.throttle(RateLimitBucket.Update)
+    sleeps shouldBe empty
+  }
+
+  it should "free a reservation whose request never got a response" in new Fixture {
+    answer = response(150, 16, Some(resetAt(30)))
+    post("issues/import")
+    pass_(1000)
+    limiter.throttle(RateLimitBucket.Update)
+    limiter.abandon(RateLimitBucket.Update)
+    limiter.inFlightCount(RateLimitBucket.Update) shouldBe 0
+    pass_(1000)
+    limiter.throttle(RateLimitBucket.Update)
+    sleeps shouldBe empty
+  }
+
+  it should "not count a reservation below zero" in new Fixture {
+    limiter.abandon(RateLimitBucket.Update)
+    limiter.record(RateLimitBucket.Update, response(150, 149, Some(resetAt(60))))
+    limiter.inFlightCount(RateLimitBucket.Update) shouldBe 0
+  }
+
+  it should "release the slot when the send itself fails" in new Fixture {
+    answer = response(150, 16, Some(resetAt(30)))
+    post("issues/import")
+    pass_(1000)
+    failWith = Some(new java.io.IOException("connection reset"))
+    the[java.io.IOException] thrownBy post("issues/import") should have message "connection reset"
+    limiter.inFlightCount(RateLimitBucket.Update) shouldBe 0
+    failWith = None
+    pass_(1000)
+    post("issues/import")
+    sleeps shouldBe empty // the failed request took nothing from the allowance
+  }
+
+  it should "settle a refused request's reservation as well" in new Fixture {
+    answer = response(150, 0, Some(resetAt(20)), status = 429)
+    intercept[TooManyRequestsException](post("issues/import"))
+    limiter.inFlightCount(RateLimitBucket.Update) shouldBe 0
   }
 
   it should "learn the reset time from the refusal itself" in new Fixture {
