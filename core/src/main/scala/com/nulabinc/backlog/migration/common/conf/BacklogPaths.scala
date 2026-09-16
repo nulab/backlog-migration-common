@@ -29,6 +29,10 @@ class BacklogPaths(
   def projectUsersJson: BetterFile =
     outputPath / "project" / projectKey / "projectUsers.json"
 
+  // projectUsersJson as exported, before convert drops its numeric ids.
+  def projectUsersSourceJson: BetterFile =
+    outputPath / "project" / projectKey / "projectUsersSource.json"
+
   def customFieldSettingsJson: BetterFile =
     outputPath / "project" / projectKey / "customFieldSettings.json"
 
