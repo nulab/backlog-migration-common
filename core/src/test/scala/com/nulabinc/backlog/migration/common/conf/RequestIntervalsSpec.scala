@@ -14,15 +14,40 @@ import scala.concurrent.duration._
 
 class RequestIntervalsSpec extends AnyFlatSpec with Matchers {
 
-  "the intervals" should "default to the fixed half second the services have always waited" in {
+  "the intervals" should "default to the half second the services always waited" in {
     val config = BacklogApiConfiguration("url", "key", "projectKey")
     config.readInterval should be(500.millis)
     config.writeInterval should be(500.millis)
-    config.adaptiveRateLimit should be(false)
-    RequestIntervals.default.adaptive should be(false)
   }
 
-  they should "reach the services and the rate limiter through DefaultModule as configured" in {
+  they should "reach the services through DefaultModule as configured" in {
+    val config = BacklogApiConfiguration(
+      "url",
+      "key",
+      "projectKey",
+      readInterval = 100.millis,
+      writeInterval = 300.millis
+    )
+    val intervals =
+      Guice.createInjector(new DefaultModule(config)).getInstance(classOf[RequestIntervals])
+    intervals.read should be(100.millis)
+    intervals.write should be(300.millis)
+  }
+
+  "a pause" should "wait the configured time" in {
+    val intervals = new RequestIntervals(read = 150.millis, write = 250.millis)
+    millisTaken(intervals.pauseBeforeRead()) should be >= 150L
+    millisTaken(intervals.pauseBeforeWrite()) should be >= 250L
+  }
+
+  "adaptive mode" should "be off by default, leaving the services and the client as they were" in {
+    val config = BacklogApiConfiguration("url", "key", "projectKey")
+    config.adaptiveRateLimit should be(false)
+    BacklogRateLimiter.of(config) should be(None)
+    BacklogAPIClientImpl.create(None) should not be a[ThrottledBacklogHttpClient]
+  }
+
+  it should "turn the service pauses off and hand pacing to the client, floored by the intervals" in {
     val config = BacklogApiConfiguration(
       "url",
       "key",
@@ -31,37 +56,15 @@ class RequestIntervalsSpec extends AnyFlatSpec with Matchers {
       writeInterval = 300.millis,
       adaptiveRateLimit = true
     )
-    val injector  = Guice.createInjector(new DefaultModule(config))
-    val intervals = injector.getInstance(classOf[RequestIntervals])
-    intervals.read should be(100.millis)
-    intervals.write should be(300.millis)
-    intervals.adaptive should be(true)
-    injector.getInstance(classOf[BacklogRateLimiter]).floors should be theSameInstanceAs intervals
-  }
+    val intervals =
+      Guice.createInjector(new DefaultModule(config)).getInstance(classOf[RequestIntervals])
+    intervals.read should be(Duration.Zero)
+    intervals.write should be(Duration.Zero)
 
-  "a pause" should "wait the configured time in fixed mode" in {
-    val intervals = new RequestIntervals(read = 150.millis, write = 250.millis)
-    millisTaken(intervals.pauseBeforeRead()) should be >= 150L
-    millisTaken(intervals.pauseBeforeWrite()) should be >= 250L
-  }
-
-  it should "do nothing in adaptive mode, where the client paces instead" in {
-    val intervals = new RequestIntervals(read = 1.second, write = 1.second, adaptive = true)
-    millisTaken(intervals.pauseBeforeRead()) should be < 100L
-    millisTaken(intervals.pauseBeforeWrite()) should be < 100L
-  }
-
-  "the HTTP client" should "be throttled only in adaptive mode" in {
-    BacklogAPIClientImpl.create(new BacklogRateLimiter(RequestIntervals.default)) should not be a[
-      ThrottledBacklogHttpClient
-    ]
-    BacklogAPIClientImpl.create(
-      new BacklogRateLimiter(new RequestIntervals(1.milli, 1.milli, adaptive = true))
-    ) shouldBe a[ThrottledBacklogHttpClient]
-  }
-
-  it should "stay bare when created without a limiter" in {
-    BacklogAPIClientImpl.create should not be a[ThrottledBacklogHttpClient]
+    val limiter = BacklogRateLimiter.of(config)
+    limiter.map(_.floors.read) should be(Some(100.millis))
+    limiter.map(_.floors.write) should be(Some(300.millis))
+    BacklogAPIClientImpl.create(limiter) shouldBe a[ThrottledBacklogHttpClient]
   }
 
   private def millisTaken(f: => Unit): Long = {

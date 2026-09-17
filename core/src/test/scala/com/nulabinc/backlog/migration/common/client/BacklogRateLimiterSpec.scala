@@ -21,7 +21,7 @@ class BacklogRateLimiterSpec extends AnyFlatSpec with Matchers {
   private val start = 1700000000000L
 
   class Fixture(
-      floors: RequestIntervals = new RequestIntervals(0.millis, 0.millis, adaptive = true)
+      floors: RequestIntervals = new RequestIntervals(0.millis, 0.millis)
   ) {
     var now: Long                 = start // the wall clock, compared against reset times
     var tick: Long                = 0L    // the monotonic ticker, used for spacing

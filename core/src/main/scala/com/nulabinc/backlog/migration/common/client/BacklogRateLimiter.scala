@@ -1,6 +1,6 @@
 package com.nulabinc.backlog.migration.common.client
 
-import com.nulabinc.backlog.migration.common.conf.RequestIntervals
+import com.nulabinc.backlog.migration.common.conf.{BacklogApiConfiguration, RequestIntervals}
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.BacklogAPIException
 import com.nulabinc.backlog4j.http.BacklogHttpResponse
@@ -22,8 +22,6 @@ class BacklogRateLimiter(
     ticker: () => Long = () => System.nanoTime() / 1000000L,
     sleep: Long => Unit = millis => Thread.sleep(millis)
 ) extends Logging {
-
-  def adaptive: Boolean = floors.adaptive
 
   private var windows: Map[RateLimitBucket, RateLimitWindow] = Map.empty
 
@@ -107,4 +105,14 @@ class BacklogRateLimiter(
 
 object BacklogRateLimiter {
   val TooManyRequests = 429
+
+  /** A limiter only when the configuration opts in; its intervals become the pacing floors. */
+  def of(apiConfig: BacklogApiConfiguration): Option[BacklogRateLimiter] =
+    if (apiConfig.adaptiveRateLimit)
+      Some(
+        new BacklogRateLimiter(
+          new RequestIntervals(apiConfig.readInterval, apiConfig.writeInterval)
+        )
+      )
+    else None
 }

@@ -12,7 +12,7 @@ import java.util
 import java.util.Date
 
 import com.nulabinc.backlog.migration.common.client.params._
-import com.nulabinc.backlog.migration.common.conf.{BacklogConfiguration, RequestIntervals}
+import com.nulabinc.backlog.migration.common.conf.BacklogConfiguration
 import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j._
 import com.nulabinc.backlog4j.api.option.{GetParams, QueryParams}
@@ -24,22 +24,17 @@ import scala.jdk.CollectionConverters._
 import scala.language.reflectiveCalls
 
 object BacklogAPIClientImpl extends BacklogConfiguration {
-
-  /** A bare client with fixed-interval pacing, kept so existing callers keep compiling. */
-  def create: BacklogHttpClient =
-    create(new BacklogRateLimiter(RequestIntervals.default))
-
-  /**
-   * In adaptive mode both clients in `BacklogAPIClientImpl` share one limiter; in fixed mode the
-   * client is bare.
-   */
-  def create(limiter: BacklogRateLimiter): BacklogHttpClient = {
+  def create: BacklogHttpClient = {
     val client = new HttpClientBacklogHttpClient()
     client.setUserAgent(
       s"backlog4j/${backlog4jVersion}-$productName/$productVersion"
     )
-    if (limiter.adaptive) new ThrottledBacklogHttpClient(client, limiter) else client
+    client
   }
+
+  /** Paced from the rate-limit headers when a limiter is given; the bare client otherwise. */
+  def create(limiter: Option[BacklogRateLimiter]): BacklogHttpClient =
+    limiter.fold(create)(new ThrottledBacklogHttpClient(create, _))
 }
 
 case class IAAH(value: String) extends AnyVal
@@ -77,19 +72,19 @@ private class JsonBacklogHttpResponse(response: JHttpResponse[String])
 class BacklogAPIClientImpl(
     configure: BacklogConfigure,
     iaah: IAAH,
-    limiter: BacklogRateLimiter
+    limiter: Option[BacklogRateLimiter]
 ) extends BacklogClientImpl(configure, BacklogAPIClientImpl.create(limiter))
     with BacklogAPIClient
     with Logging {
 
-  def this(configure: BacklogConfigure, iaah: IAAH) =
-    this(configure, iaah, new BacklogRateLimiter(RequestIntervals.default))
+  def this(configure: BacklogConfigure, iaah: IAAH) = this(configure, iaah, None)
 
   import scala.util.control.Exception.allCatch
 
   private val listeners = scala.collection.mutable.ArrayBuffer.empty[RateLimitEventListener]
-  private val rateLimitStatusCode = BacklogRateLimiter.TooManyRequests
-  private val rateLimitRetryLimit = 3
+  private val rateLimitStatusCode    = 429
+  private val rateLimitRetryInterval = 60000
+  private val rateLimitRetryLimit    = 3
 
   private val client =
     new BacklogClientImpl(configure, BacklogAPIClientImpl.create(limiter)) {
@@ -157,48 +152,45 @@ class BacklogAPIClientImpl(
     response.body()
   }
 
-  override def importIssue(params: ImportIssueParams): Issue =
-    retryRateLimit {
-      client.importIssue(params)
-    }
+  override def importIssue(params: ImportIssueParams): Issue = retryRateLimit() {
+    client.importIssue(params)
+  }
 
-  override def importUpdateIssue(params: ImportUpdateIssueParams): Issue =
-    retryRateLimit {
-      client.importUpdateIssue(params)
-    }
+  override def importUpdateIssue(params: ImportUpdateIssueParams): Issue = retryRateLimit() {
+    client.importUpdateIssue(params)
+  }
 
   override def importDeleteAttachment(
       issueIdOrKey: Any,
       attachmentId: Any,
       params: ImportDeleteAttachmentParams
-  ): Attachment = retryRateLimit {
+  ): Attachment = retryRateLimit() {
     client.importDeleteAttachment(issueIdOrKey, attachmentId, params)
   }
 
-  override def importWiki(params: ImportWikiParams): Wiki =
-    retryRateLimit {
-      client.importWiki(params)
-    }
+  override def importWiki(params: ImportWikiParams): Wiki = retryRateLimit() {
+    client.importWiki(params)
+  }
 
-  override def importDocument(jsonBody: String): String = retryRateLimit {
+  override def importDocument(jsonBody: String): String = retryRateLimit() {
     sendJson("POST", buildEndpoint("documents/import"), jsonBody)
   }
 
   override def importUpdateDocumentContent(documentId: String, jsonBody: String): Unit =
-    retryRateLimit {
+    retryRateLimit() {
       sendJson("PATCH", buildEndpoint(s"documents/$documentId/content/import"), jsonBody)
       ()
     }
 
   override def importDocumentComment(documentId: String, jsonBody: String): String =
-    retryRateLimit {
+    retryRateLimit() {
       sendJson("POST", buildEndpoint(s"documents/$documentId/comments/import"), jsonBody)
     }
 
   override def delete(
       endpoint: String,
       parameters: util.List[NameValuePair]
-  ): BacklogHttpResponse = retryRateLimit {
+  ): BacklogHttpResponse = retryRateLimit() {
     super.delete(endpoint, parameters)
   }
 
@@ -206,7 +198,7 @@ class BacklogAPIClientImpl(
       endpoint: String,
       getParams: GetParams,
       queryParams: QueryParams
-  ): BacklogHttpResponse = retryRateLimit {
+  ): BacklogHttpResponse = retryRateLimit() {
     super.get(endpoint, getParams, queryParams)
   }
 
@@ -214,7 +206,7 @@ class BacklogAPIClientImpl(
       endpoint: String,
       parameters: util.List[NameValuePair],
       headers: util.List[NameValuePair]
-  ): BacklogHttpResponse = retryRateLimit {
+  ): BacklogHttpResponse = retryRateLimit() {
     super.patch(endpoint, parameters, headers)
   }
 
@@ -222,19 +214,19 @@ class BacklogAPIClientImpl(
       endpoint: String,
       parameters: util.List[NameValuePair],
       headers: util.List[NameValuePair]
-  ): BacklogHttpResponse = retryRateLimit {
+  ): BacklogHttpResponse = retryRateLimit() {
     super.post(endpoint, parameters, headers)
   }
 
   override def postMultiPart(
       endpoint: String,
       parameters: util.Map[String, AnyRef]
-  ): BacklogHttpResponse = retryRateLimit {
+  ): BacklogHttpResponse = retryRateLimit() {
     super.postMultiPart(endpoint, parameters)
   }
 
   override def put(endpoint: String, parameters: util.List[NameValuePair]): BacklogHttpResponse =
-    retryRateLimit {
+    retryRateLimit() {
       super.put(endpoint, parameters)
     }
 
@@ -244,8 +236,7 @@ class BacklogAPIClientImpl(
   override def removeRateLimitEventListener(listener: RateLimitEventListener): Unit =
     listeners -= listener
 
-  /** The pause before a retry waits on the window the refused request's own 429 reported. */
-  private def retryRateLimit[T](f: => T): T = {
+  private def retryRateLimit[T]()(f: => T): T = {
     @annotation.tailrec
     def retry0(errors: List[Throwable], f: => T): T = {
       allCatch.either(f) match {
@@ -262,7 +253,12 @@ class BacklogAPIClientImpl(
               val event = RateLimitEvent(e)
               listeners.foreach(_.fired(event))
 
-              Thread.sleep(limiter.delayAfterTooManyRequests(e))
+              // In adaptive mode wait for the reset this refusal reported; otherwise a fixed minute.
+              val interval = limiter match {
+                case Some(l) => l.delayAfterTooManyRequests(e)
+                case None    => rateLimitRetryInterval.toLong
+              }
+              Thread.sleep(interval)
               retry0(e :: errors, f)
             }
             case _ => throw e

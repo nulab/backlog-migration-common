@@ -12,10 +12,8 @@ case class BacklogApiConfiguration(
     readInterval: FiniteDuration = BacklogApiConfiguration.DefaultReadInterval,
     writeInterval: FiniteDuration = BacklogApiConfiguration.DefaultWriteInterval,
     /**
-     * Opt-in. Off, the services pause for the fixed intervals above before each request, as they
-     * always have. On, the client paces every request from the `X-RateLimit-*` headers of the ones
-     * before, with the intervals above as floors, and waits for the window to reset when the
-     * allowance is nearly gone.
+     * Opt-in. On, the client paces every request from the `X-RateLimit-*` headers with the
+     * intervals above as floors, and the services stop pausing on their own. Off, nothing changes.
      */
     adaptiveRateLimit: Boolean = false
 ) extends BacklogConfiguration {
@@ -24,9 +22,23 @@ case class BacklogApiConfiguration(
 
 object BacklogApiConfiguration {
 
-  /** What the services have always waited before a read. 600 a minute would allow 100 ms. */
+  /**
+   * How long a service pauses before the reads it has always paused before: an issue, a wiki, a
+   * document, a page of comments.
+   *
+   * Backlog allows 600 reads a minute, one every 100 ms, so half a second is five times what the
+   * limit asks; it is what the services have always waited, kept so nothing changes pace unless a
+   * tool asks it to.
+   */
   val DefaultReadInterval: FiniteDuration = 500.millis
 
-  /** What the services have always waited before a write. 150 a minute would allow 400 ms. */
+  /**
+   * How long a service pauses before each write to Backlog.
+   *
+   * Backlog allows 150 updates a minute, one every 400 ms. The pause runs before the request
+   * rather than between request starts, so the response time adds to it: at half a second a write
+   * costs 700 to 800 ms in practice, about half of what the limit allows. Half a second is what
+   * the services have always waited; a tool that has measured its own imports may pass less.
+   */
   val DefaultWriteInterval: FiniteDuration = 500.millis
 }

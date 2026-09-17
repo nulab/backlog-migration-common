@@ -21,6 +21,7 @@ import com.nulabinc.backlog4j.conf.BacklogPackageConfigure
 import monix.eval.Task
 import monix.execution.Scheduler
 
+import scala.concurrent.duration.Duration
 import scala.jdk.CollectionConverters._
 
 /**
@@ -28,15 +29,6 @@ import scala.jdk.CollectionConverters._
  *   uchida
  */
 class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
-
-  protected val intervals: RequestIntervals =
-    new RequestIntervals(
-      apiConfig.readInterval,
-      apiConfig.writeInterval,
-      apiConfig.adaptiveRateLimit
-    )
-
-  protected val rateLimiter: BacklogRateLimiter = new BacklogRateLimiter(intervals)
 
   protected val backlog: BacklogAPIClient = createBacklogAPIClient(apiConfig.iaah)
 
@@ -48,8 +40,11 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
       new BacklogPaths(apiConfig.projectKey, apiConfig.backlogOutputPath)
     )
     bind(classOf[PropertyValue]).toInstance(createPropertyValue())
-    bind(classOf[RequestIntervals]).toInstance(intervals)
-    bind(classOf[BacklogRateLimiter]).toInstance(rateLimiter)
+    // In adaptive mode the client paces every request itself, so the services do not pause.
+    bind(classOf[RequestIntervals]).toInstance(
+      if (apiConfig.adaptiveRateLimit) new RequestIntervals(Duration.Zero, Duration.Zero)
+      else new RequestIntervals(apiConfig.readInterval, apiConfig.writeInterval)
+    )
 
     bind(classOf[CommentService]).to(classOf[CommentServiceImpl])
     bind(classOf[CustomFieldSettingService]).to(classOf[CustomFieldSettingServiceImpl])
@@ -79,7 +74,7 @@ class DefaultModule(apiConfig: BacklogApiConfiguration) extends AbstractModule {
     val backlogPackageConfigure = new BacklogPackageConfigure(apiConfig.url)
     val configure               = backlogPackageConfigure.apiKey(apiConfig.key)
 
-    new BacklogAPIClientImpl(configure, iaah, rateLimiter)
+    new BacklogAPIClientImpl(configure, iaah, BacklogRateLimiter.of(apiConfig))
   }
 
   private[this] def createPropertyValue(): PropertyValue = {
