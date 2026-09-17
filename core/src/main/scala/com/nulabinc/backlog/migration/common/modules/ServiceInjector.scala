@@ -1,7 +1,11 @@
 package com.nulabinc.backlog.migration.common.modules
 
 import com.google.inject.{AbstractModule, Guice, Injector}
-import com.nulabinc.backlog.migration.common.client.{BacklogAPIClient, BacklogAPIClientImpl}
+import com.nulabinc.backlog.migration.common.client.{
+  BacklogAPIClient,
+  BacklogAPIClientImpl,
+  BacklogRateLimiter
+}
 import com.nulabinc.backlog.migration.common.conf.{BacklogApiConfiguration, BacklogPaths}
 import com.nulabinc.backlog.migration.common.domain.BacklogProjectKey
 import com.nulabinc.backlog.migration.common.service._
@@ -18,7 +22,8 @@ object ServiceInjector {
       override def configure(): Unit = {
         val backlogPackageConfigure = new BacklogPackageConfigure(apiConfig.url)
         val configure               = backlogPackageConfigure.apiKey(apiConfig.key)
-        val backlog                 = new BacklogAPIClientImpl(configure, apiConfig.iaah)
+        val backlog =
+          new BacklogAPIClientImpl(configure, apiConfig.iaah, BacklogRateLimiter.of(apiConfig))
 
         bind(classOf[BacklogProjectKey]).toInstance(BacklogProjectKey(apiConfig.projectKey))
         bind(classOf[BacklogAPIClient]).toInstance(backlog)

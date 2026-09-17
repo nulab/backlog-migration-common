@@ -31,6 +31,10 @@ object BacklogAPIClientImpl extends BacklogConfiguration {
     )
     client
   }
+
+  /** Paced from the rate-limit headers when a limiter is given; the bare client otherwise. */
+  def create(limiter: Option[BacklogRateLimiter]): BacklogHttpClient =
+    limiter.fold(create)(new ThrottledBacklogHttpClient(create, _))
 }
 
 case class IAAH(value: String) extends AnyVal
@@ -65,10 +69,15 @@ private class JsonBacklogHttpResponse(response: JHttpResponse[String])
   override def getFileNameFromContentDisposition: String = null
 }
 
-class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
-    extends BacklogClientImpl(configure, BacklogAPIClientImpl.create)
+class BacklogAPIClientImpl(
+    configure: BacklogConfigure,
+    iaah: IAAH,
+    limiter: Option[BacklogRateLimiter]
+) extends BacklogClientImpl(configure, BacklogAPIClientImpl.create(limiter))
     with BacklogAPIClient
     with Logging {
+
+  def this(configure: BacklogConfigure, iaah: IAAH) = this(configure, iaah, None)
 
   import scala.util.control.Exception.allCatch
 
@@ -78,7 +87,7 @@ class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
   private val rateLimitRetryLimit    = 3
 
   private val client =
-    new BacklogClientImpl(configure, BacklogAPIClientImpl.create) {
+    new BacklogClientImpl(configure, BacklogAPIClientImpl.create(limiter)) {
       val headers = Seq(
         new NameValuePair("iaah", iaah.value)
       ).asJava
@@ -244,7 +253,12 @@ class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
               val event = RateLimitEvent(e)
               listeners.foreach(_.fired(event))
 
-              Thread.sleep(rateLimitRetryInterval)
+              // In adaptive mode wait for the reset this refusal reported; otherwise a fixed minute.
+              val interval = limiter match {
+                case Some(l) => l.delayAfterTooManyRequests(e)
+                case None    => rateLimitRetryInterval.toLong
+              }
+              Thread.sleep(interval)
               retry0(e :: errors, f)
             }
             case _ => throw e
