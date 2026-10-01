@@ -1,5 +1,6 @@
 package com.nulabinc.backlog.migration.common.client
 
+import java.io.ByteArrayOutputStream
 import java.net.http.{
   HttpClient => JHttpClient,
   HttpRequest => JHttpRequest,
@@ -177,6 +178,84 @@ class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
     retryRateLimit() {
       sendJson("POST", buildEndpoint(s"documents/$documentId/comments/import"), jsonBody)
     }
+
+    private def multipartBody(
+      boundary: String,
+      stringFields: Seq[(String, String)],
+      filePart: (String, String, Array[Byte])
+  ): Array[Byte] = {
+    val out                    = new ByteArrayOutputStream()
+    def write(s: String): Unit = out.write(s.getBytes(StandardCharsets.UTF_8))
+
+    stringFields.foreach {
+      case (name, value) =>
+        write(s"--$boundary\r\n")
+        write(s"Content-Disposition: form-data; name=\"$name\"\r\n")
+        write("Content-Type: text/plain; charset=UTF-8\r\n")
+        write("\r\n")
+        write(s"$value\r\n")
+    }
+
+    val (fieldName, filename, content) = filePart
+    write(s"--$boundary\r\n")
+    write(s"Content-Disposition: form-data; name=\"$fieldName\"; filename=\"$filename\"\r\n")
+    write("Content-Type: application/octet-stream\r\n")
+    write("\r\n")
+    out.write(content)
+    write("\r\n")
+
+    write(s"--$boundary--\r\n")
+    out.toByteArray
+  }
+
+  private def sendMultipart(
+      method: String,
+      endpoint: String,
+      stringFields: Seq[(String, String)],
+      filePart: (String, String, Array[Byte])
+  ): String = {
+    val boundary     = s"----BacklogMigrationBoundary${System.nanoTime()}"
+    val body         = multipartBody(boundary, stringFields, filePart)
+    val uriSeparator = if (endpoint.contains("?")) "&" else "?"
+    val apiKeyParam  = URLEncoder.encode(configure.getApiKey, StandardCharsets.UTF_8.name())
+    val request = JHttpRequest
+      .newBuilder()
+      .uri(URI.create(s"$endpoint$uriSeparator" + s"apiKey=$apiKeyParam"))
+      .timeout(Duration.ofMillis(configure.getReadTimeout))
+      .header("Content-Type", s"multipart/form-data; boundary=$boundary")
+      .header("iaah", iaah.value)
+      .method(method, JHttpRequest.BodyPublishers.ofByteArray(body))
+      .build()
+    val response =
+      jsonHttpClient.send(request, JHttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
+    val statusCode = response.statusCode()
+    if (statusCode < 200 || statusCode >= 300) {
+      val message =
+        if (statusCode == rateLimitStatusCode) "The API usage limit has been exceeded."
+        else "backlog api request failed."
+      throw new BacklogAPIException(message, new JsonBacklogHttpResponse(response))
+    }
+    response.body()
+  }
+
+  override def importDocumentAttachment(
+      documentId: String,
+      filename: String,
+      content: Array[Byte],
+      created: Option[String],
+      createdUserId: Option[Long]
+  ): String = retryRateLimit() {
+    val stringFields = Seq(
+      created.map("created" -> _),
+      createdUserId.map(id => "createdUserId" -> id.toString)
+    ).flatten
+    sendMultipart(
+      "POST",
+      buildEndpoint(s"documents/$documentId/attachments/import"),
+      stringFields,
+      ("file", filename, content)
+    )
+  }
 
   override def delete(
       endpoint: String,

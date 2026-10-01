@@ -30,7 +30,7 @@ object BacklogJsonProtocol extends DefaultJsonProtocol {
   implicit val BacklogUserFormat           = jsonFormat6(BacklogUser)
   implicit val BacklogNotificationFormat   = jsonFormat2(BacklogNotification)
   implicit val BacklogOperationFormat      = jsonFormat4(BacklogOperation)
-  implicit val BacklogAttachmentFormat     = jsonFormat2(BacklogAttachment)
+  implicit val BacklogAttachmentFormat     = jsonFormat4(BacklogAttachment)
   implicit val BacklogProjectFormat        = jsonFormat17(BacklogProject)
   implicit val BacklogProjectWrapperFormat = jsonFormat1(BacklogProjectWrapper)
   implicit val BacklogSharedFileFormat     = jsonFormat2(BacklogSharedFile)

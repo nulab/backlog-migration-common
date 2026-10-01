@@ -1,7 +1,8 @@
 package com.nulabinc.backlog.migration.common.service
 
-import java.io.{File, FileInputStream, InputStream}
+import java.io.{File, InputStream}
 import java.lang.Thread.sleep
+import java.nio.file.Files
 import javax.inject.Inject
 
 import com.nulabinc.backlog.migration.common.client.BacklogAPIClient
@@ -21,19 +22,17 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogDocumentTree,
   BacklogUser
 }
-import com.nulabinc.backlog.migration.common.utils.{FileUtil, Logging}
+import com.nulabinc.backlog.migration.common.utils.Logging
 import com.nulabinc.backlog4j.api.option.{
   AddDocumentTagsParams,
   GetDocumentTreeParams,
   GetDocumentsCountParams,
   GetDocumentsParams
 }
-import com.nulabinc.backlog4j.internal.file.AttachmentDataImpl
 import spray.json.DefaultJsonProtocol._
 import spray.json._
 
 import scala.jdk.CollectionConverters._
-import scala.util.Using
 
 /**
  * @author
@@ -216,21 +215,24 @@ class DocumentServiceImpl @Inject() (implicit
 
   override def addAttachment(
       documentId: String,
-      path: String
+      path: String,
+      attachment: BacklogAttachment,
+      propertyResolver: PropertyResolver
   ): Either[Throwable, BacklogAttachment] = {
     sleep(500)
     val file = new File(path)
     try {
-      val attachment = Using.resource(new FileInputStream(file)) { inputStream =>
-        val attachmentData = new AttachmentDataImpl(file.getName, inputStream)
-        backlog.addDocumentAttachment(documentId, attachmentData)
-      }
-      Right(
-        BacklogAttachment(
-          optId = Some(attachment.getId),
-          name = FileUtil.clean(attachment.getName)
-        )
+      val content       = Files.readAllBytes(file.toPath)
+      val createdUserId = resolvedUserId(attachment.optCreatedUser, propertyResolver)
+      val response = backlog.importDocumentAttachment(
+        documentId,
+        file.getName,
+        content,
+        attachment.optCreated,
+        createdUserId
       )
+      val newId = JsonParser(response).asJsObject.fields("id").convertTo[String].toLong
+      Right(attachment.copy(optId = Some(newId)))
     } catch {
       case e: Throwable =>
         logger.error(e.getMessage, e)

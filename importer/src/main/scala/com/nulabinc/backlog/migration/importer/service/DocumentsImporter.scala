@@ -247,10 +247,15 @@ private[importer] class DocumentsImporter @Inject() (
       inlineCommentRewriteResult <- Task(
         documentService.rewriteInlineCommentIds(document, commentIdMap)
       )
-      _                 <- logInlineCommentStep(inlineCommentRewriteResult._2)
-      tagsResult        <- postTags(newDocumentId, document)
-      _                 <- logStepCount("Tags added", tagsResult._1, tagsResult._2)
-      attachmentsResult <- postAttachments(oldDocumentId, newDocumentId, document)
+      _          <- logInlineCommentStep(inlineCommentRewriteResult._2)
+      tagsResult <- postTags(newDocumentId, document)
+      _          <- logStepCount("Tags added", tagsResult._1, tagsResult._2)
+      attachmentsResult <- postAttachments(
+        oldDocumentId,
+        newDocumentId,
+        document,
+        propertyResolver
+      )
       _ <- logStepCount(
         "Attachments added",
         attachmentsResult._1,
@@ -412,14 +417,20 @@ private[importer] class DocumentsImporter @Inject() (
   private[this] def postAttachments(
       oldDocumentId: String,
       newDocumentId: String,
-      document: BacklogDocument
+      document: BacklogDocument,
+      propertyResolver: PropertyResolver
   )(implicit consoleDSL: ConsoleDSL[Task]): Task[(Int, Int, Map[String, String])] = {
     val total = document.attachments.size
     Task
       .sequence(document.attachments.map { attachment =>
         toPath(oldDocumentId, attachment) match {
           case Some(path) =>
-            documentService.addAttachment(newDocumentId, path.pathAsString) match {
+            documentService.addAttachment(
+              newDocumentId,
+              path.pathAsString,
+              attachment,
+              propertyResolver
+            ) match {
               case Right(newAttachment) =>
                 Task(
                   (

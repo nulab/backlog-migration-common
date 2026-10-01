@@ -84,7 +84,9 @@ trait DocumentService {
 
   def addAttachment(
       documentId: String,
-      path: String
+      path: String,
+      attachment: BacklogAttachment,
+      propertyResolver: PropertyResolver
   ): Either[Throwable, BacklogAttachment]
 
   def addTags(

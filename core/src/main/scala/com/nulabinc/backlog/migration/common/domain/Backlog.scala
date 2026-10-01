@@ -219,7 +219,12 @@ object BacklogComment {
     )
 }
 
-case class BacklogAttachment(optId: Option[Long], name: String)
+case class BacklogAttachment(
+    optId: Option[Long],
+    name: String,
+    optCreatedUser: Option[BacklogUser] = None,
+    optCreated: Option[String] = None
+)
 
 case class BacklogAttributeInfo(optId: Option[Long], typeId: String)
 
