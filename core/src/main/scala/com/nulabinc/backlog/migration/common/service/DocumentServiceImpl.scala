@@ -20,9 +20,11 @@ import com.nulabinc.backlog.migration.common.domain.{
   BacklogDocumentCommentReply,
   BacklogDocumentTag,
   BacklogDocumentTree,
+  BacklogDocumentTreeNode,
   BacklogUser
 }
 import com.nulabinc.backlog.migration.common.utils.Logging
+import com.nulabinc.backlog4j.BacklogAPIException
 import com.nulabinc.backlog4j.api.option.{
   AddDocumentTagsParams,
   GetDocumentTreeParams,
@@ -87,7 +89,18 @@ class DocumentServiceImpl @Inject() (implicit
 
   override def documentTree(projectId: Long): BacklogDocumentTree = {
     val params = new GetDocumentTreeParams(java.lang.Long.valueOf(projectId))
-    Convert.toBacklog(backlog.getDocumentTree(params))
+    try {
+      Convert.toBacklog(backlog.getDocumentTree(params))
+    } catch {
+      case e: BacklogAPIException if e.getStatusCode == 404 =>
+        val emptyNode = BacklogDocumentTreeNode(
+          id = "",
+          name = "",
+          optEmoji = None,
+          children = Seq.empty
+        )
+        BacklogDocumentTree(projectId = projectId, activeTree = emptyNode, trashTree = emptyNode)
+    }
   }
 
   override def downloadDocumentAttachment(

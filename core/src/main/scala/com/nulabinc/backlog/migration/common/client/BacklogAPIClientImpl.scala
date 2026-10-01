@@ -179,7 +179,7 @@ class BacklogAPIClientImpl(configure: BacklogConfigure, iaah: IAAH)
       sendJson("POST", buildEndpoint(s"documents/$documentId/comments/import"), jsonBody)
     }
 
-    private def multipartBody(
+  private def multipartBody(
       boundary: String,
       stringFields: Seq[(String, String)],
       filePart: (String, String, Array[Byte])
