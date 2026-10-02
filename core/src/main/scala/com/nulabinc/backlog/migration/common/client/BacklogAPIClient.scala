@@ -23,6 +23,14 @@ trait BacklogAPIClient extends BacklogClient {
 
   def importDocumentComment(documentId: String, jsonBody: String): String
 
+  def importDocumentAttachment(
+      documentId: String,
+      filename: String,
+      content: Array[Byte],
+      created: Option[String],
+      createdUserId: Option[Long]
+  ): String
+
   def addRateLimitEventListener(listener: RateLimitEventListener): Unit
 
   def removeRateLimitEventListener(listener: RateLimitEventListener): Unit
